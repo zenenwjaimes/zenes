@@ -17,6 +17,11 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
     // Insert code here to initialize your application
+    
+//    NSData *romData = [[NSFileManager defaultManager] contentsAtPath: @"/Users/slasherx/Desktop/mario.nes"];
+    
+    Cpu6502 *cpu6502 = [[Cpu6502 alloc] init];
+    NSLog(@"%X", cpu6502.reg_pc);
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
