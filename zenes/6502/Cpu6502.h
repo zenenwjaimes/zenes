@@ -7,19 +7,19 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Register.h"
+#include "ProcessorStatus.h"
 
 @interface Cpu6502 : NSObject
 {
-    int8_t _memory[0xFFFF];
+    uint8_t _memory[0xFFFF];
 }
 
-@property int8_t reg_acc;
-@property int8_t reg_x;
-@property int8_t reg_y;
-@property int8_t reg_sp;
-@property int8_t reg_status;
-@property int16_t reg_pc;
-@property (assign, nonatomic) int8_t *memory;
+@property uint8_t reg_acc;
+@property uint8_t reg_x;
+@property uint8_t reg_y;
+@property uint16_t reg_sp;
+@property uint8_t reg_status;
+@property uint16_t reg_pc;
+@property (assign, nonatomic) uint8_t *memory;
 
 @end

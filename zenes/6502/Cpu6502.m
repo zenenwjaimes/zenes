@@ -12,17 +12,53 @@
 
 -(id)init {
     if (self = [super init]) {
-        self.reg_pc = 0x8000;
+        [self bootupSequence];
     }
     return self;
 }
 
-- (void)setMemory:(int8_t *)memory {
+- (void)bootupSequence {
+    //
+    self.reg_pc = 0x8000;
+    self.reg_status = 0x28;
+    self.reg_x = 0;
+    self.reg_y = 0;
+    self.reg_acc = 0;
+    self.reg_sp = 0x1FFF;
+    uint8_t tempMemory[0xFFFF] = {};
+    
+    for (int i = 0; i < sizeof(tempMemory); i++) {
+        tempMemory[i] = 0xFF;
+    }
+    
+    self.memory = tempMemory;
+    
+    // Clear interrupt flag and enable decimal mode on boot
+    self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_UNUSED_BIT);
+    [self enableZeroFlag];
+    [self clearInterruptsFlag];
+    [self enableDecimalFlag];
+}
+
+- (void)setMemory:(uint8_t *)memory {
     memcpy(_memory, memory, sizeof(_memory));
 }
 
-- (int8_t *)memory {
+- (uint8_t *)memory {
     return _memory;
+}
+
+- (void)enableZeroFlag {
+    self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_ZERO_BIT);
+}
+
+// This means that interrupts CAN happen
+- (void)clearInterruptsFlag {
+    self.reg_status ^= (-1 ^ self.reg_status) & (0 << STATUS_IRQ_BIT);
+}
+
+- (void)enableDecimalFlag {
+    self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_DECIMAL_BIT);
 }
 
 @end

@@ -54,6 +54,7 @@
 		FECA7CF51CF44752001E85A5 /* Nes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Nes.m; sourceTree = "<group>"; };
 		FECA7CFD1CF44F7F001E85A5 /* Cpu6502.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Cpu6502.h; path = 6502/Cpu6502.h; sourceTree = "<group>"; };
 		FECA7CFE1CF44F7F001E85A5 /* Cpu6502.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Cpu6502.m; path = 6502/Cpu6502.m; sourceTree = "<group>"; };
+		FECA7D011CF45EF2001E85A5 /* ProcessorStatus.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = ProcessorStatus.h; path = 6502/ProcessorStatus.h; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFrameworksBuildPhase section */
@@ -113,6 +114,7 @@
 				FECA7CCB1CF41D5E001E85A5 /* MainMenu.xib */,
 				FECA7CCE1CF41D5E001E85A5 /* Info.plist */,
 				FECA7CC61CF41D5E001E85A5 /* Supporting Files */,
+				FECA7D011CF45EF2001E85A5 /* ProcessorStatus.h */,
 			);
 			path = zenes;
 			sourceTree = "<group>";
