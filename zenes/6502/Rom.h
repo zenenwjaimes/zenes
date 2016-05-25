@@ -13,4 +13,6 @@
 @property (copy) NSData *data;
 @property (assign) uint16_t header;
 
+- (id) init: (NSString *) path;
+
 @end

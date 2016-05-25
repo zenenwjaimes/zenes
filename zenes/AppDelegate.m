@@ -22,6 +22,8 @@
     
     Cpu6502 *cpu6502 = [[Cpu6502 alloc] init];
     NSLog(@"%X", cpu6502.reg_status);
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
+    NSLog(@"%@", rom.data);
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {

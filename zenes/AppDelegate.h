@@ -8,6 +8,7 @@
 
 #import <Cocoa/Cocoa.h>
 #include "6502/Cpu6502.h"
+#include "6502/Rom.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
