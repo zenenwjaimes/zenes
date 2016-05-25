@@ -20,7 +20,7 @@
 - (void)bootupSequence {
     //
     self.reg_pc = 0x8000;
-    self.reg_status = 0x28;
+    self.reg_status = 0x00;//0x28;
     self.reg_x = 0;
     self.reg_y = 0;
     self.reg_acc = 0;
