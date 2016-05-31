@@ -13,4 +13,6 @@
 @property (assign) uint8_t mapperType;
 
 - (id) initWithType: (uint8_t) mapperType;
+
+- (uint16_t) getPrgRomAddress: (uint8_t) bank;
 @end

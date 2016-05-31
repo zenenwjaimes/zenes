@@ -7,7 +7,8 @@
 //
 
 #import <Foundation/Foundation.h>
-#include "ProcessorStatus.h"
+#import <CoreFoundation/CFByteOrder.h>
+#import "ProcessorStatus.h"
 
 @interface Cpu6502 : NSObject
 {
@@ -21,5 +22,11 @@
 @property uint8_t reg_status;
 @property uint16_t reg_pc;
 @property (assign, nonatomic) uint16_t *memory;
+
+- (void)writePrgRom: (uint16_t *)rom toAddress: (uint16_t)address;
+- (void)enableZeroFlag;
+- (void)enableInterrupts;
+- (void)disableInterrupts;
+- (void)enableDecimalFlag;
 
 @end

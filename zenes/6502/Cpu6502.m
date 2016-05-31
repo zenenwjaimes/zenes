@@ -50,6 +50,12 @@
     return _memory;
 }
 
+- (void)writePrgRom: (uint16_t *)rom toAddress: (uint16_t)address {
+    for (int i = 0; i < 0x4000; i++) {
+        self.memory[address+i] = CFSwapInt16(rom[i]);
+    }
+}
+
 - (void)enableZeroFlag {
     //self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_ZERO_BIT);
     self.reg_status |= (1 << STATUS_ZERO_BIT);
