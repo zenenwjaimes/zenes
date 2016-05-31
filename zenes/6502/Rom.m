@@ -14,10 +14,12 @@
     if (self = [super init]) {
         self.data = [[NSFileManager defaultManager] contentsAtPath: path];
         
-        uint16_t tempHeader;
-        [self.data getBytes: &tempHeader length: 16];
-        
-        self.header = tempHeader;
+        self.prgRomSize = ((uint8_t  *)[self.data bytes])[4];
+        self.chrRomSize = ((uint8_t  *)[self.data bytes])[5];
+        self.mapperType = ((uint8_t  *)[self.data bytes])[6];
+
+        NSLog(@"Program Rom Size: %X", ((uint8_t  *)[self.data bytes])[4]);
+        NSLog(@"Character Rom Size: %X", ((uint8_t  *)[self.data bytes])[5]);
     }
     
     return self;
