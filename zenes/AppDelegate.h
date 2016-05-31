@@ -7,11 +7,10 @@
 //
 
 #import <Cocoa/Cocoa.h>
-#import "6502/Cpu6502.h"
+#import "Nes/Nes.h"
 #import "Nes/Rom.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
-
 
 @end
 

@@ -16,13 +16,10 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    // Insert code here to initialize your application
-    
-//    NSData *romData = [[NSFileManager defaultManager] contentsAtPath: @"/Users/slasherx/Desktop/mario.nes"];
-    
-    Cpu6502 *cpu6502 = [[Cpu6502 alloc] init];
-    NSLog(@"%X", cpu6502.reg_status);
     Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
+    Nes *nesInstance = [[Nes alloc] initWithRom: rom];
+
+    [nesInstance run];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {

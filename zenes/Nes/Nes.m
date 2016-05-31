@@ -10,4 +10,18 @@
 
 @implementation Nes
 
+- (id) initWithRom: (Rom *)rom {
+    if (self = [super init]) {
+        self.rom = rom;
+        
+        self.cpu = [[Cpu6502 alloc] init];
+    }
+    return self;
+}
+
+- (void) run {
+    
+}
+
+
 @end
