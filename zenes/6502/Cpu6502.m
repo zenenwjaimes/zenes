@@ -19,13 +19,13 @@
 
 - (void)bootupSequence {
     //
-    self.reg_pc = 0x8000;
+    self.reg_pc = 0x0;
     self.reg_status = 0x00;
     self.reg_x = 0;
     self.reg_y = 0;
     self.reg_acc = 0;
     self.reg_sp = 0x1FFF;
-    uint16_t tempMemory[0x10000] = {};
+    uint8_t tempMemory[0x10000] = {};
     
     for (int i = 0; i < 0x10000; i++) {
         tempMemory[i] = 0xFF;
@@ -42,17 +42,18 @@
     NSLog(@"Status Register: %@", [self intToBinary: self.reg_status]);
 }
 
-- (void)setMemory:(uint16_t *)memory {
+- (void)setMemory:(uint8_t *)memory {
+    NSLog(@"memory size: %ld", sizeof(_memory));
     memcpy(_memory, memory, sizeof(_memory));
 }
 
-- (uint16_t *)memory {
+- (uint8_t *)memory {
     return _memory;
 }
 
-- (void)writePrgRom: (uint16_t *)rom toAddress: (uint16_t)address {
+- (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address {
     for (int i = 0; i < 0x4000; i++) {
-        self.memory[address+i] = CFSwapInt16(rom[i]);
+        self.memory[address+i] = rom[i];
     }
 }
 

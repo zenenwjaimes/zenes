@@ -12,7 +12,7 @@
 
 @interface Cpu6502 : NSObject
 {
-    uint16_t _memory[0x10000];
+    uint8_t _memory[0x10000];
 }
 
 @property uint8_t reg_acc;
@@ -21,9 +21,9 @@
 @property uint16_t reg_sp;
 @property uint8_t reg_status;
 @property uint16_t reg_pc;
-@property (assign, nonatomic) uint16_t *memory;
+@property (assign, nonatomic) uint8_t *memory;
 
-- (void)writePrgRom: (uint16_t *)rom toAddress: (uint16_t)address;
+- (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
 - (void)enableZeroFlag;
 - (void)enableInterrupts;
 - (void)disableInterrupts;
