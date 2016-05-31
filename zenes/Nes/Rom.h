@@ -7,6 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Mapper.h"
 
 @interface Rom : NSObject
 
@@ -15,6 +16,7 @@
 @property (assign) uint8_t prgRomSize;
 @property (assign) uint8_t chrRomSize;
 @property (assign) uint8_t mapperType;
+@property (copy) Mapper *mapper;
 
 - (id) init: (NSString *) path;
 
