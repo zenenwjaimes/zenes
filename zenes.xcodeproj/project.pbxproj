@@ -7,7 +7,10 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		FE0C7A451CFD73B50043CEC7 /* Nes in Resources */ = {isa = PBXBuildFile; fileRef = FE0C7A441CFD73B50043CEC7 /* Nes */; };
+		FE0C7A501CFD77710043CEC7 /* Nes in Resources */ = {isa = PBXBuildFile; fileRef = FE0C7A4F1CFD77710043CEC7 /* Nes */; };
+		FE0C7A5F1CFD7C420043CEC7 /* Mapper.m in Sources */ = {isa = PBXBuildFile; fileRef = FE0C7A5A1CFD7C420043CEC7 /* Mapper.m */; };
+		FE0C7A601CFD7C420043CEC7 /* Nes.m in Sources */ = {isa = PBXBuildFile; fileRef = FE0C7A5C1CFD7C420043CEC7 /* Nes.m */; };
+		FE0C7A611CFD7C420043CEC7 /* Rom.m in Sources */ = {isa = PBXBuildFile; fileRef = FE0C7A5E1CFD7C420043CEC7 /* Rom.m */; };
 		FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */; };
 		FECA7CC81CF41D5E001E85A5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CC71CF41D5E001E85A5 /* main.m */; };
 		FECA7CCA1CF41D5E001E85A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FECA7CC91CF41D5E001E85A5 /* Assets.xcassets */; };
@@ -36,7 +39,15 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
-		FE0C7A441CFD73B50043CEC7 /* Nes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Nes; sourceTree = "<group>"; };
+		FE0C7A4F1CFD77710043CEC7 /* Nes */ = {isa = PBXFileReference; lastKnownFileType = folder; name = Nes; path = /Users/slasherx/Projects/zenes/zenes/Nes; sourceTree = "<absolute>"; };
+		FE0C7A541CFD79080043CEC7 /* Rom.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Rom.h; path = Nes/Rom.h; sourceTree = "<group>"; };
+		FE0C7A551CFD79080043CEC7 /* Rom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Rom.m; path = Nes/Rom.m; sourceTree = "<group>"; };
+		FE0C7A591CFD7C420043CEC7 /* Mapper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Mapper.h; sourceTree = "<group>"; };
+		FE0C7A5A1CFD7C420043CEC7 /* Mapper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Mapper.m; sourceTree = "<group>"; };
+		FE0C7A5B1CFD7C420043CEC7 /* Nes.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Nes.h; sourceTree = "<group>"; };
+		FE0C7A5C1CFD7C420043CEC7 /* Nes.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Nes.m; sourceTree = "<group>"; };
+		FE0C7A5D1CFD7C420043CEC7 /* Rom.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = Rom.h; sourceTree = "<group>"; };
+		FE0C7A5E1CFD7C420043CEC7 /* Rom.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = Rom.m; sourceTree = "<group>"; };
 		FECA7CC01CF41D5E001E85A5 /* zenes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zenes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FECA7CC31CF41D5E001E85A5 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -80,6 +91,19 @@
 /* End PBXFrameworksBuildPhase section */
 
 /* Begin PBXGroup section */
+		FE0C7A581CFD7C420043CEC7 /* Nes */ = {
+			isa = PBXGroup;
+			children = (
+				FE0C7A591CFD7C420043CEC7 /* Mapper.h */,
+				FE0C7A5A1CFD7C420043CEC7 /* Mapper.m */,
+				FE0C7A5B1CFD7C420043CEC7 /* Nes.h */,
+				FE0C7A5C1CFD7C420043CEC7 /* Nes.m */,
+				FE0C7A5D1CFD7C420043CEC7 /* Rom.h */,
+				FE0C7A5E1CFD7C420043CEC7 /* Rom.m */,
+			);
+			path = Nes;
+			sourceTree = "<group>";
+		};
 		FECA7CB71CF41D5E001E85A5 = {
 			isa = PBXGroup;
 			children = (
@@ -103,7 +127,7 @@
 		FECA7CC21CF41D5E001E85A5 /* zenes */ = {
 			isa = PBXGroup;
 			children = (
-				FE0C7A441CFD73B50043CEC7 /* Nes */,
+				FE0C7A581CFD7C420043CEC7 /* Nes */,
 				FECA7CF01CF4465E001E85A5 /* 6502 */,
 				FECA7CC31CF41D5E001E85A5 /* AppDelegate.h */,
 				FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */,
@@ -118,6 +142,8 @@
 		FECA7CC61CF41D5E001E85A5 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				FE0C7A541CFD79080043CEC7 /* Rom.h */,
+				FE0C7A551CFD79080043CEC7 /* Rom.m */,
 				FECA7CFD1CF44F7F001E85A5 /* Cpu6502.h */,
 				FECA7CFE1CF44F7F001E85A5 /* Cpu6502.m */,
 				FECA7CC71CF41D5E001E85A5 /* main.m */,
@@ -247,9 +273,9 @@
 			buildActionMask = 2147483647;
 			files = (
 				FECA7CCA1CF41D5E001E85A5 /* Assets.xcassets in Resources */,
-				FE0C7A451CFD73B50043CEC7 /* Nes in Resources */,
 				FECA7CCD1CF41D5E001E85A5 /* MainMenu.xib in Resources */,
 				FECA7CF11CF4465E001E85A5 /* 6502 in Resources */,
+				FE0C7A501CFD77710043CEC7 /* Nes in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -274,9 +300,12 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				FE0C7A601CFD7C420043CEC7 /* Nes.m in Sources */,
 				FECA7CC81CF41D5E001E85A5 /* main.m in Sources */,
 				FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */,
 				FECA7CFF1CF44F7F001E85A5 /* Cpu6502.m in Sources */,
+				FE0C7A611CFD7C420043CEC7 /* Rom.m in Sources */,
+				FE0C7A5F1CFD7C420043CEC7 /* Mapper.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

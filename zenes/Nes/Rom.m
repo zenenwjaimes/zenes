@@ -20,6 +20,8 @@
 
         NSLog(@"Program Rom Size: %X", ((uint8_t  *)[self.data bytes])[4]);
         NSLog(@"Character Rom Size: %X", ((uint8_t  *)[self.data bytes])[5]);
+        
+        self.mapper = [[Mapper alloc] initWithType: self.mapperType];
     }
     
     return self;

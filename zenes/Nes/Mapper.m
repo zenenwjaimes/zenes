@@ -10,4 +10,13 @@
 
 @implementation Mapper
 
+- (id) initWithType: (uint8_t) mapperType {
+    if (self = [super init]) {
+        self.mapperType = mapperType;
+        NSLog(@"%d", self.mapperType);
+    }
+    
+    return self;
+}
+
 @end
