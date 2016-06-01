@@ -11,5 +11,6 @@
 @interface BitHelper : NSObject
 
 + (NSString *)intToBinary:(uint8_t)number;
++ (uint8_t)checkBit: (uint8_t)p on: (uint8_t)value;
 
 @end

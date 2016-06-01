@@ -35,6 +35,7 @@
 - (void)disableInterrupts;
 - (void)enableDecimalFlag;
 - (void)disableDecimalFlag;
+- (uint8_t)checkFlag: (uint8_t)flag;
 
 - (void)runNextInstruction;
 - (void)run;
@@ -42,9 +43,12 @@
 @end
 
 enum opcodes {
+    BPL = 0x10,
     CLD = 0xD8,
+    LDA_ABS = 0xAD,
     LDA_IMM = 0xA9,
     LDX_IMM = 0xA2,
     SEI = 0x78,
-    STA = 0x8D
+    STA = 0x8D,
+    TXS = 0x9A
 };

@@ -32,7 +32,7 @@
     uint8_t tempMemory[0x10000] = {};
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
-    for (int i = 0; i < 0x10000; i++) {
+    for (int i = 0; i < 0x2000; i++) {
         tempMemory[i] = 0xFF;
     }
     
@@ -95,6 +95,10 @@
     self.reg_status &= ~ (1 << STATUS_DECIMAL_BIT);
 }
 
+- (uint8_t)checkFlag: (uint8_t)flag {
+    return (self.reg_status & (1 << flag));
+}
+
 - (void)runNextInstruction {
     enum opcodes opcode;
     opcode = self.memory[self.reg_pc];
@@ -104,6 +108,23 @@
     NSLog(@"current pc: %X", self.reg_pc);
     
     switch(opcode) {
+        // Branch to PC+op1 if negative flag is 0
+        case BPL:
+            self.op1 = self.memory[self.reg_pc+1];
+            NSLog(@"bit for addressing: %X", self.op1 & 0xFF);
+            // Branch if the negative bit is set
+            if ([self checkFlag: STATUS_NEGATIVE_BIT] == 0) {
+                self.reg_pc += self.op1;
+                self.counter -= 3;
+                // TODO: Check for different page here. If extra page used, make sure to add one more cycle
+                
+                NSLog(@"branching off, negative bit is not set");
+            } else {
+                self.reg_pc += 2;
+                self.counter -= 2;
+                NSLog(@"not branching, negative bit set");
+            }
+            break;
         // CLD (Clear Decimal Flag)
         case CLD:
             NSLog(@"clear decimal");
@@ -156,7 +177,7 @@
                 [self disableZeroFlag];
             }
             
-            // Sign flag is set if bit 7 is set on the accumulator
+            // Sign flag is set if bit 7 is set on the reg x
             if ((self.reg_x >> 7) & 1) {
                 [self enableSignFlag];
             } else {
@@ -164,6 +185,35 @@
             }
             
             self.reg_pc += 2;
+            break;
+
+        // LDA (Load Accumulator Absolute)
+        case LDA_ABS:
+            self.op1 = self.reg_pc+1;
+            self.op2 = self.reg_pc+2;
+
+            NSLog(@"loading whats at: %X", (self.memory[self.op2] << 8 | self.memory[self.op1]));
+            // Cycles: 4
+            self.counter -= 4;
+            self.reg_acc = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
+            // 1 byte OP, jump to the next byte address
+            NSLog(@"lda abs: %X", self.reg_acc);
+            
+            // Accumulator is 0, enable the zero flag
+            if (self.reg_acc == 0x00) {
+                [self enableZeroFlag];
+            } else {
+                [self disableZeroFlag];
+            }
+            
+            // Sign flag is set if bit 7 is set on the accumulator
+            if ((self.reg_acc >> 7) & 1) {
+                [self enableSignFlag];
+            } else {
+                [self disableSignFlag];
+            }
+            
+            self.reg_pc += 3;
             break;
             
         // SEI (Set Interrupt)
@@ -182,12 +232,23 @@
             self.op1 = self.reg_pc+1;
             self.op2 = self.reg_pc+2;
             self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])] = self.reg_acc;
-            // Cycles: 2
+            // Cycles: 4
             self.counter -= 4;
             // 1 byte OP, jump to the next byte address
             self.reg_pc += 3;
             break;
         
+        case TXS:
+            NSLog(@"Transfer X to SP: %X", self.reg_x);
+            self.reg_sp = 0x1000+self.reg_x;
+            
+            // Cycles: 2
+            self.counter -= 2;
+            // 1 byte OP, jump to the next byte address
+            self.reg_pc++;
+            
+            break;
+            
         // Unknown OP
         default:
             NSLog(@"OP not found: %X", opcode);
