@@ -35,11 +35,17 @@
     return self;
 }
 
+//TODO: Fix this run loop up a bit. Make it so you can step through operations
 - (void) run {
-    while (1) {
-        
-    }
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+        for (;;) {
+            [self.cpu run];
+        }
+    });
 }
 
+- (void) runNextInstruction {
+    [self.cpu runNextInstruction];
+}
 
 @end

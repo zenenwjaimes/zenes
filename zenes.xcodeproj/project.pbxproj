@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
-		E981FBD81CFE36480082ADA8 /* Nes in Resources */ = {isa = PBXBuildFile; fileRef = E981FBD71CFE36480082ADA8 /* Nes */; settings = {ASSET_TAGS = (); }; };
+		E981FBD81CFE36480082ADA8 /* Nes in Resources */ = {isa = PBXBuildFile; fileRef = E981FBD71CFE36480082ADA8 /* Nes */; };
 		E981FBDC1CFE369E0082ADA8 /* Mapper.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBD91CFE369E0082ADA8 /* Mapper.m */; };
 		E981FBDD1CFE369E0082ADA8 /* Nes.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDA1CFE369E0082ADA8 /* Nes.m */; };
 		E981FBDE1CFE369E0082ADA8 /* Rom.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDB1CFE369E0082ADA8 /* Rom.m */; };
 		E981FBE01CFE36F80082ADA8 /* Cpu6502.h in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDF1CFE36F80082ADA8 /* Cpu6502.h */; };
+		FE2FD1571CFE875A002AD4F1 /* BitHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FE2FD1561CFE875A002AD4F1 /* BitHelper.m */; };
+		FE2FD1681CFE9994002AD4F1 /* NesWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = FE2FD1671CFE9994002AD4F1 /* NesWindow.m */; };
 		FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */; };
 		FECA7CC81CF41D5E001E85A5 /* main.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CC71CF41D5E001E85A5 /* main.m */; };
 		FECA7CCA1CF41D5E001E85A5 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = FECA7CC91CF41D5E001E85A5 /* Assets.xcassets */; };
@@ -46,6 +48,10 @@
 		E981FBDB1CFE369E0082ADA8 /* Rom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Rom.m; path = Nes/Rom.m; sourceTree = "<group>"; };
 		E981FBDF1CFE36F80082ADA8 /* Cpu6502.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Cpu6502.h; path = 6502/Cpu6502.h; sourceTree = "<group>"; };
 		FE0C7A551CFD79080043CEC7 /* Rom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Rom.m; path = Nes/Rom.m; sourceTree = "<group>"; };
+		FE2FD1551CFE875A002AD4F1 /* BitHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitHelper.h; sourceTree = "<group>"; };
+		FE2FD1561CFE875A002AD4F1 /* BitHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BitHelper.m; sourceTree = "<group>"; };
+		FE2FD1661CFE9994002AD4F1 /* NesWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NesWindow.h; path = Nes/NesWindow.h; sourceTree = "<group>"; };
+		FE2FD1671CFE9994002AD4F1 /* NesWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NesWindow.m; path = Nes/NesWindow.m; sourceTree = "<group>"; };
 		FECA7CC01CF41D5E001E85A5 /* zenes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zenes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FECA7CC31CF41D5E001E85A5 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -115,6 +121,8 @@
 				FECA7CF01CF4465E001E85A5 /* 6502 */,
 				FECA7CC31CF41D5E001E85A5 /* AppDelegate.h */,
 				FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */,
+				FE2FD1551CFE875A002AD4F1 /* BitHelper.h */,
+				FE2FD1561CFE875A002AD4F1 /* BitHelper.m */,
 				FECA7CC91CF41D5E001E85A5 /* Assets.xcassets */,
 				FECA7CCB1CF41D5E001E85A5 /* MainMenu.xib */,
 				FECA7CCE1CF41D5E001E85A5 /* Info.plist */,
@@ -126,6 +134,8 @@
 		FECA7CC61CF41D5E001E85A5 /* Supporting Files */ = {
 			isa = PBXGroup;
 			children = (
+				FE2FD1661CFE9994002AD4F1 /* NesWindow.h */,
+				FE2FD1671CFE9994002AD4F1 /* NesWindow.m */,
 				E981FBDF1CFE36F80082ADA8 /* Cpu6502.h */,
 				FE0C7A551CFD79080043CEC7 /* Rom.m */,
 				E981FBD91CFE369E0082ADA8 /* Mapper.m */,
@@ -291,8 +301,10 @@
 				E981FBDD1CFE369E0082ADA8 /* Nes.m in Sources */,
 				E981FBDE1CFE369E0082ADA8 /* Rom.m in Sources */,
 				FECA7CC81CF41D5E001E85A5 /* main.m in Sources */,
+				FE2FD1571CFE875A002AD4F1 /* BitHelper.m in Sources */,
 				FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */,
 				FECA7CFF1CF44F7F001E85A5 /* Cpu6502.m in Sources */,
+				FE2FD1681CFE9994002AD4F1 /* NesWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};

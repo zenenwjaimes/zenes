@@ -18,5 +18,6 @@
 - (id) initWithRom: (Rom *)rom;
 
 - (void) run;
+- (void) runNextInstruction;
 
 @end

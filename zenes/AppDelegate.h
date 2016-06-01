@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import "Nes/NesWindow.h"
 #import "Nes/Nes.h"
 #import "Nes/Rom.h"
 
