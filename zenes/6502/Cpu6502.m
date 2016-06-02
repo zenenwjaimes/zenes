@@ -165,13 +165,14 @@
         //TODO: Re check the logic on the BPL, rewrite the relative addressing
         // Branch to PC+op1 if negative flag is 0
         case BPL:
+            self.reg_pc += 2;
             // Branch if the negative bit is set
             if ([self checkFlag: STATUS_NEGATIVE_BIT] == 0) {
                 self.counter -= 3;
-                uint16_t relativeAddress = self.memory[self.op1];
+                uint16_t relativeAddress = self.memory[self.op1]+2;
                 
                 if (relativeAddress >= 0x80) {
-                    relativeAddress += (self.reg_pc+4)-256;
+                    relativeAddress += self.reg_pc-256;
                     relativeAddress &= 0xFFFF;
                     
                     NSLog(@"relative address: %X", relativeAddress);
@@ -185,10 +186,8 @@
                 }
                 // TODO: Check for different page here. If extra page used, make sure to add one more cycle
             } else {
-                self.reg_pc += 2;
                 self.counter -= 2;
             }
-            //self.reg_pc += 2;
             break;
         // CLD (Clear Decimal Flag)
         case CLD:
@@ -226,7 +225,6 @@
         // LDA Absolute X
         case LDA_ABSX:
             // Cycles: 4
-            // TODO: Check for page wrap, add one more cycle to the counter
             self.counter -= 4;
             self.reg_acc = [self readAbsoluteAddress1: self.memory[self.op1] Address2: self.memory[self.op2] WithOffset: self.memory[self.op3]];
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
