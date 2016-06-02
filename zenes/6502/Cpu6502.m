@@ -102,7 +102,12 @@
 - (void)runNextInstruction {
     enum opcodes opcode;
     opcode = self.memory[self.reg_pc];
-    self.op1 = self.op2 = 0x0;
+    
+    // setup op1 and op2 even if they aren't used by the operation
+    self.op1 = self.reg_pc+1;
+    self.op2 = self.reg_pc+2;
+    
+    uint8_t relativeAddress = 0x0;
     
     NSLog(@"next instruction: %X", opcode);
     NSLog(@"current pc: %X", self.reg_pc);
@@ -110,20 +115,24 @@
     switch(opcode) {
         // Branch to PC+op1 if negative flag is 0
         case BPL:
-            self.op1 = self.memory[self.reg_pc+1];
-            NSLog(@"bit for addressing: %X", self.op1 & 0xFF);
             // Branch if the negative bit is set
             if ([self checkFlag: STATUS_NEGATIVE_BIT] == 0) {
-                self.reg_pc += self.op1;
                 self.counter -= 3;
-                // TODO: Check for different page here. If extra page used, make sure to add one more cycle
+                relativeAddress = self.memory[self.reg_pc+1];
                 
-                NSLog(@"branching off, negative bit is not set");
+                if (relativeAddress > 0x80) {
+                    relativeAddress += (self.reg_pc+1)-256;
+                    relativeAddress &= 0xFFFF;                    
+                }
+                NSLog(@"Relative Address: %X", relativeAddress);
+                
+                self.reg_pc += relativeAddress;
+                // TODO: Check for different page here. If extra page used, make sure to add one more cycle
             } else {
                 self.reg_pc += 2;
                 self.counter -= 2;
-                NSLog(@"not branching, negative bit set");
             }
+            //self.reg_pc += 2;
             break;
         // CLD (Clear Decimal Flag)
         case CLD:
@@ -137,7 +146,6 @@
             
         // LDA (Load Acc Immediate)
         case LDA_IMM:
-            self.op1 = self.reg_pc+1;
             // Cycles: 2
             self.counter -= 2;
             self.reg_acc = self.memory[self.op1];
@@ -163,13 +171,11 @@
         
         // LDX (Load X Immediate)
         case LDX_IMM:
-            self.op1 = self.reg_pc+1;
             // Cycles: 2
             self.counter -= 2;
             self.reg_x = self.memory[self.op1];
-            // 1 byte OP, jump to the next byte address
-            NSLog(@"ldx imm: %X", self.reg_x);
             
+            // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
             if (self.reg_x == 0x00) {
                 [self enableZeroFlag];
@@ -187,18 +193,37 @@
             self.reg_pc += 2;
             break;
 
+            // LDY (Load Y Immediate)
+        case LDY_IMM:
+            // Cycles: 2
+            self.counter -= 2;
+            self.reg_y = self.memory[self.op1];
+            // 1 byte OP, jump to the next byte address
+            
+            // Accumulator is 0, enable the zero flag
+            if (self.reg_y == 0x00) {
+                [self enableZeroFlag];
+            } else {
+                [self disableZeroFlag];
+            }
+            
+            // Sign flag is set if bit 7 is set on the reg y
+            if ((self.reg_y >> 7) & 1) {
+                [self enableSignFlag];
+            } else {
+                [self disableSignFlag];
+            }
+            
+            self.reg_pc += 2;
+            break;
+            
         // LDA (Load Accumulator Absolute)
         case LDA_ABS:
-            self.op1 = self.reg_pc+1;
-            self.op2 = self.reg_pc+2;
-
-            NSLog(@"loading whats at: %X", (self.memory[self.op2] << 8 | self.memory[self.op1]));
             // Cycles: 4
             self.counter -= 4;
             self.reg_acc = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
-            // 1 byte OP, jump to the next byte address
-            NSLog(@"lda abs: %X", self.reg_acc);
             
+            // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
             if (self.reg_acc == 0x00) {
                 [self enableZeroFlag];
@@ -218,7 +243,6 @@
             
         // SEI (Set Interrupt)
         case SEI:
-            NSLog(@"set interrupt flag");
             [self enableInterrupts];
             // Cycles: 2
             self.counter -= 2;
@@ -228,9 +252,6 @@
             
         // STA (Store Accumulator Immediate)
         case STA:
-            NSLog(@"store accumulator");
-            self.op1 = self.reg_pc+1;
-            self.op2 = self.reg_pc+2;
             self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])] = self.reg_acc;
             // Cycles: 4
             self.counter -= 4;
@@ -239,9 +260,7 @@
             break;
         
         case TXS:
-            NSLog(@"Transfer X to SP: %X", self.reg_x);
             self.reg_sp = 0x1000+self.reg_x;
-            
             // Cycles: 2
             self.counter -= 2;
             // 1 byte OP, jump to the next byte address
@@ -256,6 +275,8 @@
             break;
     }
     
+    // reset ops
+    self.op1 = self.op2 = 0x0;
     NSLog(@"status flag: %@", [BitHelper intToBinary: self.reg_status]);
 }
 

@@ -48,6 +48,7 @@ enum opcodes {
     LDA_ABS = 0xAD,
     LDA_IMM = 0xA9,
     LDX_IMM = 0xA2,
+    LDY_IMM = 0xA0,
     SEI = 0x78,
     STA = 0x8D,
     TXS = 0x9A
