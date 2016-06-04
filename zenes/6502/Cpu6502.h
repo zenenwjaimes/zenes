@@ -36,6 +36,8 @@
 - (void)disableInterrupts;
 - (void)enableDecimalFlag;
 - (void)disableDecimalFlag;
+- (void)enableCarryFlag;
+- (void)disableCarryFlag;
 - (uint8_t)checkFlag: (uint8_t)flag;
 
 - (void)runNextInstruction;
@@ -45,7 +47,10 @@
 
 enum opcodes {
     BPL = 0x10,
+    CLC = 0x18,
     CLD = 0xD8,
+    CLI = 0x58,
+    CLV = 0xB8,
     CMP_IMM = 0xC9,
     JSR = 0x20,
     LDA_ABS = 0xAD,
@@ -65,5 +70,7 @@ enum opcodes {
     ORA_IY = 0x11,
     SEI = 0x78,
     STA = 0x8D,
+    STX_ZP = 0x86,
+    STY_ZP = 0x84,
     TXS = 0x9A
 };
