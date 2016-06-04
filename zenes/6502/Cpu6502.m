@@ -173,16 +173,15 @@
         //TODO: Re check the logic on the BPL, rewrite the relative addressing
         // Branch to PC+op1 if negative flag is 0
         case BPL:
+            self.reg_pc += 2;
             // Branch if the negative bit is set
             if ([self checkFlag: STATUS_NEGATIVE_BIT] == 0) {
                 self.counter += 3;
                 uint16_t relativeAddress = self.memory[self.op1];
                 
                 if (relativeAddress >= 0x80) {
-                    relativeAddress += (self.reg_pc+4)-256;
+                    relativeAddress += (self.reg_pc-1)-256;
                     relativeAddress &= 0xFFFF;
-                    
-                    NSLog(@"relative address: %X", relativeAddress);
                     
                     self.reg_pc = relativeAddress;
                 
@@ -196,7 +195,6 @@
                 self.reg_pc += 2;
                 self.counter += 2;
             }
-            //self.reg_pc += 2;
             break;
             
         // CLC (Clear Carry Flag)
@@ -210,6 +208,8 @@
             
         // CLD (Clear Decimal Flag)
         case CLD:
+            // 1 byte OP, jump to the next byte address
+            self.reg_pc++;
             [self disableDecimalFlag];
             // Cycles: 2
             self.counter += 2;
@@ -224,8 +224,6 @@
             NSLog(@"acc: %d", self.reg_acc);
             NSLog(@"op1 value: %d", self.memory[self.op1]);
             NSLog(@"%@", temp >= 0x80?@"greater than 0x80":@"not greater than 0x80");
-            
-            self.reg_pc += 2;
             break;
             
         case JSR:
@@ -244,15 +242,16 @@
         
         // LDA Absolute X
         case LDA_ABSX:
+            self.reg_pc += 3;
             // Cycles: 4
             // TODO: Check for page wrap, add one more cycle to the counter
             self.counter += 4;
             self.reg_acc = [self readAbsoluteAddress1: self.memory[self.op1] Address2: self.memory[self.op2] WithOffset: self.memory[self.op3]];
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
-            self.reg_pc += 3;
             break;
         // LDA (Load Acc Immediate)
         case LDA_IMM:
+            self.reg_pc += 2;
             // Cycles: 2
             self.counter += 2;
             self.reg_acc = self.memory[self.op1];
@@ -260,12 +259,11 @@
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
-            
-            self.reg_pc += 2;
             break;
         
         // LDX (Load X Immediate)
         case LDX_IMM:
+            self.reg_pc += 2;
             // Cycles: 2
             self.counter += 2;
             self.reg_x = self.memory[self.op1];
@@ -273,24 +271,22 @@
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_x];
-            
-            self.reg_pc += 2;
             break;
 
             // LDY (Load Y Immediate)
         case LDY_IMM:
+            self.reg_pc += 2;
             // Cycles: 2
             self.counter += 2;
             self.reg_y = self.memory[self.op1];
             // 1 byte OP, jump to the next byte address
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
-            
-            self.reg_pc += 2;
             break;
             
         // LDA (Load Accumulator Absolute)
         case LDA_ABS:
+            self.reg_pc += 3;
             // Cycles: 4
             self.counter += 4;
             self.reg_acc = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
@@ -298,25 +294,26 @@
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
-            
-            self.reg_pc += 3;
             break;
         // NOP (no operation, do nothing but decrement the counter and move on)
         case NOP:
             self.counter +=1;
             self.reg_pc++;
+            self.counter -=1;
             break;
         // ORA on zero page address
         case ORA_ZP:
+            self.reg_pc += 2;
             self.reg_acc |= [self readZeroPage: self.memory[self.op1]];
             // Cycles
             self.counter += 3;
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
-            
-            self.reg_pc += 2;
             break;
         // SEI (Set Interrupt)
         case SEI:
+            // 1 byte OP, jump to the next byte address
+            self.reg_pc++;
+
             [self enableInterrupts];
             // Cycles: 2
             self.counter += 2;
@@ -326,6 +323,8 @@
             
         // STA (Store Accumulator Immediate)
         case STA:
+            // 1 byte OP, jump to the next byte address
+            self.reg_pc += 3;
             self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])] = self.reg_acc;
             // Cycles: 4
             self.counter += 4;
@@ -352,7 +351,11 @@
             break;
             
         case TXS:
-            self.reg_sp = self.reg_x;
+            // 1 byte OP, jump to the next byte address
+            self.reg_pc ++;
+
+            [self pushToStack: self.reg_x];
+            NSLog(@"stack pointer: %X", self.reg_sp);
             // Cycles: 2
             self.counter += 2;
             // 1 byte OP, jump to the next byte address
