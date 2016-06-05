@@ -27,6 +27,9 @@
     uint16_t address = 0x0;
     
     switch (self.mapperType) {
+        case 0:
+            address = ((0x4000 * bank) + offset);
+            break;
         case 1:
             address = ((0x4000 * bank) + offset);
             break;
