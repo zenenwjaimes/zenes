@@ -202,6 +202,24 @@
      NSLog(@"PROCESSING OPCODE (0x%X): %@ AT PC: %X", opcode, [Cpu6502 getOpcodeName: opcode], self.reg_pc);
     
     switch(opcode) {
+        case ADC_IMM:
+            self.counter += 2;
+            self.reg_pc += 2;
+            
+            uint8_t tempadd = self.reg_acc + self.memory[self.op1] + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+            uint8_t isOverflow = ((!(((self.reg_acc ^ self.memory[self.op1]) & 0x80)!=0) && (((self.reg_acc ^ tempadd) & 0x80))!=0)?1:0);
+            
+            if (isOverflow != 0) {
+                [self enableOverflowFlag];
+            } else {
+                [self disableOverflowFlag];
+            }
+            if (tempadd > 0xFF) {
+                [self enableCarryFlag];
+            }
+            [self toggleZeroAndSignFlagForReg: tempadd];
+            self.reg_acc = (tempadd & 0xFF);
+            break;
         case AND_IMM:
             self.reg_pc += 2;
             self.counter += 2;
@@ -360,6 +378,36 @@
             
             break;
             
+        case CPX_IMM:
+            self.reg_pc += 2;
+            self.counter += 2;
+            
+            uint8_t cmpx = self.reg_x - self.memory[self.op1];
+            [self toggleZeroAndSignFlagForReg: cmpx];
+            
+            if (self.reg_x > self.memory[self.op1]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
+        case CPY_IMM:
+            self.reg_pc += 2;
+            self.counter += 2;
+            
+            uint8_t cmpy = self.reg_y - self.memory[self.op1];
+            [self toggleZeroAndSignFlagForReg: cmpy];
+            
+            if (self.reg_y > self.memory[self.op1]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
         case DEX:
             self.reg_pc++;
             self.counter += 2;
@@ -375,6 +423,14 @@
             self.reg_y--;
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
+            
+            break;
+        case EOR_IMM:
+            self.reg_pc += 2;
+            self.counter += 2;
+            
+            self.reg_acc ^= self.memory[self.op1];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
         case JMP_ABS:
@@ -509,7 +565,26 @@
             NSLog(@"big add: %X, value: %X", 0x100+self.reg_pc, big);
             self.reg_pc = ((big << 8)| little)+1;
             NSLog(@"return to reg pc: %X", self.reg_pc);
+            break;
+        case SBC_IMM:
+            self.counter += 2;
+            self.reg_pc += 2;
             
+            uint8_t tempsub = self.reg_acc - self.memory[self.op1] - (1-[BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]);
+            uint8_t tempsuboverflow = ((!(((self.reg_acc ^ self.memory[self.op1]) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
+            
+            if (tempsuboverflow != 0) {
+                [self enableOverflowFlag];
+            } else {
+                [self disableOverflowFlag];
+            }
+            if (tempadd > 0x00) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            [self toggleZeroAndSignFlagForReg: tempadd];
+            self.reg_acc = (tempadd & 0xFF);
             break;
         // SEC (Set Carry)
         case SEC:
@@ -624,6 +699,9 @@
     NSString *opcodeName = nil;
     
     switch(opcode) {
+        case ADC_IMM:
+            opcodeName = @"ADC_IMM";
+            break;
         case AND_IMM:
             opcodeName = @"AND_IMM";
             break;
@@ -668,6 +746,12 @@
             // CMP (Immediate)
         case CMP_IMM:
             opcodeName = @"CMP_IMM";
+            break;
+        case CPX_IMM:
+            opcodeName = @"CPX_IMM";
+            break;
+        case CPY_IMM:
+            opcodeName = @"CPY_IMM";
             break;
         case DEX:
             opcodeName = @"DEX";
@@ -732,6 +816,9 @@
             break;
         case RTS:
             opcodeName = @"RTS";
+            break;
+        case SBC_IMM:
+            opcodeName = @"SBC_IMM";
             break;
             // SEC (Set Carry)
         case SEC:

@@ -50,6 +50,7 @@
 @end
 
 enum opcodes {
+    ADC_IMM = 0x69,
     AND_IMM = 0x29,
     BCC = 0x90,
     BCS = 0xB0,
@@ -65,6 +66,8 @@ enum opcodes {
     CLI = 0x58,
     CLV = 0xB8,
     CMP_IMM = 0xC9,
+    CPX_IMM = 0xE0,
+    CPY_IMM = 0xC0,
     DEX = 0xCA,
     DEY = 0x88,
     EOR_IMM = 0x49,
@@ -91,6 +94,7 @@ enum opcodes {
     PHA = 0x48,
     PHP = 0x08,
     RTS = 0x60,
+    SBC_IMM = 0xE9,
     SEC = 0x38,
     SED = 0xF8,
     SEI = 0x78,
