@@ -15,7 +15,7 @@
         <customObject id="Voe-Tx-rLC" customClass="AppDelegate">
             <connections>
                 <outlet property="debuggerWindow" destination="b8c-my-Gwb" id="z7u-1N-KR7"/>
-                <outlet property="nesScreen" destination="KGG-m6-8Q9" id="uKj-5Y-ftf"/>
+                <outlet property="screen" destination="KGG-m6-8Q9" id="ZJt-DV-hx5"/>
                 <outlet property="window" destination="QvC-M9-y7g" id="gIp-Ho-8D9"/>
             </connections>
         </customObject>
@@ -427,6 +427,9 @@
                     <toolbarItem reference="Qhk-wU-D3F"/>
                 </defaultToolbarItems>
             </toolbar>
+            <connections>
+                <outlet property="nesScreen" destination="KGG-m6-8Q9" id="Hwl-17-p0W"/>
+            </connections>
             <point key="canvasLocation" x="-38" y="379"/>
         </window>
         <userDefaultsController representsSharedInstance="YES" id="Qoj-BY-tII"/>

@@ -15,9 +15,19 @@
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    // 
+    // Draw the next frame
+
+    //[self drawFrame: ];
     
     glFlush();
+}
+
+- (void)test {
+    NSLog(@"testing here");
+}
+
+- (void)drawFrame: (uint8_t **)frameData {
+    
 }
 
 @end

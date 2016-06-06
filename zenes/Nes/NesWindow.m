@@ -11,14 +11,13 @@
 @implementation NesWindow
 
 - (IBAction)playButton:(id)sender {
-    //NSLog(@"Play button");
+    [self.nesScreen test];
     if (self.nesInstance.cpu.isRunning == YES) {
         [self.nesInstance run];
     }
 }
 
 - (IBAction)pauseButton:(id)sender {
-    //NSLog(@"Pause button");
     if (self.nesInstance.cpu.isRunning == NO) {
         [self.nesInstance.cpu setIsRunning: YES];
     } else {

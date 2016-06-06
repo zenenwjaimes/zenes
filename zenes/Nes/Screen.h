@@ -11,4 +11,7 @@
 
 @interface Screen : NSOpenGLView
 
+- (void)drawFrame: (uint8_t **)frameData;
+- (void)test;
+
 @end

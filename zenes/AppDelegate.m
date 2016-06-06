@@ -11,6 +11,7 @@
 @interface AppDelegate ()
 
 @property (weak) IBOutlet NesWindow *window;
+
 @end
 
 @implementation AppDelegate
