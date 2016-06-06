@@ -996,4 +996,15 @@
     return opcodeName;
 }
 
+- (void)dumpMemoryToLog {
+    NSMutableArray *dump = [NSMutableArray arrayWithCapacity: 0xFFFF];
+    if (self.isRunning == NO) {
+        for (uint32_t i = 0; i < 0x10000; i++) {
+            [dump addObject: [NSString stringWithFormat: @"%X->%X",i,self.memory[i]]];
+        }
+    }
+    NSData *data = [NSKeyedArchiver archivedDataWithRootObject: dump];
+    [[NSFileManager defaultManager] createFileAtPath: @"/Users/slasherx/memory.plist" contents: data attributes: nil];
+}
+
 @end

@@ -30,4 +30,9 @@
     [self.nesInstance runNextInstruction];
 }
 
+
+- (IBAction)memoryDumpButton:(id)sender {
+    [self.nesInstance.cpu dumpMemoryToLog];
+}
+
 @end

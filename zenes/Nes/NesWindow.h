@@ -16,6 +16,7 @@
 - (IBAction)playButton:(id)sender;
 - (IBAction)pauseButton:(id)sender;
 - (IBAction)stepIntoButton:(id)sender;
+- (IBAction)memoryDumpButton:(id)sender;
 
 
 @end

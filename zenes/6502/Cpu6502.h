@@ -46,6 +46,7 @@
 
 - (void)runNextInstruction;
 - (void)run;
+- (void)dumpMemoryToLog;
 
 + (NSString *)getOpcodeName: (uint8_t)opcode;
 

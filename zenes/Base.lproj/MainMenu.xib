@@ -186,6 +186,11 @@
                             <action selector="pauseButton:" target="QvC-M9-y7g" id="b6c-W0-yzT"/>
                         </connections>
                     </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="0A6E249A-6290-4CD7-BEA3-707F0CACBC66" label="Memory Dump" paletteLabel="Memory Dump" tag="-1" image="NSIconViewTemplate" id="Qhk-wU-D3F">
+                        <connections>
+                            <action selector="memoryDumpButton:" target="QvC-M9-y7g" id="7T4-b2-izQ"/>
+                        </connections>
+                    </toolbarItem>
                     <toolbarItem implicitItemIdentifier="C1622856-A284-4025-9954-4B6FB6CD3C1D" label="Step Into" paletteLabel="Step Into" tag="3" image="right-arrow-1" selectable="YES" id="XIa-yj-sFz">
                         <size key="minSize" width="5" height="5"/>
                         <size key="maxSize" width="8" height="8"/>
@@ -199,9 +204,10 @@
                     <toolbarItem reference="gSU-mU-RNP"/>
                     <toolbarItem reference="XIa-yj-sFz"/>
                     <toolbarItem reference="41P-zY-DqE"/>
+                    <toolbarItem reference="Qhk-wU-D3F"/>
                 </defaultToolbarItems>
             </toolbar>
-            <point key="canvasLocation" x="66" y="354"/>
+            <point key="canvasLocation" x="-38" y="379"/>
         </window>
         <userDefaultsController representsSharedInstance="YES" id="Qoj-BY-tII"/>
         <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" hidesOnDeactivate="YES" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" frameAutosaveName="" animationBehavior="default" id="NY9-bS-AAk" customClass="NSPanel">
@@ -248,6 +254,7 @@
         </window>
     </objects>
     <resources>
+        <image name="NSIconViewTemplate" width="10" height="10"/>
         <image name="pause" width="103.26050567626953" height="103.26050567626953"/>
         <image name="play" width="103.26050567626953" height="103.26050567626953"/>
         <image name="right-arrow-1" width="103.26050567626953" height="103.26050567626953"/>
