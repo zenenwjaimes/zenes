@@ -154,7 +154,6 @@
 }
 
 - (void)toggleOverflowFlagForReg: (uint8_t)cpu_reg withBit: (uint8_t)bit {
-    NSLog(@"bit value: %X", 1<<bit);
     if ((1 << bit) & cpu_reg) {
         [self enableOverflowFlag];
     } else {
@@ -165,25 +164,22 @@
 - (void)toggleZeroAndSignFlagForReg: (uint8_t)cpu_reg {
     // CPU Reg is 0, enable the zero flag
     if (cpu_reg == 0x00) {
-        NSLog(@"Enable Zero Flag");
         [self enableZeroFlag];
     } else {
-        NSLog(@"Disable Zero Flag");
         [self disableZeroFlag];
     }
     
     // Sign flag set on CPU Reg
     if ((cpu_reg >> 7) & 1) {
-        NSLog(@"Enable Sign");
         [self enableSignFlag];
     } else {
-        NSLog(@"Disable Sign");
         [self disableSignFlag];
     }
 }
 
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
+    NSLog(@"Writing %X to %X", data, 0x100+self.reg_sp);
     self.memory[0x100+self.reg_sp] = data;
     self.reg_sp -= 1;
 }
@@ -191,6 +187,7 @@
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be lowered by 1
     self.reg_sp += 1;
+    NSLog(@"Reading %X from %X", self.memory[0x100+self.reg_sp], 0x100+self.reg_sp);
     return self.memory[0x100+self.reg_sp];
 }
 
@@ -203,6 +200,11 @@
     enum opcodes opcode;
     opcode = self.memory[self.reg_pc];
     uint16_t currentPC = self.reg_pc;
+    uint8_t currentRegStatus = self.reg_status;
+    uint8_t currentRegX = self.reg_x;
+    uint8_t currentRegY = self.reg_y;
+    uint8_t currentRegA = self.reg_acc;
+    uint8_t currentRegSP = self.reg_sp;
     uint8_t argCount = 0;
     
     // setup op1 and op2 even if they aren't used by the operation
@@ -270,7 +272,6 @@
             self.counter += 2;
             // Branch if the zero bit is not set
             if ([self checkFlag: STATUS_ZERO_BIT] != 0) {
-                NSLog(@"BEQ ZERO BIT SET, REL ADDR");
                 self.counter += 1;
                 uint16_t relativeAddress = self.memory[self.op1];
                 
@@ -348,9 +349,7 @@
             self.reg_pc += 2;
             self.counter += 2;
             // Branch if the overflow bit is set
-            NSLog(@"BVS ENCOUNTERED %X", [self checkFlag: STATUS_OVERFLOW_BIT]);
             if ([self checkFlag: STATUS_OVERFLOW_BIT] != 0) {
-                NSLog(@"BVS BRANCHING OUT OVERFLOW SET");
                 self.counter += 1;
                 uint16_t relativeAddress = self.memory[self.op1];
                 
@@ -495,7 +494,6 @@
             [self pushToStack: stackPc >> 8];
             [self pushToStack: stackPc];
 
-            NSLog(@"Jump to routine: %X", (self.memory[self.op2] << 8 | self.memory[self.op1]));
             self.reg_pc = (self.memory[self.op2] << 8 | self.memory[self.op1]);
             
             // Cycles 6
@@ -518,6 +516,7 @@
             // Cycles: 2
             self.counter += 2;
             self.reg_acc = self.memory[self.op1];
+            NSLog(@"PC (%X) loading accumulator with: %X ", currentPC, self.memory[self.op1]);
 
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
@@ -547,6 +546,30 @@
             // 1 byte OP, jump to the next byte address
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
+            break;
+            
+        case LDX_ABS:
+            argCount = 3;
+            self.reg_pc += 3;
+            // Cycles: 4
+            self.counter += 4;
+            self.reg_x = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
+            
+            // 1 byte OP, jump to the next byte address
+            // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
+        case LDY_ABS:
+            argCount = 3;
+            self.reg_pc += 3;
+            // Cycles: 4
+            self.counter += 4;
+            self.reg_y = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
+            
+            // 1 byte OP, jump to the next byte address
+            // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
         // LDA (Load Accumulator Absolute)
@@ -596,6 +619,12 @@
             argCount = 1;
             self.counter += 4;
             self.reg_pc++;
+
+            NSLog(@"Current stack (%X) next SP (%X) at PC: %X", currentRegSP, currentPC);
+            for (uint8_t i = 0xFF; i >= 0xDD; i--) {
+                NSLog(@"%X: %X", 0x100+i, self.memory[0x100+i]);
+            }
+            
             self.reg_status = [self pullFromStack];
             break;
         case PHA:
@@ -616,11 +645,11 @@
             self.counter += 6;
             // Pull the stack address and put it into the pc
             uint16_t little, big = 0x00;
-            self.reg_sp += 1;
-            little = self.memory[0x100+self.reg_sp];
-            self.reg_sp += 1;
-            big = self.memory[0x100+self.reg_sp];
+            
+            little = [self pullFromStack];
+            big = [self pullFromStack];
             self.reg_pc = ((big << 8)| little)+1;
+            NSLog(@"Return to: %X", self.reg_pc);
             break;
         case SBC_IMM:
             argCount = 2;
@@ -690,15 +719,14 @@
             // Cycles: 3
             self.counter += 3;
             self.memory[self.memory[self.op1]] = self.reg_acc;
-
-            NSLog(@"Storing acc in ZP: %X", self.memory[self.op1]);
             break;
             
         // STX (Store X Zero Page)
         case STX_ZP:
             argCount = 2;
             self.reg_pc += 2;
-            self.reg_x = [self readZeroPage: self.memory[self.op1]];
+            //self.reg_x = [self readZeroPage: self.memory[self.op1]];
+            self.memory[self.memory[self.op1]] = self.reg_x;
             // Cycles: 4
             self.counter += 4;
             // 1 byte OP, jump to the next byte address
@@ -708,12 +736,31 @@
         case STY_ZP:
             argCount = 2;
             self.reg_pc += 2;
-            self.reg_y = [self readZeroPage: self.memory[self.op1]];
+            //self.reg_y = [self readZeroPage: self.memory[self.op1]];
+            self.memory[self.memory[self.op1]] = self.reg_y;
             // Cycles: 4
             self.counter += 4;
             // 1 byte OP, jump to the next byte address
             break;
             
+            // STX (Store X Absolute Page)
+        case STX_ABS:
+            argCount = 3;
+            self.reg_pc += 3;
+            self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])] = self.reg_x;
+            // Cycles: 4
+            self.counter += 4;
+            // 1 byte OP, jump to the next byte address
+            break;
+            // STY (Store Y Absolute Page)
+        case STY_ABS:
+            argCount = 3;
+            self.reg_pc += 3;
+            self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])] = self.reg_y;
+            // Cycles: 4
+            self.counter += 4;
+            // 1 byte OP, jump to the next byte address
+            break;
         case TAX:
             argCount = 1;
             self.reg_pc++;
@@ -769,35 +816,25 @@
             
         // Unknown OP
         default:
-            NSLog(@"OP not found: %X, next 3 bytes %X %X %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3]);
+            NSLog(@"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC);
             self.isRunning = NO;
             //@throw [NSException exceptionWithName: @"Unknown OP" reason: @"Unknown OP" userInfo: nil];
             break;
     }
     
+    // TODO: Clean this up, this is terrible
+    NSString *line = nil;
+    
     if (argCount == 1) {
-        [(AppDelegate *)self.delegate appendToDebuggerWindow: [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", [Cpu6502 getOpcodeName: opcode], self.reg_acc, self.reg_x, self.reg_y, self.reg_status, self.reg_sp, self.counter]];
+        line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", [Cpu6502 getOpcodeName: opcode], currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
     } else if (argCount == 2) {
-        [(AppDelegate *)self.delegate appendToDebuggerWindow: [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", [Cpu6502 getOpcodeName: opcode], self.reg_acc, self.reg_x, self.reg_y, self.reg_status, self.reg_sp, self.counter]];
+        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", [Cpu6502 getOpcodeName: opcode], currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
     } else if (argCount == 3) {
-        [(AppDelegate *)self.delegate appendToDebuggerWindow: [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], [Cpu6502 getOpcodeName: opcode], self.reg_acc, self.reg_x, self.reg_y, self.reg_status, self.reg_sp, self.counter]];
+        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], [Cpu6502 getOpcodeName: opcode], currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+    } else {
+        line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
     }
-    
-    
-    NSLog(@"PROCESSING OPCODE (0x%X): %@ AT PC: %X", opcode, [Cpu6502 getOpcodeName: opcode], self.reg_pc);
-
-    NSLog(@"OP1: %X, OP2: %X, OP3: %X", self.memory[self.op1], self.memory[self.op2], self.memory[self.op3]);
-    NSLog(@"OPCODE (0x%X): %@", opcode, [Cpu6502 getOpcodeName: opcode]);
-    NSLog(@"CURRENT SP: %X", self.reg_sp);
-    NSLog(@"SP: %X", self.reg_sp);
-    NSLog(@"STATUS: NOxBDIZC");
-    NSLog(@"STATUS: %@ (%X)", [BitHelper intToBinary: self.reg_status], self.reg_status);
-    NSLog(@"ACC: %d (%X)", self.reg_acc, self.reg_acc);
-    NSLog(@"NEXT PC: %X", self.reg_pc);
-    NSLog(@"   ");
-    NSLog(@"   ");
-    NSLog(@"   ");
-
+    [(AppDelegate *)self.delegate appendToDebuggerWindow: line];
     
     // reset ops
     self.op1 = self.op2 = self.op3 = 0x0;
@@ -909,6 +946,14 @@
         case LDY_IMM:
             opcodeName = @"LDY_IMM";
             break;
+            // LDX (Load X ABS)
+        case LDX_ABS:
+            opcodeName = @"LDX_ABS";
+            break;
+            // LDY (Load Y ABS)
+        case LDY_ABS:
+            opcodeName = @"LDY_ABS";
+            break;
             // LDA (Load Accumulator Absolute)
         case LDA_ABS:
             opcodeName = @"LDA_ABS";
@@ -968,6 +1013,12 @@
             // STY (Store Y Zero Page)
         case STY_ZP:
             opcodeName = @"STY_ZP";
+            break;
+        case STX_ABS:
+            opcodeName = @"STX_ABS";
+            break;
+        case STY_ABS:
+            opcodeName = @"STY_ABS";
             break;
         case TAX:
             opcodeName = @"TAX";

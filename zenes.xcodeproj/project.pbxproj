@@ -12,6 +12,7 @@
 		E981FBDD1CFE369E0082ADA8 /* Nes.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDA1CFE369E0082ADA8 /* Nes.m */; };
 		E981FBDE1CFE369E0082ADA8 /* Rom.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDB1CFE369E0082ADA8 /* Rom.m */; };
 		E981FBE01CFE36F80082ADA8 /* Cpu6502.h in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDF1CFE36F80082ADA8 /* Cpu6502.h */; };
+		FE0BBCB21D0581C700BC4AC3 /* Screen.m in Sources */ = {isa = PBXBuildFile; fileRef = FE0BBCB11D0581C700BC4AC3 /* Screen.m */; };
 		FE2FD1571CFE875A002AD4F1 /* BitHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FE2FD1561CFE875A002AD4F1 /* BitHelper.m */; };
 		FE2FD1681CFE9994002AD4F1 /* NesWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = FE2FD1671CFE9994002AD4F1 /* NesWindow.m */; };
 		FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */; };
@@ -47,6 +48,8 @@
 		E981FBDA1CFE369E0082ADA8 /* Nes.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Nes.m; path = Nes/Nes.m; sourceTree = "<group>"; };
 		E981FBDB1CFE369E0082ADA8 /* Rom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Rom.m; path = Nes/Rom.m; sourceTree = "<group>"; };
 		E981FBDF1CFE36F80082ADA8 /* Cpu6502.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Cpu6502.h; path = 6502/Cpu6502.h; sourceTree = "<group>"; };
+		FE0BBCB01D0581C700BC4AC3 /* Screen.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = Screen.h; path = Nes/Screen.h; sourceTree = "<group>"; };
+		FE0BBCB11D0581C700BC4AC3 /* Screen.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = Screen.m; path = Nes/Screen.m; sourceTree = "<group>"; };
 		FE0C7A551CFD79080043CEC7 /* Rom.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Rom.m; path = Nes/Rom.m; sourceTree = "<group>"; };
 		FE2FD1551CFE875A002AD4F1 /* BitHelper.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; path = BitHelper.h; sourceTree = "<group>"; };
 		FE2FD1561CFE875A002AD4F1 /* BitHelper.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; path = BitHelper.m; sourceTree = "<group>"; };
@@ -127,6 +130,8 @@
 				FECA7CCB1CF41D5E001E85A5 /* MainMenu.xib */,
 				FECA7CCE1CF41D5E001E85A5 /* Info.plist */,
 				FECA7CC61CF41D5E001E85A5 /* Supporting Files */,
+				FE0BBCB01D0581C700BC4AC3 /* Screen.h */,
+				FE0BBCB11D0581C700BC4AC3 /* Screen.m */,
 			);
 			path = zenes;
 			sourceTree = "<group>";
@@ -303,6 +308,7 @@
 				FECA7CC81CF41D5E001E85A5 /* main.m in Sources */,
 				FE2FD1571CFE875A002AD4F1 /* BitHelper.m in Sources */,
 				FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */,
+				FE0BBCB21D0581C700BC4AC3 /* Screen.m in Sources */,
 				FECA7CFF1CF44F7F001E85A5 /* Cpu6502.m in Sources */,
 				FE2FD1681CFE9994002AD4F1 /* NesWindow.m in Sources */,
 			);

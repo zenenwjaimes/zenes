@@ -10,10 +10,12 @@
 #import "Nes/NesWindow.h"
 #import "Nes/Nes.h"
 #import "Nes/Rom.h"
+#import "Nes/Screen.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
 @property IBOutlet NSTextView *debuggerWindow;
+@property IBOutlet Screen *nesScreen;
 
 - (void)appendToDebuggerWindow:(NSString*)text;
 
