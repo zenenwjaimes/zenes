@@ -764,8 +764,7 @@
             self.reg_pc ++;
             self.counter += 2;
             
-            self.reg_x = [self pullFromStack];
-            
+            self.reg_x = self.reg_sp;
             break;
             
         // Unknown OP

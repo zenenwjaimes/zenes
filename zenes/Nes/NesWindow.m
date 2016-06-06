@@ -12,11 +12,18 @@
 
 - (IBAction)playButton:(id)sender {
     //NSLog(@"Play button");
-    [self.nesInstance run];
+    if (self.nesInstance.cpu.isRunning == YES) {
+        [self.nesInstance run];
+    }
 }
 
 - (IBAction)pauseButton:(id)sender {
     //NSLog(@"Pause button");
+    if (self.nesInstance.cpu.isRunning == NO) {
+        [self.nesInstance.cpu setIsRunning: YES];
+    } else {
+        [self.nesInstance.cpu setIsRunning: NO];
+    }
 }
 
 - (IBAction)stepIntoButton:(id)sender {
