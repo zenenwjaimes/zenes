@@ -13,5 +13,9 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate>
 
+@property IBOutlet NSTextView *debuggerWindow;
+
+- (void)appendToDebuggerWindow:(NSString*)text;
+
 @end
 

@@ -16,6 +16,7 @@
     uint8_t _memory[0x10000];
 }
 
+@property BOOL isRunning;
 @property uint16_t op1;
 @property uint16_t op2;
 @property uint16_t op3;
@@ -28,6 +29,7 @@
 @property uint8_t reg_status;
 @property uint16_t reg_pc;
 @property (assign, nonatomic) uint8_t *memory;
+@property (retain) NSObject *delegate;
 
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
 - (void)enableZeroFlag;
@@ -71,6 +73,8 @@ enum opcodes {
     DEX = 0xCA,
     DEY = 0x88,
     EOR_IMM = 0x49,
+    INX = 0xE8,
+    INY = 0xC8,
     JMP_ABS = 0x4C,
     JMP_IND = 0x6C,
     JSR = 0x20,
@@ -102,5 +106,10 @@ enum opcodes {
     STA_ZP = 0x85,
     STX_ZP = 0x86,
     STY_ZP = 0x84,
+    TAX = 0xAA,
+    TXA = 0x8A,
+    TAY = 0xA8,
+    TYA = 0x98,
+    TSX = 0xBA,
     TXS = 0x9A
 };

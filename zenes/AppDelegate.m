@@ -20,10 +20,21 @@
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
     
     self.window.nesInstance = nesInstance;
+    [self.debuggerWindow setEditable: NO];
+    [self.debuggerWindow setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification {
     // Insert code here to tear down your application
+}
+
+- (void)appendToDebuggerWindow:(NSString*)text
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSAttributedString* attr = [[NSAttributedString alloc] initWithString:text];
+        [[self.debuggerWindow textStorage] appendAttributedString:attr];
+        [self.debuggerWindow scrollRangeToVisible:NSMakeRange([[self.debuggerWindow string] length], 0)];
+    });
 }
 
 @end
