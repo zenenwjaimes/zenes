@@ -26,6 +26,9 @@
 }
 
 - (IBAction)stepIntoButton:(id)sender {
+    if (self.nesInstance.cpu.isRunning == NO) {
+        [self.nesInstance.cpu setIsRunning: YES];
+    }
     [self.nesInstance runNextInstruction];
 }
 

@@ -30,7 +30,7 @@
     self.reg_x = 0x00;
     self.reg_y = 0x00;
     self.reg_acc = 0x00;
-    self.reg_sp = 0xFD;
+    self.reg_sp = 0xFF;
     uint8_t tempMemory[0x10000] = {};
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
@@ -179,7 +179,7 @@
 
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
-    NSLog(@"Writing %X to %X", data, 0x100+self.reg_sp);
+    NSLog(@"Stack Writing %X to %X", data, 0x100+self.reg_sp);
     self.memory[0x100+self.reg_sp] = data;
     self.reg_sp -= 1;
 }
@@ -187,7 +187,7 @@
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be lowered by 1
     self.reg_sp += 1;
-    NSLog(@"Reading %X from %X", self.memory[0x100+self.reg_sp], 0x100+self.reg_sp);
+    NSLog(@"Stack Reading %X from %X", self.memory[0x100+self.reg_sp], 0x100+self.reg_sp);
     return self.memory[0x100+self.reg_sp];
 }
 
@@ -318,9 +318,22 @@
         // Branch to PC+op1 if negative flag is 0
         case BPL:
             argCount = 2;
+            //if (self.reg_pc == 0x800D || self.reg_pc == 0x8012) {
+            //    [self enableSignFlag];
+            //    NSLog(@"bit helper: %@", [BitHelper intToBinary: self.reg_status]);
+            //}
+            
+            NSLog(@"ppu reg 1: %X", self.memory[0x2000]);
+            NSLog(@"ppu reg 2: %X", self.memory[0x2001]);
+            NSLog(@"ppu reg 3: %X", self.memory[0x2002]);
+            NSLog(@"ppu reg 4: %X", self.memory[0x2003]);
+            NSLog(@"ppu reg 5: %X", self.memory[0x2004]);
+            NSLog(@"ppu reg 6: %X", self.memory[0x2005]);
+
             self.reg_pc += 2;
             self.counter += 2;
             // Branch if the negative bit is set
+
             if ([self checkFlag: STATUS_NEGATIVE_BIT] == 0) {
                 self.counter += 1;
                 uint16_t relativeAddress = self.memory[self.op1];
@@ -557,7 +570,7 @@
             
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
-            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             
         case LDY_ABS:
@@ -569,7 +582,7 @@
             
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
-            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            [self toggleZeroAndSignFlagForReg: self.reg_y];
             break;
             
         // LDA (Load Accumulator Absolute)
@@ -834,7 +847,8 @@
     } else {
         line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
     }
-    [(AppDelegate *)self.delegate appendToDebuggerWindow: line];
+    //[(AppDelegate *)self.delegate appendToDebuggerWindow: line];
+    NSLog(line);
     
     // reset ops
     self.op1 = self.op2 = self.op3 = 0x0;
@@ -842,6 +856,11 @@
 
 - (void)run {
     [self runNextInstruction];
+    //NSLog(@"PPU STATUS = %@", [BitHelper intToBinary: self.memory[0x2001]]);
+    
+    //if (self.memory[0x2000] != 0x00) {
+    //    @throw [NSException exceptionWithName:@"bah" reason:@"bah" userInfo: nil];
+    //}
         
     if(self.counter >= 0) {
         //self.counter -= self.interruptPeriod;

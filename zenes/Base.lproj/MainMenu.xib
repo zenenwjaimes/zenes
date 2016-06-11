@@ -445,18 +445,18 @@
                     <scrollView fixedFrame="YES" horizontalLineScroll="10" horizontalPageScroll="10" verticalLineScroll="10" verticalPageScroll="10" hasHorizontalScroller="NO" usesPredominantAxisScrolling="NO" translatesAutoresizingMaskIntoConstraints="NO" id="dGX-ZE-IYw">
                         <rect key="frame" x="0.0" y="0.0" width="650" height="378"/>
                         <clipView key="contentView" ambiguous="YES" id="qe4-dQ-xY3">
-                            <rect key="frame" x="1" y="1" width="648" height="376"/>
+                            <rect key="frame" x="1" y="1" width="632" height="376"/>
                             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                             <subviews>
                                 <textView ambiguous="YES" importsGraphics="NO" richText="NO" horizontallyResizable="YES" baseWritingDirection="leftToRight" findStyle="panel" allowsUndo="YES" usesRuler="YES" usesFontPanel="YES" verticallyResizable="YES" allowsNonContiguousLayout="YES" id="b8c-my-Gwb">
-                                    <rect key="frame" x="0.0" y="0.0" width="648" height="376"/>
+                                    <rect key="frame" x="0.0" y="0.0" width="632" height="376"/>
                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                     <color key="textColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
                                     <color key="backgroundColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                    <size key="minSize" width="648" height="376"/>
+                                    <size key="minSize" width="632" height="376"/>
                                     <size key="maxSize" width="10000000" height="10000000"/>
                                     <color key="insertionPointColor" red="1" green="1" blue="1" alpha="1" colorSpace="calibratedRGB"/>
-                                    <size key="minSize" width="648" height="376"/>
+                                    <size key="minSize" width="632" height="376"/>
                                     <size key="maxSize" width="10000000" height="10000000"/>
                                 </textView>
                             </subviews>
@@ -466,8 +466,8 @@
                             <rect key="frame" x="-100" y="-100" width="87" height="18"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
-                        <scroller key="verticalScroller" verticalHuggingPriority="750" doubleValue="1" horizontal="NO" id="EWS-Cj-dNE">
-                            <rect key="frame" x="633" y="1" width="16" height="376"/>
+                        <scroller key="verticalScroller" verticalHuggingPriority="750" horizontal="NO" id="EWS-Cj-dNE">
+                            <rect key="frame" x="-15" y="1" width="16" height="0.0"/>
                             <autoresizingMask key="autoresizingMask"/>
                         </scroller>
                     </scrollView>

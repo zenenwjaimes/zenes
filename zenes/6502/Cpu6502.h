@@ -21,7 +21,7 @@
 @property uint16_t op2;
 @property uint16_t op3;
 @property uint8_t interruptPeriod;
-@property uint8_t counter;
+@property uint16_t counter;
 @property uint8_t reg_acc;
 @property uint8_t reg_x;
 @property uint8_t reg_y;
