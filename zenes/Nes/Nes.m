@@ -53,7 +53,7 @@
 
         // TODO: Hack
         if (self.rom.mapperType == 0) {
-            self.cpu.reg_pc = 0xC000;
+            //self.cpu.reg_pc = 0x8000;
         }
     }
     return self;

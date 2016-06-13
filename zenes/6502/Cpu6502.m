@@ -662,7 +662,6 @@
             little = [self pullFromStack];
             big = [self pullFromStack];
             self.reg_pc = ((big << 8)| little)+1;
-            NSLog(@"Return to: %X", self.reg_pc);
             break;
         case SBC_IMM:
             argCount = 2;
