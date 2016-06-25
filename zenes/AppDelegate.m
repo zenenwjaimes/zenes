@@ -17,7 +17,7 @@
 @implementation AppDelegate
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/donkey.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
     
     self.window.nesInstance = nesInstance;

@@ -323,12 +323,10 @@
             //    NSLog(@"bit helper: %@", [BitHelper intToBinary: self.reg_status]);
             //}
             
-            NSLog(@"ppu reg 1: %X", self.memory[0x2000]);
-            NSLog(@"ppu reg 2: %X", self.memory[0x2001]);
-            NSLog(@"ppu reg 3: %X", self.memory[0x2002]);
-            NSLog(@"ppu reg 4: %X", self.memory[0x2003]);
-            NSLog(@"ppu reg 5: %X", self.memory[0x2004]);
-            NSLog(@"ppu reg 6: %X", self.memory[0x2005]);
+            // hack here to continue execution without the ppu
+            if (self.counter >= 2387) {
+                [self enableSignFlag];
+            }
 
             self.reg_pc += 2;
             self.counter += 2;
@@ -470,7 +468,16 @@
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
+        case INC_ZP:
+            argCount = 2;
+            self.reg_pc += 2;
+            self.counter += 5;
             
+            self.memory[self.op1] = ((self.memory[self.op1]+1) & 0xFF);
+            
+            [self toggleZeroAndSignFlagForReg: self.memory[self.op1]];
+            
+            break;
         case INX:
             argCount = 1;
             self.reg_pc++;
@@ -559,6 +566,18 @@
             // 1 byte OP, jump to the next byte address
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
+            break;
+            
+        case LDA_INDY:
+            argCount = 2;
+            self.reg_pc += 2;
+            self.counter += 5;
+            
+            // TODO: Adjust for the extra cycles on page boundaries
+            uint16 indindex = self.memory[self.op1] + self.op2;
+            self.reg_acc = self.memory[indindex];
+            
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
         case LDX_ABS:
@@ -933,6 +952,9 @@
         case EOR_IMM:
             opcodeName = @"EOR_IMM";
             break;
+        case INC_ZP:
+            opcodeName = @"INC_ZP";
+            break;
         case INX:
             opcodeName = @"INX";
             break;
@@ -955,6 +977,9 @@
             // LDA (Load Acc Immediate)
         case LDA_IMM:
             opcodeName = @"LDA_IMM";
+            break;
+        case LDA_INDY:
+            opcodeName = @"LDA_INDY";
             break;
             // LDX (Load X Immediate)
         case LDX_IMM:
