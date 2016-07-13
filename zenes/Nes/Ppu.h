@@ -7,13 +7,17 @@
 //
 
 #import <Foundation/Foundation.h>
+#import "Cpu6502.h"
 
 @interface Ppu : NSObject
 {
-    uint8_t _memory[0x10000];
+    
 }
 
+@property (retain) Cpu6502 *cpu;
+@property uint8_t currentScanline;
 
-@property (assign, nonatomic) uint8_t *memory;
+
+-(id)initWithCpu: (Cpu6502 *)cpu;
 
 @end

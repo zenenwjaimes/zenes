@@ -11,7 +11,7 @@
 @implementation Screen
 
 - (void)drawRect:(NSRect)dirtyRect {
-    [super drawRect:dirtyRect];    
+    [super drawRect:dirtyRect];
     glClearColor(0, 0, 0, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 

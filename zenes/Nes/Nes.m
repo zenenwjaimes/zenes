@@ -13,8 +13,8 @@
 - (id) initWithRom: (Rom *)rom {
     if (self = [super init]) {
         self.rom = rom;
-        
         self.cpu = [[Cpu6502 alloc] init];
+        self.ppu = [[Ppu alloc] initWithCpu: self.cpu];
         
         uint16_t prgRom0 = 0x00;
         uint16_t prgRom1 = 0x00;
@@ -63,7 +63,7 @@
 - (void) run {
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         for (;;) {
-            [self.cpu run];
+            [self runNextInstruction];
         }
     });
 }

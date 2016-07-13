@@ -318,16 +318,6 @@
         // Branch to PC+op1 if negative flag is 0
         case BPL:
             argCount = 2;
-            //if (self.reg_pc == 0x800D || self.reg_pc == 0x8012) {
-            //    [self enableSignFlag];
-            //    NSLog(@"bit helper: %@", [BitHelper intToBinary: self.reg_status]);
-            //}
-            
-            // hack here to continue execution without the ppu
-            if (self.counter >= 2387) {
-                [self enableSignFlag];
-            }
-
             self.reg_pc += 2;
             self.counter += 2;
             // Branch if the negative bit is set
@@ -870,19 +860,6 @@
     
     // reset ops
     self.op1 = self.op2 = self.op3 = 0x0;
-}
-
-- (void)run {
-    [self runNextInstruction];
-    //NSLog(@"PPU STATUS = %@", [BitHelper intToBinary: self.memory[0x2001]]);
-    
-    //if (self.memory[0x2000] != 0x00) {
-    //    @throw [NSException exceptionWithName:@"bah" reason:@"bah" userInfo: nil];
-    //}
-        
-    if(self.counter >= 0) {
-        //self.counter -= self.interruptPeriod;
-    }
 }
 
 + (NSString *)getOpcodeName: (uint8_t)opcode{
