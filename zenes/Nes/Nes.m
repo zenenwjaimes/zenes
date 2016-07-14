@@ -70,6 +70,8 @@
 
 - (void) runNextInstruction {
     [self.cpu runNextInstruction];
+    
+    self.ppu.skipVBlank = NO;
 }
 
 @end
