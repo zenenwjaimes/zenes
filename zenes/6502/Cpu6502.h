@@ -21,7 +21,7 @@
 @property uint16_t op2;
 @property uint16_t op3;
 @property uint8_t interruptPeriod;
-@property uint16_t counter;
+@property uint32_t counter;
 @property uint8_t reg_acc;
 @property uint8_t reg_x;
 @property uint8_t reg_y;
@@ -47,10 +47,17 @@
 - (void)runNextInstruction;
 - (void)run;
 - (void)dumpMemoryToLog;
+- (void)triggerInterrupt: (int)interruptType;
 
 + (NSString *)getOpcodeName: (uint8_t)opcode;
 
 @end
+
+enum interrupts {
+    INT_RESET = 1,
+    INT_IRQ = 2,
+    INT_NMI = 3
+};
 
 enum opcodes {
     ADC_IMM = 0x69,

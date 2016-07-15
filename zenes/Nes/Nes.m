@@ -69,9 +69,14 @@
 }
 
 - (void) runNextInstruction {
-    [self.cpu runNextInstruction];
-    
-    self.ppu.skipVBlank = NO;
+    if ([self.ppu shouldProcessVBlank] == NO) {
+        [self.cpu runNextInstruction];
+    } else {
+        [self.cpu triggerInterrupt: INT_NMI];
+        
+        // Cheese it
+        self.cpu.counter -= 341*262;
+    }
 }
 
 @end

@@ -41,7 +41,7 @@
     self.memory = tempMemory;
     
     // Clear interrupt flag and enable decimal mode on boot
-    [self enableInterrupts];
+    //[self enableInterrupts];
     self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_UNUSED_BIT);
     
     self.isRunning = YES;
@@ -77,7 +77,7 @@
     self.reg_status &= ~ (1 << STATUS_ZERO_BIT);
 }
 
-// This means that interrupts CAN happen
+// This means that interrupts CAN'T happen
 - (void)enableInterrupts {
     self.reg_status |= (1 << STATUS_IRQ_BIT);
 }
@@ -113,6 +113,28 @@
 
 - (uint8_t)checkFlag: (uint8_t)flag {
     return (self.reg_status & (1 << flag));
+}
+
+- (void)triggerInterrupt: (int)interruptType {
+    switch (interruptType) {
+        case INT_RESET:
+            break;
+            
+        case INT_IRQ:
+            break;
+            
+        case INT_NMI:
+            // Push current PC to the stack
+            [self pushToStack: self.reg_pc >> 8];
+            [self pushToStack: self.reg_pc];
+            // set pc to the address stored at FFFD/FFFC (usually 0x8000)
+            self.reg_pc = (self.memory[0xFFFA] << 8) | (self.memory[0xFFFB]);
+            NSLog(@"nmi: %X", self.reg_pc);
+            // Push current reg status to stack
+            [self pushToStack: self.reg_status];
+            
+            break;
+    }
 }
 
 - (uint8_t)readZeroPage: (uint8_t)address {
@@ -712,7 +734,7 @@
             // Cycles: 2
             self.counter += 2;
             break;
-        // SEI (Set Interrupt)
+        // SEI (Set Interrupt Disable)
         case SEI:
             argCount = 1;
             // 1 byte OP, jump to the next byte address

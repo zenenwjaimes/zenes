@@ -20,6 +20,7 @@
 @property BOOL skipVBlank;
 
 -(id)initWithCpu: (Cpu6502 *)cpu;
+- (BOOL)shouldProcessVBlank;
 
 @end
 
