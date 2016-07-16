@@ -129,7 +129,7 @@
             [self pushToStack: self.reg_pc];
             // set pc to the address stored at FFFD/FFFC (usually 0x8000)
             self.reg_pc = (self.memory[0xFFFA] << 8) | (self.memory[0xFFFB]);
-            NSLog(@"nmi: %X", self.reg_pc);
+            //NSLog(@"nmi: %X", self.reg_pc);
             // Push current reg status to stack
             [self pushToStack: self.reg_status];
             
@@ -144,6 +144,14 @@
     uint8_t value = self.memory[address];
     
     return value;
+}
+
+- (void)writeZeroPage: (uint8_t)address withValue: (uint8_t)value {
+    if (address > 0xFF) {
+        @throw [NSException exceptionWithName: @"InvalidZeroPage" reason: @"Address passed is great than 0xFF" userInfo: nil];
+    }
+    
+    self.memory[address] = value;
 }
 
 // Address format is: (address2|address1)+offset
@@ -201,15 +209,15 @@
 
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
-    NSLog(@"Stack Writing %X to %X", data, 0x100+self.reg_sp);
+    //NSLog(@"Stack Writing %X to %X", data, 0x100+self.reg_sp);
     self.memory[0x100+self.reg_sp] = data;
     self.reg_sp -= 1;
 }
 
 - (uint8_t)pullFromStack {
-    // Wraps around if need be. reg_sp will be lowered by 1
+    // Wraps around if need be. reg_sp will be incremented by 1
     self.reg_sp += 1;
-    NSLog(@"Stack Reading %X from %X", self.memory[0x100+self.reg_sp], 0x100+self.reg_sp);
+    //NSLog(@"Stack Reading %X from %X", self.memory[0x100+self.reg_sp], 0x100+self.reg_sp);
     return self.memory[0x100+self.reg_sp];
 }
 
@@ -262,6 +270,29 @@
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
+        //case ASL_A:
+            
+        //    break;
+        case ASL_ZP:
+            argCount = 2;
+            self.reg_pc += 2;
+            self.counter += 5;
+            uint8_t valuezp = [self readZeroPage: self.memory[self.op1]];
+            uint8_t tempzp = (valuezp << 1) & 0xFE;
+            
+            [self writeZeroPage: self.memory[self.op1] withValue: tempzp];
+            [self toggleOverflowFlagForReg: valuezp withBit: 7];
+            [self toggleZeroAndSignFlagForReg: tempzp];
+            break;
+        //case ASL_ZPX:
+            
+        //    break;
+        //case ASL_ABS:
+            
+        //    break;
+        //case ASL_ABSX:
+            
+        //    break;
         case BCC:
             argCount = 2;
             self.reg_pc += 2;
@@ -517,7 +548,7 @@
             
         case JSR:
             argCount = 3;
-            self.reg_pc += 3;
+            //self.reg_pc += 3;
             self.counter += 6;
             
             uint16_t stackPc = self.reg_pc-1;
@@ -525,7 +556,6 @@
             // Push new address to the stack and decrement the current PC
             [self pushToStack: stackPc >> 8];
             [self pushToStack: stackPc];
-
             self.reg_pc = (self.memory[self.op2] << 8 | self.memory[self.op1]);
             
             // Cycles 6
@@ -548,7 +578,7 @@
             // Cycles: 2
             self.counter += 2;
             self.reg_acc = self.memory[self.op1];
-            NSLog(@"PC (%X) loading accumulator with: %X ", currentPC, self.memory[self.op1]);
+            //NSLog(@"PC (%X) loading accumulator with: %X ", currentPC, self.memory[self.op1]);
 
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
@@ -628,6 +658,32 @@
             // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
+        case LSR_A:
+            argCount = 1;
+            self.reg_pc++;
+            // Cycles: 4
+            self.counter += 2;
+            // Since the shift is right, the 7th bit of the value will always be 0
+            // so we disable the sign flag
+            [self disableSignFlag];
+            uint8_t lsra = [self readZeroPage: self.reg_acc];
+            uint8_t lsrtemp = (lsra >> 1) & 0x7F;
+            
+            if ([BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_acc]) {
+                [self enableCarryFlag];
+            }
+            
+            if (lsrtemp == 0) [self enableZeroFlag];
+            self.reg_acc = lsrtemp;
+            break;
+        //case LSR_ZP:
+        //    break;
+        //case LSR_ZPX:
+        //    break;
+        //case LSR_ABS:
+        //    break;
+        //case LSR_ABSX:
+        //    break;
         // NOP (no operation, do nothing but decrement the counter and move on)
         case NOP:
             argCount = 1;
@@ -664,10 +720,10 @@
             self.counter += 4;
             self.reg_pc++;
 
-            NSLog(@"Current stack (%X) next SP (%X) at PC: %X", currentRegSP, currentPC);
-            for (uint8_t i = 0xFF; i >= 0xDD; i--) {
-                NSLog(@"%X: %X", 0x100+i, self.memory[0x100+i]);
-            }
+            //NSLog(@"Current stack (%X) next SP (%X) at PC: %X", currentRegSP, currentPC);
+            //for (uint8_t i = 0xFF; i >= 0xDD; i--) {
+            //    NSLog(@"%X: %X", 0x100+i, self.memory[0x100+i]);
+            //}
             
             self.reg_status = [self pullFromStack];
             break;
@@ -692,7 +748,7 @@
             
             little = [self pullFromStack];
             big = [self pullFromStack];
-            self.reg_pc = ((big << 8)| little)+1;
+            self.reg_pc = ((big << 8)| little);
             break;
         case SBC_IMM:
             argCount = 2;
@@ -894,6 +950,21 @@
         case AND_IMM:
             opcodeName = @"AND_IMM";
             break;
+        case ASL_A:
+            opcodeName = @"ASL_A";
+            break;
+        case ASL_ZP:
+            opcodeName = @"ASL_ZP";
+            break;
+        case ASL_ZPX:
+            opcodeName = @"ASL_ZPX";
+            break;
+        case ASL_ABS:
+            opcodeName = @"ASL_ABS";
+            break;
+        case ASL_ABSX:
+            opcodeName = @"ASL_ABSX";
+            break;
         case BCC:
             opcodeName = @"BCC";
             break;
@@ -1001,6 +1072,21 @@
             opcodeName = @"LDA_ABS";
             break;
             // NOP (no operation, do nothing but decrement the counter and move on)
+        case LSR_A:
+            opcodeName = @"LSR_A";
+            break;
+        case LSR_ZP:
+            opcodeName = @"LSR_ZP";
+            break;
+        case LSR_ZPX:
+            opcodeName = @"LSR_ZPX";
+            break;
+        case LSR_ABS:
+            opcodeName = @"LSR_ABS";
+            break;
+        case LSR_ABSX:
+            opcodeName = @"LSR_ABSX";
+            break;
         case NOP:
             opcodeName = @"NOP";
             break;
