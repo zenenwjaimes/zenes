@@ -7,7 +7,6 @@
 //
 
 #import "Cpu6502.h"
-#import "AppDelegate.h"
 
 @implementation Cpu6502
 
@@ -15,7 +14,7 @@
     if (self = [super init]) {
         self.interruptPeriod = 7;
         [self bootupSequence];
-        self.delegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
+        //self.delegate = (AppDelegate *)[[NSApplication sharedApplication] delegate];
     }
     return self;
 }
@@ -511,6 +510,7 @@
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
+            //TODO: Memory fix
         case INC_ZP:
             argCount = 2;
             self.reg_pc += 2;
@@ -801,6 +801,7 @@
             self.counter += 2;
             break;
             
+        //TODO: Memory fix
         // STA_ABS (Store Accumulator Absolute)
         case STA_ABS:
             argCount = 3;
@@ -810,8 +811,8 @@
             // Cycles: 4
             self.counter += 4;
             break;
-            
-            // STA_ZP (Store Accumulator Zero Page)
+        //TODO: Memory fix
+        // STA_ZP (Store Accumulator Zero Page)
         case STA_ZP:
             argCount = 2;
             self.reg_pc += 2;
@@ -819,7 +820,7 @@
             self.counter += 3;
             self.memory[self.memory[self.op1]] = self.reg_acc;
             break;
-            
+        //TODO: Memory fix
         // STX (Store X Zero Page)
         case STX_ZP:
             argCount = 2;
@@ -830,7 +831,7 @@
             self.counter += 4;
             // 1 byte OP, jump to the next byte address
             break;
-            
+        //TODO: Memory fix
         // STY (Store Y Zero Page)
         case STY_ZP:
             argCount = 2;
@@ -841,8 +842,8 @@
             self.counter += 4;
             // 1 byte OP, jump to the next byte address
             break;
-            
-            // STX (Store X Absolute Page)
+        //TODO: Memory fix
+        // STX (Store X Absolute Page)
         case STX_ABS:
             argCount = 3;
             self.reg_pc += 3;
@@ -851,7 +852,8 @@
             self.counter += 4;
             // 1 byte OP, jump to the next byte address
             break;
-            // STY (Store Y Absolute Page)
+        //TODO: Memory fix
+        // STY (Store Y Absolute Page)
         case STY_ABS:
             argCount = 3;
             self.reg_pc += 3;
@@ -923,18 +925,25 @@
     
     // TODO: Clean this up, this is terrible
     NSString *line = nil;
+    uint16 opcodeLength = 10-[[Cpu6502 getOpcodeName: opcode] length];
+    NSString *opcodePadded = [Cpu6502 getOpcodeName: opcode];
+    if (opcodeLength > 0) {
+        NSString *padding = [[NSString string] stringByPaddingToLength: opcodeLength withString: @" " startingAtIndex: 0];
+        opcodePadded = [opcodePadded stringByAppendingString: padding];
+    }
+    NSLog(@"string: '%@'",opcodePadded);
     
     if (argCount == 1) {
-        line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", [Cpu6502 getOpcodeName: opcode], currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+        line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
     } else if (argCount == 2) {
-        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", [Cpu6502 getOpcodeName: opcode], currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
     } else if (argCount == 3) {
-        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\t\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], [Cpu6502 getOpcodeName: opcode], currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
     } else {
         line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
     }
-    //[(AppDelegate *)self.delegate appendToDebuggerWindow: line];
-    NSLog(line);
+    
+    self.currentLine = line;
     
     // reset ops
     self.op1 = self.op2 = self.op3 = 0x0;

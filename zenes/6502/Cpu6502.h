@@ -29,7 +29,8 @@
 @property uint8_t reg_status;
 @property uint16_t reg_pc;
 @property (assign, nonatomic) uint8_t *memory;
-@property (retain) NSObject *delegate;
+//@property (retain) NSObject *delegate;
+@property (copy) NSString *currentLine;
 
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
 - (void)enableZeroFlag;

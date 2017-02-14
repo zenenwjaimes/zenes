@@ -11,10 +11,12 @@
 #import "Nes/Nes.h"
 #import "Nes/Rom.h"
 #import "Nes/Screen.h"
+#import "Cpu6502.h"
 
-@interface AppDelegate : NSObject <NSApplicationDelegate>
+@interface AppDelegate : NSObject <NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate>
 
 @property IBOutlet NSTextView *debuggerWindow;
+@property IBOutlet NSTableView *debuggerTable;
 
 - (void)appendToDebuggerWindow:(NSString*)text;
 

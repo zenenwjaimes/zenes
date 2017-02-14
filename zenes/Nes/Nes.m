@@ -7,6 +7,7 @@
 //
 
 #import "Nes.h"
+#import "AppDelegate.h"
 
 @implementation Nes
 
@@ -55,6 +56,7 @@
         if (self.rom.mapperType == 0) {
             //self.cpu.reg_pc = 0x8000;
         }
+        
     }
     return self;
 }
@@ -64,8 +66,33 @@
     dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
         for (;;) {
             [self runNextInstruction];
+            
+            if (self.cpu.isRunning == YES) {
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+                });
+            
+                dispatch_sync(dispatch_get_main_queue(), ^{
+                    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
+                });
+            }
+            
+            [NSThread sleepForTimeInterval:2];
         }
     });
+}
+
+- (void) runNextInstructionInline {
+    if ([self.ppu shouldProcessVBlank] == NO) {
+        [self.cpu runNextInstruction];
+    } else {
+        [self.cpu triggerInterrupt: INT_NMI];
+        
+        // Cheese it
+        self.cpu.counter -= 341*262;
+    }
+    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
 }
 
 - (void) runNextInstruction {
