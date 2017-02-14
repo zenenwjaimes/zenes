@@ -18,8 +18,10 @@
 
 @property IBOutlet NSTextView *debuggerWindow;
 @property IBOutlet NSTableView *debuggerTable;
+@property IBOutlet NSTextView *debuggerMemory;
 
 - (void)appendToDebuggerWindow:(NSString*)text;
+- (void)setDebuggerMemoryText: (uint8_t *) memory;
 
 @end
 

@@ -33,7 +33,7 @@
     uint8_t tempMemory[0x10000] = {};
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
-    for (int i = 0; i < 0x2000; i++) {
+    for (int i = 0; i < 0x10000; i++) {
         tempMemory[i] = 0xFF;
     }
     

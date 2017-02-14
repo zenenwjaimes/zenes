@@ -16,21 +16,27 @@
 
 @implementation AppDelegate
 
-- (void)applicationDidFinishLaunching:(NSNotification *)aNotification {
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
+- (void)applicationDidFinishLaunching:(NSNotification *)aNotification
+{
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     self.window.nesInstance = nesInstance;
     [self.debuggerWindow setEditable: NO];
     [self.debuggerWindow setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
+    
+    [self.debuggerMemory setEditable: NO];
+    [self.debuggerMemory setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(updateRegs:) name: @"debuggerUpdate" object: nil];
 }
 
-- (void)updateRegs: (NSNotification *) notification{
+- (void)updateRegs: (NSNotification *) notification
+{
     [self.debuggerTable reloadData];
 }
 
-- (void)applicationWillTerminate:(NSNotification *)aNotification {
+- (void)applicationWillTerminate:(NSNotification *)aNotification
+{
     // Insert code here to tear down your application
 }
 
@@ -43,10 +49,24 @@
     });
 }
 
+- (void)setDebuggerMemoryText: (uint8_t *) memory
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSMutableString *text = [NSMutableString string];
+        
+        //for (int i = 0; i < 0x10000; i++) {
+        //    [text appendString: [NSString stringWithFormat: @"%X: %X\n", i, memory[i]]];
+        //}
+        
+        NSAttributedString* attr = [[NSAttributedString alloc] initWithString:text];
+        //[[self.debuggerMemory textStorage] setAttributedString: attr];
+    });
+}
+
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
 {
-    return 11;
+    return 12;
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
@@ -143,6 +163,16 @@
             } else {
                 result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op1];
             }
+            break;
+        case 11:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Curr SP Val";
+            } else {
+                if (self.window.nesInstance.cpu.isRunning == YES) {
+                    result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.memory[0x100+self.window.nesInstance.cpu.reg_sp+1]];
+                }
+            }
+            
             break;
     }
     //result.stringValue = @"test";
