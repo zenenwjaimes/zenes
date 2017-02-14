@@ -18,12 +18,12 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/nestest.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     self.window.nesInstance = nesInstance;
-    [self.debuggerWindow setEditable: NO];
-    [self.debuggerWindow setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
+//    [self.debuggerWindow setEditable: NO];
+//    [self.debuggerWindow setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
     
     [self.debuggerMemory setEditable: NO];
     [self.debuggerMemory setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
@@ -43,30 +43,30 @@
 - (void)appendToDebuggerWindow:(NSString*)text
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSAttributedString* attr = [[NSAttributedString alloc] initWithString:text];
-        [[self.debuggerWindow textStorage] appendAttributedString:attr];
-        [self.debuggerWindow scrollRangeToVisible:NSMakeRange([[self.debuggerWindow string] length], 0)];
+        NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
+        [[self.debuggerMemory textStorage] appendAttributedString:attr];
+        [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
     });
 }
 
 - (void)setDebuggerMemoryText: (uint8_t *) memory
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSMutableString *text = [NSMutableString string];
+        //NSMutableString *text = [NSMutableString string];
         
         //for (int i = 0; i < 0x10000; i++) {
         //    [text appendString: [NSString stringWithFormat: @"%X: %X\n", i, memory[i]]];
         //}
         
-        NSAttributedString* attr = [[NSAttributedString alloc] initWithString:text];
-        //[[self.debuggerMemory textStorage] setAttributedString: attr];
+        //NSAttributedString* attr = [[NSAttributedString alloc] initWithString:@"px"];
+        //[[self.debuggerMemory textStorage] appendAttributedString: attr];
     });
 }
 
 
 - (NSInteger)numberOfRowsInTableView:(NSTableView *)tableView
 {
-    return 12;
+    return 20;
 }
 
 - (NSView *)tableView:(NSTableView *)tableView viewForTableColumn:(NSTableColumn *)tableColumn row:(NSInteger)row
@@ -172,7 +172,62 @@
                     result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.memory[0x100+self.window.nesInstance.cpu.reg_sp+1]];
                 }
             }
-            
+            break;
+        case 12:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Sign Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_NEGATIVE_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 13:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Zero Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_ZERO_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 14:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"IRQ Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_IRQ_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 15:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Decimal Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_DECIMAL_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 16:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Carry Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_CARRY_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 17:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Overflow Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_OVERFLOW_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 18:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Unused Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_UNUSED_BIT]?@"Y":@"N"];
+            }
+            break;
+        case 19:
+            if ([tableColumn.identifier isEqualToString: @"reg"]) {
+                result.stringValue = @"Break Flag";
+            } else {
+                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_BREAK_BIT]?@"Y":@"N"];
+            }
             break;
     }
     //result.stringValue = @"test";

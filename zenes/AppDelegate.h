@@ -16,7 +16,6 @@
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate>
 
-@property IBOutlet NSTextView *debuggerWindow;
 @property IBOutlet NSTableView *debuggerTable;
 @property IBOutlet NSTextView *debuggerMemory;
 
