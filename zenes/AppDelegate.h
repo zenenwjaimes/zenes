@@ -12,6 +12,7 @@
 #import "Nes/Rom.h"
 #import "Nes/Screen.h"
 #import "Cpu6502.h"
+#import "BitHelper.h"
 
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate>
 

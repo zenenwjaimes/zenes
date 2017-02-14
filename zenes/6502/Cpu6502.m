@@ -225,6 +225,8 @@
     if (self.isRunning == NO) {
         return;
     }
+    // reset ops
+    self.op1 = self.op2 = self.op3 = 0x0;
     
     enum opcodes opcode;
     opcode = self.memory[self.reg_pc];
@@ -931,7 +933,6 @@
         NSString *padding = [[NSString string] stringByPaddingToLength: opcodeLength withString: @" " startingAtIndex: 0];
         opcodePadded = [opcodePadded stringByAppendingString: padding];
     }
-    NSLog(@"string: '%@'",opcodePadded);
     
     if (argCount == 1) {
         line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
@@ -945,8 +946,7 @@
     
     self.currentLine = line;
     
-    // reset ops
-    self.op1 = self.op2 = self.op3 = 0x0;
+
 }
 
 + (NSString *)getOpcodeName: (uint8_t)opcode{

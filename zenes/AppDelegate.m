@@ -27,7 +27,6 @@
 }
 
 - (void)updateRegs: (NSNotification *) notification{
-    NSLog(@"update regs?????");
     [self.debuggerTable reloadData];
 }
 
@@ -72,28 +71,28 @@
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"OP1";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.op1] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op1];
             }
             break;
         case 1:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"OP2";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.op2] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op2];
             }
             break;
         case 2:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"OP3";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.op3] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X",  self.window.nesInstance.cpu.op3];
             }
             break;
         case 3:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"IntP";
             } else {
-                result.stringValue = [[NSNumber numberWithInt: self.window.nesInstance.cpu.interruptPeriod] stringValue];
+                result.stringValue = [BitHelper intToBinary: self.window.nesInstance.cpu.interruptPeriod];
             }
             break;
         case 4:
@@ -107,42 +106,42 @@
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"ACC";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.reg_acc] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.reg_acc];
             }
             break;
         case 6:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"X";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.reg_x] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.reg_x];
             }
             break;
         case 7:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Y";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.reg_y] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X",  self.window.nesInstance.cpu.reg_y];
             }
             break;
         case 8:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"SP";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.reg_sp] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.reg_sp];
             }
             break;
         case 9:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"STATUS";
             } else {
-                result.stringValue = [[NSNumber numberWithUnsignedInteger: self.window.nesInstance.cpu.reg_status] stringValue];
+                result.stringValue = [BitHelper intToBinary: self.window.nesInstance.cpu.reg_status];
             }
             break;
         case 10:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"PC";
             } else {
-                result.stringValue = [[NSNumber numberWithDouble: self.window.nesInstance.cpu.op1] stringValue];
+                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op1];
             }
             break;
     }
