@@ -32,7 +32,22 @@
 //@property (retain) NSObject *delegate;
 @property (copy) NSString *currentLine;
 
+// Memory reading instructions
+- (uint8_t)readAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2;
+- (uint8_t)readIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
+- (uint8_t)readIndexedIndirectAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
+- (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
+- (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
+- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte;
+- (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (uint8_t)offset;
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
+- (uint8_t)readZeroPage: (uint8_t)address withRegister: (uint8_t)reg;
+- (uint8_t)readZeroPage: (uint8_t)address;
+- (void)writeZeroPage: (uint8_t)address withValue: (uint8_t)value;
+- (void)writeValue: (uint8_t)value toAbsoluteOp1: (uint8_t)absop1 andAbsoluteOp2: (uint8_t)absop2;
+- (void)writeValue: (uint8_t)value toAddress: (uint16_t)address;
+
+// Generic register flags
 - (void)enableZeroFlag;
 - (void)disableZeroFlag;
 - (void)enableInterrupts;
@@ -44,6 +59,7 @@
 - (void)enableOverflowFlag;
 - (void)disableOverflowFlag;
 - (uint8_t)checkFlag: (uint8_t)flag;
+- (void)toggleCarryFlagForReg: (uint8_t)cpu_reg;
 
 - (void)runNextInstruction;
 - (void)run;
@@ -63,6 +79,13 @@ enum interrupts {
 enum opcodes {
     ADC_IMM = 0x69,
     AND_IMM = 0x29,
+    AND_ZP = 0x25,
+    AND_ZPX = 0x35,
+    AND_ABS = 0x2D,
+    AND_ABSX = 0x3D,
+    AND_ABSY = 0x39,
+    AND_INDX = 0x21,
+    AND_INDY = 0x31,
     ASL_A = 0x0A,
     ASL_ZP = 0x06,
     ASL_ZPX = 0x16,
@@ -98,6 +121,7 @@ enum opcodes {
     LDA_ABSY = 0xB9,
     LDA_IMM = 0xA9,
     LDA_INDY = 0xB1,
+    LDA_ZP = 0xA5,
     LDX_IMM = 0xA2,
     LDY_IMM = 0xA0,
     LDX_ABS = 0xAE,
@@ -125,8 +149,13 @@ enum opcodes {
     SEC = 0x38,
     SED = 0xF8,
     SEI = 0x78,
-    STA_ABS = 0x8D,
     STA_ZP = 0x85,
+    STA_ZPX = 0x95,
+    STA_ABS = 0x8D,
+    STA_ABSX = 0x9D,
+    STA_ABSY = 0x99,
+    STA_INDX = 0x81,
+    STA_INDY = 0x91,
     STX_ABS = 0x8E,
     STY_ABS = 0x8C,
     STX_ZP = 0x86,

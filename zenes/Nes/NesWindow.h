@@ -7,6 +7,7 @@
 //
 
 #import <Cocoa/Cocoa.h>
+#import <AppKit/AppKit.h>
 #import "Nes.h"
 #import "Screen.h"
 
@@ -15,9 +16,9 @@
 @property (strong) Nes *nesInstance;
 @property IBOutlet Screen *nesScreen;
 
+- (IBAction)dumpMemory:(id)sender;
 - (IBAction)playButton:(id)sender;
 - (IBAction)pauseButton:(id)sender;
 - (IBAction)stepIntoButton:(id)sender;
-- (IBAction)memoryDumpButton:(id)sender;
 
 @end

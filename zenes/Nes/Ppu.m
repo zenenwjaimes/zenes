@@ -28,11 +28,15 @@
 
 - (BOOL)shouldProcessVBlank {
     int ppuCycles = 341*262;
+    if (self.cpu.interruptPeriod == INT_NMI && self.cpu.counter > ppuCycles) {
+        self.cpu.interruptPeriod = 0;
+        NSLog(@"");
+    }
     // Usually only happens on first vblank call, keeps the ppu in sequence
     if (self.cpu.counter < ppuCycles || self.skipVBlank == YES) {
         return NO;
     }
-
+    
     // TODO: Add more checks
     
     return YES;

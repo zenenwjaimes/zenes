@@ -18,12 +18,13 @@
 
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
-    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/nestest.nes"];
+
+    [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
+    
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     self.window.nesInstance = nesInstance;
-//    [self.debuggerWindow setEditable: NO];
-//    [self.debuggerWindow setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
     
     [self.debuggerMemory setEditable: NO];
     [self.debuggerMemory setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
@@ -60,6 +61,20 @@
         
         //NSAttributedString* attr = [[NSAttributedString alloc] initWithString:@"px"];
         //[[self.debuggerMemory textStorage] appendAttributedString: attr];
+    });
+}
+
+- (IBAction)memoryDumpButton:(id)sender
+{
+    dispatch_async(dispatch_get_main_queue(), ^{
+        NSMutableString *text = [NSMutableString string];
+        
+        for (int i = 0; i < 0x10000; i++) {
+            [text appendString: [NSString stringWithFormat: @"%X: %X\n", i, self.window.nesInstance.cpu.memory[i]]];
+        }
+        
+        NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
+        [[self.debuggerFull textStorage] setAttributedString: attr];
     });
 }
 
