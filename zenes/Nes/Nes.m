@@ -72,9 +72,9 @@
                     [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
                 });
                 
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    [(AppDelegate *)[[NSApplication sharedApplication] delegate] setDebuggerMemoryText: self.cpu.memory];
-                });
+                //dispatch_sync(dispatch_get_main_queue(), ^{
+                //    [(AppDelegate *)[[NSApplication sharedApplication] delegate] setDebuggerMemoryText: self.cpu.memory];
+                //});
             
                 dispatch_sync(dispatch_get_main_queue(), ^{
                     [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
@@ -96,7 +96,6 @@
         self.cpu.counter -= 341*262;
     }
     [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-    [(AppDelegate *)[[NSApplication sharedApplication] delegate] setDebuggerMemoryText: self.cpu.memory];
     [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
 }
 

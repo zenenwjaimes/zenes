@@ -229,9 +229,9 @@
     return self.memory[indirectIndexed];
 }
 
-- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte// andHigh: (uint8_t)highByte
+- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte
 {
-    uint16_t tempAddress = (lowByte);
+    uint16_t tempAddress = ((highByte << 8) | lowByte);
     NSLog(@"INDIRECT TEMP: %X", tempAddress);
     NSLog(@"INDIRECT SHIFTED: %X", ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress]);
     return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
@@ -514,7 +514,7 @@
             
         case BCC:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the carry bit is set
             if ([self checkFlag: STATUS_CARRY_BIT] == 0) {
@@ -527,7 +527,7 @@
             
         case BCS:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the carry bit is set
             if ([self checkFlag: STATUS_CARRY_BIT] != 0) {
@@ -540,7 +540,7 @@
             
         case BEQ:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the zero bit is not set
             if ([self checkFlag: STATUS_ZERO_BIT] != 0) {
@@ -553,7 +553,7 @@
             
         case BIT_ZP:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 3;
             uint8_t value = [self readZeroPage: self.memory[self.op1]] & self.reg_acc;
 
@@ -563,7 +563,7 @@
             
         case BMI:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the zero bit is not set
             if ([self checkFlag: STATUS_NEGATIVE_BIT] != 0) {
@@ -576,7 +576,7 @@
             
         case BNE:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the zero bit is not set
             if ([self checkFlag: STATUS_ZERO_BIT] == 0) {
@@ -590,7 +590,7 @@
         // Branch to PC+op1 if negative flag is 0
         case BPL:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the negative bit is set
 
@@ -605,7 +605,7 @@
       
         case BVC:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the overflow bit is clear
             if ([self checkFlag: STATUS_OVERFLOW_BIT] == 0) {
@@ -619,7 +619,7 @@
             
         case BVS:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             // Branch if the overflow bit is set
             if ([self checkFlag: STATUS_OVERFLOW_BIT] != 0) {
@@ -688,13 +688,32 @@
             
         case CPY_IMM:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             
             uint8_t cmpy = self.reg_y - self.memory[self.op1];
             [self toggleZeroAndSignFlagForReg: cmpy];
             
-            if (self.reg_y > self.memory[self.op1]) {
+            if (self.reg_y >= self.memory[self.op1]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
+        case CPY_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            
+            uint8_t cmpy_abs = self.reg_y - [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
+            NSLog(@"cmpy abs: %X", cmpy_abs);
+            NSLog(@"cmpy reg y: %X", self.reg_y);
+            NSLog(@"cmpy data at address: %X", [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]);
+            [self toggleZeroAndSignFlagForReg: cmpy_abs];
+            
+            if (self.reg_y >= [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]) {
                 [self enableCarryFlag];
             } else {
                 [self disableCarryFlag];
@@ -769,7 +788,7 @@
         case JMP_IND:
             argCount = 3;
             self.counter += 5;
-            self.reg_pc = [self getIndirectAddressWithLow: self.memory[self.op1]/* andHigh: self.memory[self.op2]*/];
+            self.reg_pc = [self getIndirectAddressWithLow: self.memory[self.op1] andHigh: self.memory[self.op2]];
             
             break;
         case JSR:
@@ -837,6 +856,30 @@
             // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
+        
+        case LDX_ABSY:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            self.reg_x = [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y];
+            
+            // 1 byte OP, jump to the next byte address
+            // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_x];
+            break;
+            
+        // TODO: Fix this and use actual memory methods instead
+        case LDX_ABS:
+            argCount = 3;
+            self.reg_pc += 3;
+            // Cycles: 4
+            self.counter += 4;
+            self.reg_x = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
+            
+            // 1 byte OP, jump to the next byte address
+            // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_x];
+            break;
 
             // LDY (Load Y Immediate)
         case LDY_IMM:
@@ -859,18 +902,6 @@
             self.reg_acc = [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y];
             NSLog(@"reg acc for lda_indy: %X", self.reg_acc);
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
-            break;
-            
-        case LDX_ABS:
-            argCount = 3;
-            self.reg_pc += 3;
-            // Cycles: 4
-            self.counter += 4;
-            self.reg_x = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
-            
-            // 1 byte OP, jump to the next byte address
-            // Accumulator is 0, enable the zero flag
-            [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             
         case LDY_ABS:
@@ -1293,6 +1324,12 @@
         case CPY_IMM:
             opcodeName = @"CPY_IMM";
             break;
+        case CPY_ZP:
+            opcodeName = @"CPY_ZP";
+            break;
+        case CPY_ABS:
+            opcodeName = @"CPY_ABS";
+            break;
         case DEX:
             opcodeName = @"DEX";
             break;
@@ -1335,13 +1372,22 @@
         case LDX_IMM:
             opcodeName = @"LDX_IMM";
             break;
-            // LDY (Load Y Immediate)
-        case LDY_IMM:
-            opcodeName = @"LDY_IMM";
+        case LDX_ZP:
+            opcodeName = @"LDX_ZP";
+            break;
+        case LDX_ZPY:
+            opcodeName = @"LDX_ZPY";
+            break;
+        case LDX_ABSY:
+            opcodeName = @"LDX_ABSY";
             break;
             // LDX (Load X ABS)
         case LDX_ABS:
             opcodeName = @"LDX_ABS";
+            break;
+            // LDY (Load Y Immediate)
+        case LDY_IMM:
+            opcodeName = @"LDY_IMM";
             break;
             // LDY (Load Y ABS)
         case LDY_ABS:

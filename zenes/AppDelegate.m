@@ -44,23 +44,9 @@
 - (void)appendToDebuggerWindow:(NSString*)text
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
+       NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
         [[self.debuggerMemory textStorage] appendAttributedString:attr];
         [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
-    });
-}
-
-- (void)setDebuggerMemoryText: (uint8_t *) memory
-{
-    dispatch_async(dispatch_get_main_queue(), ^{
-        //NSMutableString *text = [NSMutableString string];
-        
-        //for (int i = 0; i < 0x10000; i++) {
-        //    [text appendString: [NSString stringWithFormat: @"%X: %X\n", i, memory[i]]];
-        //}
-        
-        //NSAttributedString* attr = [[NSAttributedString alloc] initWithString:@"px"];
-        //[[self.debuggerMemory textStorage] appendAttributedString: attr];
     });
 }
 

@@ -21,7 +21,6 @@
 @property IBOutlet NSTextView *debuggerFull;
 
 - (void)appendToDebuggerWindow:(NSString*)text;
-- (void)setDebuggerMemoryText: (uint8_t *) memory;
 - (IBAction)memoryDumpButton:(id)sender;
 
 @end

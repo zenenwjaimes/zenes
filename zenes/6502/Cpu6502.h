@@ -38,6 +38,7 @@
 - (uint8_t)readIndexedIndirectAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
 - (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
 - (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
+//- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte;
 - (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte;
 - (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (uint8_t)offset;
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
@@ -107,6 +108,8 @@ enum opcodes {
     CMP_IMM = 0xC9,
     CPX_IMM = 0xE0,
     CPY_IMM = 0xC0,
+    CPY_ZP = 0xC4,
+    CPY_ABS = 0xCC,
     DEX = 0xCA,
     DEY = 0x88,
     EOR_IMM = 0x49,
@@ -123,8 +126,11 @@ enum opcodes {
     LDA_INDY = 0xB1,
     LDA_ZP = 0xA5,
     LDX_IMM = 0xA2,
-    LDY_IMM = 0xA0,
+    LDX_ZP = 0xA6,
+    LDX_ZPY = 0xB6,
     LDX_ABS = 0xAE,
+    LDX_ABSY = 0xBE,
+    LDY_IMM = 0xA0,
     LDY_ABS = 0xAC,
     LSR_A = 0x4A,
     LSR_ZP = 0x46,
