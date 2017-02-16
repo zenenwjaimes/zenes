@@ -57,6 +57,7 @@
 		FE2FD1661CFE9994002AD4F1 /* NesWindow.h */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.h; name = NesWindow.h; path = Nes/NesWindow.h; sourceTree = "<group>"; };
 		FE2FD1671CFE9994002AD4F1 /* NesWindow.m */ = {isa = PBXFileReference; fileEncoding = 4; lastKnownFileType = sourcecode.c.objc; name = NesWindow.m; path = Nes/NesWindow.m; sourceTree = "<group>"; };
 		FE43EF501D36335D005419DD /* Ppu.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Ppu.m; path = Nes/Ppu.m; sourceTree = "<group>"; };
+		FE49C8671E55A96D00A3B70F /* NesInc.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = NesInc.h; path = zenes/NesInc.h; sourceTree = "<group>"; };
 		FECA7CC01CF41D5E001E85A5 /* zenes.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = zenes.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		FECA7CC31CF41D5E001E85A5 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		FECA7CC41CF41D5E001E85A5 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -102,6 +103,7 @@
 		FECA7CB71CF41D5E001E85A5 = {
 			isa = PBXGroup;
 			children = (
+				FE49C8671E55A96D00A3B70F /* NesInc.h */,
 				FECA7CC21CF41D5E001E85A5 /* zenes */,
 				FECA7CD61CF41D5F001E85A5 /* zenesTests */,
 				FECA7CE11CF41D5F001E85A5 /* zenesUITests */,

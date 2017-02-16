@@ -21,9 +21,15 @@
 - (void)bootupSequence {
     self.currentScanline = 0;
     self.skipVBlank = NO;
+
+    uint8_t tempMemory[0x10000] = {};
     
-    // Enable vblank interrupts
-    //self.cpu.memory[0x2000] = (1 << 7);
+    //TODO: Set everything to 0xFF on bootup. this could be wrong
+    for (int i = 0; i < 0x10000; i++) {
+        tempMemory[i] = 0xFF;
+    }
+    
+    self.memory = tempMemory;    
 }
 
 - (BOOL)shouldProcessVBlank {
@@ -40,6 +46,15 @@
     // TODO: Add more checks
     
     return YES;
+}
+
+- (void)setBackgroundDataFrom: (Cpu6502 *)cpu toPixels: (int **)pixels
+{
+    for (int i = 0; i < 262; i++) {
+        for (int j = 0; j < 340; j++) {
+            pixels[i][j] = i+j;
+        }
+    }
 }
 
 @end

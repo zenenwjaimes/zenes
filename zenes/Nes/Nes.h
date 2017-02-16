@@ -7,10 +7,7 @@
 //
 
 #import <Foundation/Foundation.h>
-#import "Rom.h"
-#import "Cpu6502.h"
-#import "Screen.h"
-#import "Ppu.h"
+#import "NesInc.h"
 
 @interface Nes : NSObject
 

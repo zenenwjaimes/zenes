@@ -30,7 +30,7 @@
 }
 
 + (uint8_t)checkBit: (uint8_t)p on: (uint8_t)value {
-    return ((value << p) & 1);
+    return ((value >> p) & 1);
 }
 
 @end

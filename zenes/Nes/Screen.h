@@ -8,10 +8,13 @@
 
 #import <Cocoa/Cocoa.h>
 #import <OpenGL/gl.h>
+#include "NesInc.h"
 
 @interface Screen : NSOpenGLView
 
-- (void)drawFrame: (uint8_t **)frameData;
-- (void)test;
+@property (assign, nonatomic) int **pixels;
+
+- (void)setFrameData: (int **)frameData;
+- (void)drawFrame;
 
 @end

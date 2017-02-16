@@ -24,6 +24,7 @@
     Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
+    nesInstance.screen = self.window.nesScreen;
     self.window.nesInstance = nesInstance;
     
     [self.debuggerMemory setEditable: NO];
@@ -44,7 +45,7 @@
 - (void)appendToDebuggerWindow:(NSString*)text
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-       NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
+        NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
         [[self.debuggerMemory textStorage] appendAttributedString:attr];
         [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
     });
@@ -60,6 +61,7 @@
         }
         
         NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
+        NSLog(@"10 to bits: %@", [BitHelper intToBinary: 16]);
         [[self.debuggerFull textStorage] setAttributedString: attr];
     });
 }

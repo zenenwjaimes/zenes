@@ -16,7 +16,7 @@
 @property (strong) Nes *nesInstance;
 @property IBOutlet Screen *nesScreen;
 
-- (IBAction)dumpMemory:(id)sender;
+- (IBAction)memoryDumpButton:(id)sender;
 - (IBAction)playButton:(id)sender;
 - (IBAction)pauseButton:(id)sender;
 - (IBAction)stepIntoButton:(id)sender;

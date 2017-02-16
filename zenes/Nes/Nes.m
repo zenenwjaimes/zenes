@@ -7,6 +7,7 @@
 //
 
 #import "Nes.h"
+
 #import "AppDelegate.h"
 
 @implementation Nes
@@ -95,6 +96,28 @@
         // Cheese it
         self.cpu.counter -= 341*262;
     }
+    
+    //[self.screen drawFrame: [self.ppu drawBackground: self.cpu]];
+    //[self.screen performSelector: @selector(drawBackground:) withObject];
+    //uint8_t pixels[362][240];
+    
+    int r=262, c=340;
+    int **pixels;
+    
+    pixels  = (int **)malloc(sizeof(int *) * r);
+    pixels[0] = (int *)malloc(sizeof(int) * c * r);
+    
+    for(int i = 0; i < r; i++)
+        pixels[i] = (*pixels + c * i);
+    
+    for (int i = 0; i <  r; i++)
+        for (int j = 0; j < c; j++)
+            pixels[i][j] = 9;
+    [self.ppu setBackgroundDataFrom: self.cpu toPixels: pixels];
+    [self.screen setFrameData: pixels];
+    //TODO: FUCK, make sure to copy pixels into the screen and not just leak memory
+    //free(pixels);
+
     [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
     [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
 }

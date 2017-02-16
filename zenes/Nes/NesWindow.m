@@ -11,7 +11,6 @@
 @implementation NesWindow
 
 - (IBAction)playButton:(id)sender {
-    [self.nesScreen test];
     if (self.nesInstance.cpu.isRunning == YES) {
         [self.nesInstance run];
     }

@@ -39,8 +39,9 @@
 - (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
 - (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
 //- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte;
-- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte;
+//- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte;
 - (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (uint8_t)offset;
+//- (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (int8_t)offset;
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
 - (uint8_t)readZeroPage: (uint8_t)address withRegister: (uint8_t)reg;
 - (uint8_t)readZeroPage: (uint8_t)address;
@@ -63,7 +64,6 @@
 - (void)toggleCarryFlagForReg: (uint8_t)cpu_reg;
 
 - (void)runNextInstruction;
-- (void)run;
 - (void)dumpMemoryToLog;
 - (void)triggerInterrupt: (int)interruptType;
 
@@ -79,6 +79,13 @@ enum interrupts {
 
 enum opcodes {
     ADC_IMM = 0x69,
+    ADC_ZP = 0x65,
+    ADC_ZPX = 0x75,
+    ADC_ABS = 0x6D,
+    ADC_ABSX = 0x7D,
+    ADC_ABSY = 0x79,
+    ADC_INDX = 0x61,
+    ADC_INDY = 0x71,
     AND_IMM = 0x29,
     AND_ZP = 0x25,
     AND_ZPX = 0x35,

@@ -387,7 +387,7 @@
                 <subviews>
                     <openGLView fixedFrame="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KGG-m6-8Q9" customClass="Screen">
                         <rect key="frame" x="0.0" y="0.0" width="256" height="240"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
                     </openGLView>
                 </subviews>
             </view>
