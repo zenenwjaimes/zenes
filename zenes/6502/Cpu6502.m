@@ -124,15 +124,15 @@
             
         case INT_NMI:
             // Push current PC to the stack
-            [self pushToStack: self.reg_pc >> 8];
-            [self pushToStack: self.reg_pc];
+            //[self pushToStack: self.reg_pc >> 8];
+            //[self pushToStack: self.reg_pc];
             // set pc to the address stored at FFFD/FFFC (usually 0x8000)
             // TODO: FUCK
-            self.reg_pc = (self.memory[0xFFFA] << 8) | (self.memory[0xFFFB]);
+            //self.reg_pc = (self.memory[0xFFFA] << 8) | (self.memory[0xFFFB]);
             self.interruptPeriod = INT_NMI;
             //NSLog(@"nmi: %X", self.reg_pc);
             // Push current reg status to stack
-            [self pushToStack: self.reg_status];
+            //[self pushToStack: self.reg_status];
             
             break;
     }
@@ -191,7 +191,6 @@
  */
 - (uint8_t)readIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset
 {
-    //uint32_t absoluteAddress = ((address2 << 8) | address1)+offset;
     uint16_t absoluteAddress = [self getIndexedAbsoluteAddress1: address1 address2: address2 withOffset: offset];
     
     // Don't wrap around, just throw an exception
@@ -311,14 +310,15 @@
 
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
-    [self writeZeroPage: 0x100+self.reg_sp withValue: data];
+    [self writeValue: data toAddress: 0x100+self.reg_sp];
     self.reg_sp -= 1;
 }
 
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be incremented by 1
     self.reg_sp += 1;
-    return self.memory[0x100+self.reg_sp];
+    NSLog(@"Get Index Stack: %X", [self getIndexedAbsoluteAddress1: self.reg_sp address2:0x01 withOffset: 0]);
+    return [self readAbsoluteAddress1: self.reg_sp address2: 0x01];
 }
 
 - (void)runNextInstruction {
@@ -709,8 +709,11 @@
             argCount = 1;
             self.reg_pc++;
             self.counter += 2;
-            self.reg_x--;
             
+            // TODO: This could be wrong... but if overflow isn't being triggered.
+            if (self.reg_x != 0) {
+                self.reg_x--;
+            }
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             
             break;
@@ -719,8 +722,11 @@
             argCount = 1;
             self.reg_pc++;
             self.counter += 2;
-            self.reg_y--;
             
+            // TODO: This could be wrong... but if overflow isn't being triggered.
+            if (self.reg_y != 0) {
+                self.reg_y--;
+            }
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             
             break;
@@ -1210,6 +1216,11 @@
         line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
     } else {
         line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
+        
+        NSLog(@"Stack at current pos: %X", self.reg_sp);
+        for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+            NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+        }
     }
     
     self.currentLine = line;
@@ -1222,6 +1233,9 @@
     
     switch(opcode) {
         case ADC_IMM:
+            opcodeName = @"ADC_IMM";
+            break;
+        case AND_IMM:
             opcodeName = @"ADC_IMM";
             break;
         case AND_ZP:

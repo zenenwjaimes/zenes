@@ -21,7 +21,7 @@
 
     [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     nesInstance.screen = self.window.nesScreen;

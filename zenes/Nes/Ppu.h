@@ -11,18 +11,22 @@
 
 @interface Ppu : NSObject
 {
-    
+    uint8_t _memory[0x10000];
+    uint8_t _chrRom[0x2000];
+    uint8_t colorPalette[64][3];
 }
 
 @property (retain) Cpu6502 *cpu;
 @property uint8_t currentScanline;
+@property uint8_t currentVerticalLine;
 @property BOOL isDrawing;
 @property BOOL skipVBlank;
 @property (assign, nonatomic) uint8_t *memory;
+@property (assign, nonatomic) uint8_t *chrRom;
 
--(id)initWithCpu: (Cpu6502 *)cpu;
+- (id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom;
 - (BOOL)shouldProcessVBlank;
-- (void)setBackgroundDataFrom: (Cpu6502 *)cpu toPixels: (int **)pixels;
+- (void)setBackgroundDataFrom: (Cpu6502 *)cpu toPixels: (int ***)pixels;
 
 @end
 

@@ -12,9 +12,9 @@
 
 @interface Screen : NSOpenGLView
 
-@property (assign, nonatomic) int **pixels;
+@property (assign, nonatomic) int ***pixels;
 
-- (void)setFrameData: (int **)frameData;
+- (void)setFrameData: (int ***)frameData;
 - (void)drawFrame;
 
 @end
