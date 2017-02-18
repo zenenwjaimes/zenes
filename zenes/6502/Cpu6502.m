@@ -174,7 +174,40 @@
 
 - (void)writeValue: (uint8_t)value toAddress: (uint16_t)address
 {
+    switch (address) {
+            // TODO: Figure this one out
+        case 0x2005:
+            
+            break;
+            // VRAM Address Write
+        case 0x2006:
+            break;
+            // Value to read/write
+        case 0x2007:
+            break;
+    }
+    
     self.memory[address] = value;
+}
+
+- (uint8_t)readValueAtAddress: (uint16_t)address
+{
+    // TODO: Fix this so certain reads perform certain actions
+    /*
+    switch (address) {
+            // TODO: Figure this one out
+        case 0x2005:
+            
+            break;
+            // VRAM Address Write
+        case 0x2006:
+            break;
+            // Value to read/write
+        case 0x2007:
+            break;
+    }*/
+    
+    return self.memory[address];
 }
 
 /**
@@ -198,7 +231,8 @@
         @throw [NSException exceptionWithName: @"InvalidAbsoluteAddress" reason: @"Address passed is great than 0xFFFF" userInfo:nil];
     }
     
-    return self.memory[absoluteAddress];
+    return [self readValueAtAddress: absoluteAddress];
+//    return self.memory[absoluteAddress];
 }
 
 - (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset
@@ -208,32 +242,25 @@
 
 - (uint8_t)readIndexedIndirectAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset
 {
+    // TODO: Implement memory reading here from the memory read method
     uint16_t indexIndirect = (self.memory[(lowByte + offset + 1) & 0xFF] << 8) | (self.memory[(lowByte + offset) & 0xFF]);
-    //NSLog(@"indx high byte: %X", (self.memory[(lowByte + offset + 1) & 0xFF] << 8));
-    //NSLog(@"indx low byte: %X", (self.memory[(lowByte + offset) & 0xFF]));
-    //NSLog(@"indx index indirect: %X", indexIndirect);
-    
-    return self.memory[indexIndirect];
+    return [self readValueAtAddress: indexIndirect];
+//    return self.memory[indexIndirect];
 }
 
 - (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset
 {
+    // TODO: Implement memory reading here from the memory read method
     uint16_t indirectIndexed = (((self.memory[(lowByte + 1) & 0xFF] << 8) | (self.memory[lowByte])) + offset) & 0xFFFF;
-    
-    //TODO: check if indirectIndexed before the & 0xFFFF, is the boundary is crossed
-    //TODO: and increment the cycles by 1
-    //NSLog(@"indy high byte: %X", (self.memory[(lowByte + 1) & 0xFF] << 8));
-    //NSLog(@"indy low byte: %X", (self.memory[lowByte]));
-    //NSLog(@"indy index indirect: %X", indirectIndexed);
-    
-    return self.memory[indirectIndexed];
+    return [self readValueAtAddress: indirectIndexed];
+//    return self.memory[indirectIndexed];
 }
 
 - (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte
 {
+    // TODO: Implement memory reading here from the memory read method
     uint16_t tempAddress = ((highByte << 8) | lowByte);
-    //NSLog(@"INDIRECT TEMP: %X", tempAddress);
-    //NSLog(@"INDIRECT SHIFTED: %X", ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress]);
+    
     return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
 }
 
@@ -248,9 +275,6 @@
     } else {
         relativeAddress = address+offset;
     }
-    //NSLog(@"Initial PC: %X", address);
-    //NSLog(@"Offset is: %X", offset);
-    //NSLog(@"Offset Address is: %X", relativeAddress);
     
     return relativeAddress;
 }
@@ -293,7 +317,6 @@
 - (void)addWithCarry: (uint8_t)value
 {
     uint16_t tempadd = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-    //uint8_t isOverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempadd) & 0x80))!=0)?1:0);
     boolean_t isOverflow = [BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc];
     
     if (isOverflow) {
@@ -317,7 +340,6 @@
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be incremented by 1
     self.reg_sp += 1;
-    NSLog(@"Get Index Stack: %X", [self getIndexedAbsoluteAddress1: self.reg_sp address2:0x01 withOffset: 0]);
     return [self readAbsoluteAddress1: self.reg_sp address2: 0x01];
 }
 
@@ -1006,6 +1028,11 @@
             // Pull the stack address and put it into the pc
             uint16_t little, big = 0x00;
             
+            NSLog(@"Stack at current pos: %X", self.reg_sp);
+            for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+                NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
+            }
+            
             little = [self pullFromStack];
             big = [self pullFromStack];
             self.reg_pc = ((big << 8)| little)+1;
@@ -1506,6 +1533,11 @@
 }
 
 - (void)dumpMemoryToLog {
+    NSLog(@"Stack at current pos: %X", self.reg_sp);
+    for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+        NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+    }
+    
     NSMutableArray *dump = [NSMutableArray arrayWithCapacity: 0xFFFF];
     if (self.isRunning == NO) {
         for (uint32_t i = 0; i < 0x10000; i++) {
