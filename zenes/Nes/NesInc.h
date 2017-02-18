@@ -12,7 +12,6 @@
 #import "Rom.h"
 #import "Cpu6502.h"
 #import "Screen.h"
-#import "Ppu.h"
 
 struct ppuFrameData;
 

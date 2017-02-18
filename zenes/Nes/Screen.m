@@ -29,7 +29,7 @@
 - (void)setFrameData: (int ***)frameData
 {
     self.pixels = frameData;
-    [self setNeedsDisplay: YES];
+    //[self setNeedsDisplay: YES];
 }
 
 - (void)drawFrame

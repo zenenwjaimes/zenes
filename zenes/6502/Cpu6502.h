@@ -11,6 +11,7 @@
 #import "ProcessorStatus.h"
 #import "BitHelper.h"
 
+@class Ppu;
 @interface Cpu6502 : NSObject
 {
     uint8_t _memory[0x10000];
@@ -29,19 +30,24 @@
 @property uint8_t reg_status;
 @property uint16_t reg_pc;
 @property (assign, nonatomic) uint8_t *memory;
-//@property (retain) NSObject *delegate;
-@property (copy) NSString *currentLine;
+@property NSString *currentLine;
+@property Ppu *ppu;
+@property uint8_t ppuReg1;
+@property uint8_t ppuReg2;
+@property uint8_t ppuReadBuffer;
+@property BOOL notifyPpu;
+@property BOOL notifyPpuWrite;
+@property uint16_t notifyPpuAddress;
+@property uint16_t notifyPpuValue;
 
 // Memory reading instructions
+- (uint8_t)readValueAtAddress: (uint16_t)address;
 - (uint8_t)readAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2;
 - (uint8_t)readIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
 - (uint8_t)readIndexedIndirectAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
 - (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
 - (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
-//- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte;
-//- (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte;
 - (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (uint8_t)offset;
-//- (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (int8_t)offset;
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
 - (uint8_t)readZeroPage: (uint8_t)address withRegister: (uint8_t)reg;
 - (uint8_t)readZeroPage: (uint8_t)address;
@@ -117,9 +123,20 @@ enum opcodes {
     CPY_IMM = 0xC0,
     CPY_ZP = 0xC4,
     CPY_ABS = 0xCC,
+    DEC_ZP = 0xC6,
+    DEC_ZPX = 0xD6,
+    DEC_ABS = 0xCE,
+    DEC_ABSX = 0xDE,
     DEX = 0xCA,
     DEY = 0x88,
     EOR_IMM = 0x49,
+    EOR_ZP = 0x45,
+    EOR_ZPX = 0x55,
+    EOR_ABS = 0x4D,
+    EOR_ABSX = 0x5D,
+    EOR_ABSY = 0x59,
+    EOR_INDX = 0x41,
+    EOR_INDY = 0x51,
     INC_ZP = 0xE6,
     INX = 0xE8,
     INY = 0xC8,
@@ -157,6 +174,12 @@ enum opcodes {
     PLP = 0x28,
     PHA = 0x48,
     PHP = 0x08,
+    ROL_ACC = 0x2A,
+    ROL_ZP = 0x26,
+    ROL_ZPX = 0x36,
+    ROL_ABS = 0x2E,
+    ROL_ABSX = 0x3E,
+    RTI = 0x40,
     RTS = 0x60,
     SBC_IMM = 0xE9,
     SEC = 0x38,

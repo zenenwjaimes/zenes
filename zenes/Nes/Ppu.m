@@ -7,8 +7,10 @@
 //
 
 #import "Ppu.h"
+#import "AppDelegate.h"
 
 @implementation Ppu
+@synthesize firstWrite,incrementStep;
 
 -(id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom {
     if (self = [super init]) {
@@ -22,7 +24,11 @@
 - (void)bootupSequence {
     self.currentScanline = 0;
     self.skipVBlank = NO;
-
+    self.firstWrite = YES;
+    self.incrementStep = 1;
+    //self.vramAddress = 0x0000;
+    self.currentVerticalLine = self.currentScanline = 0;
+    
     [self setupColorPalette];
     
     uint8_t tempMemory[0x10000] = {};
@@ -57,20 +63,72 @@
     return _chrRom;
 }
 
-- (BOOL)shouldProcessVBlank {
-    int ppuCycles = 341*262;
-    if (self.cpu.interruptPeriod == INT_NMI && self.cpu.counter > ppuCycles) {
-        self.cpu.interruptPeriod = 0;
-        NSLog(@"");
+- (uint8_t)readPpuStatusReg: (uint8_t)flag
+{
+    uint8_t ppuStatusReg = self.cpu.ppuReg1;
+    return ((ppuStatusReg >> flag) & 1);
+}
+
+- (void)setVramAddress:(uint16_t)vramAddress
+{
+    // Observe changes to increment stepping, in case any
+    // games/demos switch between modes during writes to vram
+    if ([self readPpuStatusReg: CR1_INCREMENT_BY_32]) {
+        self.incrementStep = 32;
     }
-    // Usually only happens on first vblank call, keeps the ppu in sequence
-    if (self.cpu.counter < ppuCycles || self.skipVBlank == YES) {
-        return NO;
+    //NSLog(@"value passed in: %X", vramAddress);
+    
+    // VRAM address is stored in 2 bytes, first write is low, second write is high
+    if (self.firstWrite == YES) {
+        self.currVramAddress = (vramAddress << 8);
+        //NSLog(@"First addy: %X", self.currVramAddress);
+
+        self.firstWrite = NO;
+    } else {
+        self.currVramAddress |= vramAddress;
+        // Wrap around instead of going up higher
+        //NSLog(@"We HAVE a FULL VRAM ADDY SET: %X", self.currVramAddress);
+        self.firstWrite = YES;
     }
-    
-    // TODO: Add more checks
-    
-    return YES;
+}
+
+- (void)observeCpuChanges
+{
+    // NOTICE: DO NOT USE READ/WRITE METHODS FROM CPU HERE
+    // DOING SO WILL CAUSE A LOOP AND CRASH!
+    uint8_t value = self.cpu.memory[self.cpu.notifyPpuAddress];//[self.cpu readValueAtAddress: self.cpu.notifyPpuAddress];
+
+    switch (self.cpu.notifyPpuAddress) {
+        case 0x2002:
+            if (self.cpu.notifyPpuWrite == NO) {
+                NSLog(@"clearing vblank?");
+                // Any time $2002 is read, clear vblank and also the sprite/bg regs
+                self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] & (1<<7));
+                self.cpu.memory[0x2005] = self.cpu.memory[0x2006] = 0;
+            }
+            break;
+        case 0x2006:
+            if (self.cpu.notifyPpuWrite == YES) {
+                NSLog(@"write of 2006: %X", value);
+                [self setVramAddress: value];
+            } else {
+                NSLog(@"read of 2006");
+            }
+            break;
+        case 0x2007:
+            [self setCanDraw: YES];
+            
+            if (self.cpu.notifyPpuWrite == YES) {
+                    //NSLog(@"current vram address: %X", self.currVramAddress);
+                NSLog(@"Written to $2007: %X", self.cpu.memory[0x2007]);
+                self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                self.currVramAddress += self.incrementStep;
+            } else {
+                NSLog(@"Read of 0x2007");
+            }
+            //NSLog(@"Read of 0x2007");
+            break;
+    }
 }
 
 - (uint16_t)getNameTableAddress
@@ -117,6 +175,41 @@
     return patternTableAddress;
 }
 
+- (void)checkVBlank
+{
+    // Vblank set
+    if (self.currentScanline ==  241 && self.currentVerticalLine == 0) {
+        NSLog(@"vblank happening! %d", self.cpu.counter);
+        NSLog(@"current addy at vblank: %@", self.cpu.currentLine);
+        self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] | (1<<7));
+        [self.cpu triggerInterrupt: INT_NMI];
+    } else if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears
+        [self.cpu readValueAtAddress: 0x2002];
+    }
+}
+
+- (void)drawFrame
+{
+    [self checkVBlank];
+    
+    if (self.currentVerticalLine <= 340) {
+        self.currentVerticalLine += 3;
+    } else {
+        if (self.currentScanline < 261) {
+            self.currentScanline++;
+        } else {
+            self.currentScanline = 0;
+        }
+        
+        self.currentVerticalLine = 0;
+    }
+    
+    // draw 3 pixels at a time. this keeps the cpu and ppu in sync since the ppu is 3x as fast as the cpu
+    if (self.canDraw == YES) {
+        
+    }
+}
+
 - (void)setBackgroundDataFrom: (Cpu6502 *)cpu toPixels: (int ***)pixels
 {
     uint16_t nameTableAddress = [self getNameTableAddress];
@@ -128,26 +221,7 @@
     //        NSLog(@"color: %X", colorPalette[i][j]);
     //    }
     //}
-    int xlen = 256;
-    int ylen = 240;
-    int zlen = 3;
-    //int ***p;
-    size_t i, j;
-    
-    for (i=0; i < xlen; ++i)
-        pixels[i] = NULL;
-    
-    for (i=0; i < xlen; ++i)
-        pixels[i] = malloc(ylen * sizeof *pixels[i]);
-    
-    for (i=0; i < xlen; ++i)
-        for (j=0; j < ylen; ++j)
-            pixels[i][j] = NULL;
-    
-    for (i=0; i < xlen; ++i)
-        for (j=0; j < ylen; ++j)
-            pixels[i][j] = malloc(zlen * sizeof *pixels[i][j]);
-    
+
     if (patternTableAddress != 0x0000) {
     
         /*for (int i = 0; i < 262; i++) {
@@ -156,11 +230,6 @@
             }
         }*/
         
-        for (int i = 0; i < 32; i++) {
-            for (int j = 0; j < 30; j++) {
-                
-            }
-        }
     }
 }
 

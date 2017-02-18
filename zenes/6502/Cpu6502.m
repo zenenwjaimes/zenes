@@ -7,6 +7,8 @@
 //
 
 #import "Cpu6502.h"
+#import "Ppu.h"
+#import "AppDelegate.h"
 
 @implementation Cpu6502
 
@@ -34,16 +36,21 @@
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
     for (int i = 0; i < 0x10000; i++) {
-        tempMemory[i] = 0x00;
+        tempMemory[i] = 0xFF;
     }
     
-    self.memory = tempMemory;
+    //self.memory = tempMemory;
+    [self setMemory: tempMemory];
     
     // Clear interrupt flag and enable decimal mode on boot
     //[self enableInterrupts];
     self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_UNUSED_BIT);
     
     self.isRunning = YES;
+    
+    // Hack for notifying the ppu of changes
+    self.notifyPpu = NO;
+    self.notifyPpuAddress = 0x0000;
 }
 
 - (void)setMemory:(uint8_t *)memory {
@@ -124,15 +131,16 @@
             
         case INT_NMI:
             // Push current PC to the stack
-            //[self pushToStack: self.reg_pc >> 8];
-            //[self pushToStack: self.reg_pc];
+            [self pushToStack: self.reg_pc >> 8];
+            [self pushToStack: self.reg_pc];
+            [self pushToStack: self.reg_status];
+            
             // set pc to the address stored at FFFD/FFFC (usually 0x8000)
             // TODO: FUCK
             //self.reg_pc = (self.memory[0xFFFA] << 8) | (self.memory[0xFFFB]);
+            self.reg_pc = (self.memory[0xFFFB] << 8) | (self.memory[0xFFFA]);
             self.interruptPeriod = INT_NMI;
-            //NSLog(@"nmi: %X", self.reg_pc);
-            // Push current reg status to stack
-            //[self pushToStack: self.reg_status];
+            [self enableInterrupts];
             
             break;
     }
@@ -174,20 +182,19 @@
 
 - (void)writeValue: (uint8_t)value toAddress: (uint16_t)address
 {
-    switch (address) {
-            // TODO: Figure this one out
-        case 0x2005:
-            
-            break;
-            // VRAM Address Write
-        case 0x2006:
-            break;
-            // Value to read/write
-        case 0x2007:
-            break;
-    }
-    
     self.memory[address] = value;
+    
+    // Send any notifications to the PPU about changes to regs
+    if (address >= 0x2000 && address <= 0x2007) {
+        self.ppuReg1 = [self readValueAtAddress: 0x2000];
+        self.ppuReg2 = [self readValueAtAddress: 0x2001];
+        self.notifyPpu = YES;
+        self.notifyPpuAddress = address;
+        self.notifyPpuWrite = YES;
+        self.notifyPpuValue = value;
+        
+        [self.ppu observeCpuChanges];
+    }
 }
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
@@ -206,6 +213,17 @@
         case 0x2007:
             break;
     }*/
+    
+    if (address == 0x2007) {
+        self.ppuReg1 = [self readValueAtAddress: 0x2000];
+        self.ppuReg2 = [self readValueAtAddress: 0x2001];
+        self.notifyPpu = YES;
+        self.notifyPpuAddress = address;
+        NSLog(@"notfing of read: %X", address);
+        self.notifyPpuWrite = NO;
+        
+        [self.ppu observeCpuChanges];
+    }
     
     return self.memory[address];
 }
@@ -373,6 +391,13 @@
             self.reg_pc += argCount;
             
             [self addWithCarry: self.memory[self.op1]];
+            break;
+        case ADC_ZP:
+            argCount = 2;
+            self.counter += 3;
+            self.reg_pc += argCount;
+            
+            [self addWithCarry: [self readZeroPage: self.memory[self.op1]]];
             break;
         case AND_IMM:
             argCount = 2;
@@ -752,16 +777,88 @@
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             
             break;
+            
+            
+        case DEC_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 5;
+
+            uint8_t deczp = [self readZeroPage: self.memory[self.op1]];
+            // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
+            deczp--;
+            [self writeZeroPage: self.memory[self.op1] withValue: deczp];
+            [self toggleZeroAndSignFlagForReg: deczp];
+            
+            break;
+            
+        case DEC_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            uint8_t deczpx = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
+            // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
+            deczpx--;
+            [self writeZeroPage: self.memory[self.op1] withValue: deczpx];
+            [self toggleZeroAndSignFlagForReg: deczpx];
+            
+            break;
+            
+        case DEC_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            uint8_t decabs = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
+            // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
+            decabs--;
+            [self writeValue: decabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op1]];
+            [self toggleZeroAndSignFlagForReg: decabs];
+            
+            break;
+            
+        case DEC_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 7;
+            
+            uint8_t decabsx = [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
+            // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
+            decabsx--;
+            uint16_t decabsxAddy = [self getIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
+            [self writeValue: decabsx toAddress: decabsxAddy];
+            [self toggleZeroAndSignFlagForReg: decabsx];
+            
+            break;
+            
         case EOR_IMM:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             
             self.reg_acc ^= self.memory[self.op1];
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
-            //TODO: Memory fix
+        case EOR_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 3;
+            
+            self.reg_acc ^= [self readZeroPage: self.memory[self.op1]];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+        case EOR_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            
+            self.reg_acc ^= [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
         case INC_ZP:
             argCount = 2;
             self.reg_pc += 2;
@@ -872,6 +969,17 @@
             self.reg_pc += argCount;
             self.counter += 4;
             self.reg_x = [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y];
+            
+            // 1 byte OP, jump to the next byte address
+            // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_x];
+            break;
+            
+        case LDX_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 3;
+            self.reg_x = [self readZeroPage: self.memory[self.op1]];
             
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
@@ -1021,6 +1129,48 @@
             self.reg_pc++;
             [self pushToStack: self.reg_status];
             break;
+        case ROL_ZP:
+            argCount = 2;
+            self.counter += 5;
+            self.reg_pc += argCount;
+            uint8_t rolzp = [self readZeroPage: self.memory[self.op1]];
+            //NSLog(@"initial value: %@", [BitHelper intToBinary: rolzp]);
+
+            uint8_t rolzp_shifted = (rolzp << 1) & 0xFE;
+            //NSLog(@"shifted value: %@", [BitHelper intToBinary: rolzp_shifted]);
+
+            rolzp_shifted |= [self checkFlag: STATUS_CARRY_BIT];
+            
+            //NSLog(@"shifted value with carry tacked on: %@", [BitHelper intToBinary: rolzp_shifted]);
+            //NSLog(@"carry flag status: %X", [self checkFlag: STATUS_CARRY_BIT]);
+
+            [self writeZeroPage: self.memory[self.op1] withValue: rolzp_shifted];
+            if ([BitHelper checkBit: 7 on: rolzp]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            [self toggleZeroAndSignFlagForReg: rolzp];
+            break;
+        case RTI:
+            argCount = 1;
+            // 6 cycles
+            self.counter += 6;
+            // Pull the stack address and put it into the pc
+            uint16_t littlerti, bigrti = 0x00;
+            uint16_t oldpc = self.reg_pc;
+            
+            //NSLog(@"Stack at current pos: %X", self.reg_sp);
+            //for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+            //    NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
+            //}
+            self.reg_status = [self pullFromStack];
+            littlerti = [self pullFromStack];
+            bigrti = [self pullFromStack];
+            self.reg_pc = ((bigrti << 8)| littlerti);
+            NSLog(@"RTI FROM %X TO: %X", oldpc, self.reg_pc);
+            break;
         case RTS:
             argCount = 1;
             // 6 cycles
@@ -1028,10 +1178,10 @@
             // Pull the stack address and put it into the pc
             uint16_t little, big = 0x00;
             
-            NSLog(@"Stack at current pos: %X", self.reg_sp);
-            for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-                NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
-            }
+            //NSLog(@"Stack at current pos: %X", self.reg_sp);
+            //for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+            //    NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
+            //}
             
             little = [self pullFromStack];
             big = [self pullFromStack];
@@ -1149,10 +1299,10 @@
         // STX (Store X Absolute Page)
         case STX_ABS:
             argCount = 3;
-            self.reg_pc += 3;
-            [self writeValue: self.reg_x toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
+            self.reg_pc += argCount;
             // Cycles: 4
             self.counter += 4;
+            [self writeValue: self.reg_x toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
             // 1 byte OP, jump to the next byte address
             break;
         //TODO: Memory fix
@@ -1221,6 +1371,10 @@
         // Unknown OP
         default:
             NSLog(@"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC);
+            NSLog(@"Stack at current pos: %X", self.reg_sp);
+            for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+                NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+            }
             self.isRunning = NO;
             //@throw [NSException exceptionWithName: @"Unknown OP" reason: @"Unknown OP" userInfo: nil];
             break;
@@ -1234,25 +1388,24 @@
         NSString *padding = [[NSString string] stringByPaddingToLength: opcodeLength withString: @" " startingAtIndex: 0];
         opcodePadded = [opcodePadded stringByAppendingString: padding];
     }
-    
-    if (argCount == 1) {
-        line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
-    } else if (argCount == 2) {
-        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
-    } else if (argCount == 3) {
-        line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
-    } else {
-        line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
-        
-        NSLog(@"Stack at current pos: %X", self.reg_sp);
-        for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-            NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+    if (DEBUGGING_ENABLED) {
+        if (argCount == 1) {
+            line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+        } else if (argCount == 2) {
+            line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+        } else if (argCount == 3) {
+            line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\tA:%X X:%X Y:%X P:%X SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], opcodePadded, currentRegA, currentRegX, currentRegY, currentRegStatus, currentRegSP, self.counter];
+        } else {
+            line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
+            
+            NSLog(@"Stack at current pos: %X", self.reg_sp);
+            for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
+                NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+            }
         }
+        
+        self.currentLine = line;
     }
-    
-    self.currentLine = line;
-    
-
 }
 
 + (NSString *)getOpcodeName: (uint8_t)opcode{
@@ -1262,8 +1415,8 @@
         case ADC_IMM:
             opcodeName = @"ADC_IMM";
             break;
-        case AND_IMM:
-            opcodeName = @"ADC_IMM";
+        case ADC_ZP:
+            opcodeName = @"ADC_ZP";
             break;
         case AND_ZP:
             opcodeName = @"AND_ZP";
@@ -1285,6 +1438,9 @@
             break;
         case AND_INDY:
             opcodeName = @"AND_INDY";
+            break;
+        case AND_IMM:
+            opcodeName = @"AND_IMM";
             break;
         case ASL_A:
             opcodeName = @"ASL_A";
@@ -1361,8 +1517,41 @@
         case DEY:
             opcodeName = @"DEY";
             break;
+        case DEC_ZP:
+            opcodeName = @"DEC_ZP";
+            break;
+        case DEC_ZPX:
+            opcodeName = @"DEC_ZP";
+            break;
+        case DEC_ABS:
+            opcodeName = @"DEC_ABS";
+            break;
+        case DEC_ABSX:
+            opcodeName = @"DEC_ABSX";
+            break;
         case EOR_IMM:
             opcodeName = @"EOR_IMM";
+            break;
+        case EOR_ZP:
+            opcodeName = @"EOR_ZP";
+            break;
+        case EOR_ZPX:
+            opcodeName = @"EOR_ZPX";
+            break;
+        case EOR_ABS:
+            opcodeName = @"EOR_ABS";
+            break;
+        case EOR_ABSX:
+            opcodeName = @"EOR_ABSX";
+            break;
+        case EOR_ABSY:
+            opcodeName = @"EOR_ABSY";
+            break;
+        case EOR_INDX:
+            opcodeName = @"EOR_INDX";
+            break;
+        case EOR_INDY:
+            opcodeName = @"EOR_INDY";
             break;
         case INC_ZP:
             opcodeName = @"INC_ZP";
@@ -1463,8 +1652,26 @@
         case PHP:
             opcodeName = @"PHP";
             break;
+        case RTI:
+            opcodeName = @"RTI";
+            break;
         case RTS:
             opcodeName = @"RTS";
+            break;
+        case ROL_ACC:
+            opcodeName = @"ROL_ACC";
+            break;
+        case ROL_ZP:
+            opcodeName = @"ROL_ZP";
+            break;
+        case ROL_ZPX:
+            opcodeName = @"ROL_ZPX";
+            break;
+        case ROL_ABS:
+            opcodeName = @"ROL_ABS";
+            break;
+        case ROL_ABSX:
+            opcodeName = @"ROL_ABSX";
             break;
         case SBC_IMM:
             opcodeName = @"SBC_IMM";

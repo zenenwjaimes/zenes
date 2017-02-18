@@ -7,6 +7,7 @@
 //
 
 #import "AppDelegate.h"
+#import "Ppu.h"
 
 @interface AppDelegate ()
 
@@ -34,7 +35,9 @@
 
 - (void)updateRegs: (NSNotification *) notification
 {
-    [self.debuggerTable reloadData];
+    if (DEBUGGING_ENABLED) {
+        [self.debuggerTable reloadData];
+    }
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -45,9 +48,11 @@
 - (void)appendToDebuggerWindow:(NSString*)text
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
-        [[self.debuggerMemory textStorage] appendAttributedString:attr];
-        [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
+        if (DEBUGGING_ENABLED) {
+            NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
+            [[self.debuggerMemory textStorage] appendAttributedString:attr];
+            [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
+        }
     });
 }
 
@@ -59,7 +64,9 @@
         for (int i = 0; i < 0x10000; i++) {
             [text appendString: [NSString stringWithFormat: @"%X: %X\n", i, self.window.nesInstance.cpu.memory[i]]];
         }
-        
+        for (int i = 0; i < 0x4000; i++) {
+            [text appendString: [NSString stringWithFormat: @"VRAM: %X: %X\n", i, self.window.nesInstance.cpu.ppu.memory[i]]];
+        }
         NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
         NSLog(@"10 to bits: %@", [BitHelper intToBinary: 16]);
         [[self.debuggerFull textStorage] setAttributedString: attr];

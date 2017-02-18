@@ -14,6 +14,8 @@
 #import "Cpu6502.h"
 #import "BitHelper.h"
 
+#define DEBUGGING_ENABLED 0
+
 @interface AppDelegate : NSObject <NSApplicationDelegate, NSTableViewDataSource, NSTableViewDelegate>
 
 @property IBOutlet NSTableView *debuggerTable;

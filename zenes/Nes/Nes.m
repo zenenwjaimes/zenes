@@ -9,6 +9,7 @@
 #import "Nes.h"
 
 #import "AppDelegate.h"
+#import "Ppu.h"
 
 @implementation Nes
 
@@ -62,6 +63,7 @@
         
         // set pc to the address stored at FFFD/FFFC (usually 0x8000)
         self.cpu.reg_pc = (self.cpu.memory[0xFFFD] << 8) | (self.cpu.memory[0xFFFC]);
+        self.cpu.ppu = self.ppu;
     }
     return self;
 }
@@ -74,15 +76,15 @@
             
             if (self.cpu.isRunning == YES) {
                 dispatch_sync(dispatch_get_main_queue(), ^{
-                    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+                    if (DEBUGGING_ENABLED) {
+                        [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+                    }
                 });
-                
-                //dispatch_sync(dispatch_get_main_queue(), ^{
-                //    [(AppDelegate *)[[NSApplication sharedApplication] delegate] setDebuggerMemoryText: self.cpu.memory];
-                //});
             
                 dispatch_sync(dispatch_get_main_queue(), ^{
-                    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
+                    if (DEBUGGING_ENABLED) {
+                        [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
+                    }
                 });
             }
             
@@ -92,56 +94,18 @@
 }
 
 - (void) runNextInstructionInline {
-    if ([self.ppu shouldProcessVBlank] == NO) {
-        [self.cpu runNextInstruction];
-    } else {
-        uint8_t ppuStatusReg = [self.cpu readAbsoluteAddress1: 0x02 address2: 0x20];
-        [self.cpu writeValue: ppuStatusReg | (1 << CR1_VBLANK_ENABLE) toAddress: 0x2002];
-        NSLog(@"ppu status reg: %@", [BitHelper intToBinary: ppuStatusReg]);
-        NSLog(@"after vblank set: %X", ppuStatusReg | (1 << CR1_VBLANK_ENABLE));
-        [self.cpu triggerInterrupt: INT_NMI];
-        
-        // Cheese it
-        self.cpu.counter -= 341*262;
+    [self.cpu runNextInstruction];
+    [self.ppu drawFrame];
+    
+    if (DEBUGGING_ENABLED) {
+        [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+        [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
     }
-    
-    //[self.screen drawFrame: [self.ppu drawBackground: self.cpu]];
-    //[self.screen performSelector: @selector(drawBackground:) withObject];
-    //uint8_t pixels[362][240];
-    
-    int ***pixels;
-    /*
-    pixels  = (int **)malloc(sizeof(int *) * r);
-    pixels[0] = (int *)malloc(sizeof(int) * c * r);
-    
-    for(int i = 0; i < r; i++)
-        pixels[i] = (*pixels + c * i);
-    
-    for (int i = 0; i <  r; i++)
-        for (int j = 0; j < c; j++)
-            pixels[i][j] = 9;*/
-    //[self.ppu setBackgroundDataFrom: self.cpu toPixels: pixels];
-    //[self.screen setFrameData: pixels];
-    //TODO: FUCK, make sure to copy pixels into the screen and not just leak memory
-    //free(pixels);
-
-    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
 }
 
 - (void) runNextInstruction {
-    if ([self.ppu shouldProcessVBlank] == NO) {
-        [self.cpu runNextInstruction];
-    } else {
-        uint8_t ppuStatusReg = [self.cpu readAbsoluteAddress1: 0x02 address2: 0x20];
-        [self.cpu writeValue: ppuStatusReg | (1 << CR1_VBLANK_ENABLE) toAddress: 0x2002];
-        NSLog(@"ppu status reg: %@", [BitHelper intToBinary: ppuStatusReg]);
-        NSLog(@"after vblank set: %X", ppuStatusReg | (1 << CR1_VBLANK_ENABLE));
-        [self.cpu triggerInterrupt: INT_NMI];
-        
-        // Cheese it
-        self.cpu.counter -= 341*262;
-    }
+    [self.cpu runNextInstruction];
+    [self.ppu drawFrame];
 }
 
 @end
