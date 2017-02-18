@@ -87,7 +87,6 @@
     } else {
         self.currVramAddress |= vramAddress;
         // Wrap around instead of going up higher
-        //NSLog(@"We HAVE a FULL VRAM ADDY SET: %X", self.currVramAddress);
         self.firstWrite = YES;
     }
 }
@@ -109,7 +108,6 @@
             break;
         case 0x2006:
             if (self.cpu.notifyPpuWrite == YES) {
-                NSLog(@"write of 2006: %X", value);
                 [self setVramAddress: value];
             } else {
                 NSLog(@"read of 2006");
@@ -120,7 +118,10 @@
             
             if (self.cpu.notifyPpuWrite == YES) {
                     //NSLog(@"current vram address: %X", self.currVramAddress);
-                NSLog(@"Written to $2007: %X", self.cpu.memory[0x2007]);
+                //if (self.currVramAddress < 0x2000 || self.currVramAddre) {
+                    if (self.cpu.memory[0x2007] != 0x20)
+                    NSLog(@"Written to $2007 (%X): %X", self.currVramAddress, self.cpu.memory[0x2007]);
+                //}
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
                 self.currVramAddress += self.incrementStep;
             } else {
@@ -179,8 +180,8 @@
 {
     // Vblank set
     if (self.currentScanline ==  241 && self.currentVerticalLine == 0) {
-        NSLog(@"vblank happening! %d", self.cpu.counter);
-        NSLog(@"current addy at vblank: %@", self.cpu.currentLine);
+        //NSLog(@"vblank happening! %d", self.cpu.counter);
+        //NSLog(@"current addy at vblank: %@", self.cpu.currentLine);
         self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] | (1<<7));
         [self.cpu triggerInterrupt: INT_NMI];
     } else if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears

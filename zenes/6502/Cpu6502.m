@@ -1169,7 +1169,7 @@
             littlerti = [self pullFromStack];
             bigrti = [self pullFromStack];
             self.reg_pc = ((bigrti << 8)| littlerti);
-            NSLog(@"RTI FROM %X TO: %X", oldpc, self.reg_pc);
+            //NSLog(@"RTI FROM %X TO: %X", oldpc, self.reg_pc);
             break;
         case RTS:
             argCount = 1;
