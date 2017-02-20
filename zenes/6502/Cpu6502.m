@@ -712,12 +712,38 @@
         // CMP (Immediate)
         case CMP_IMM:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             uint8_t temp = (self.reg_acc - self.memory[self.op1]);
             
             [self toggleZeroAndSignFlagForReg: temp];
             if (self.reg_acc >= self.memory[self.op1]) {
+                [self enableCarryFlag];
+            }
+            
+            break;
+            
+        case CMP_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 2;
+            uint8_t tempcmpzp = (self.reg_acc - [self readZeroPage: self.memory[self.op1]]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpzp];
+            if (self.reg_acc >= [self readZeroPage: self.memory[self.op1]]) {
+                [self enableCarryFlag];
+            }
+            
+            break;
+            
+        case CMP_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 2;
+            uint8_t tempcmpzpx = (self.reg_acc - [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpzpx];
+            if (self.reg_acc >= [self readZeroPage: self.memory[self.op1]]) {
                 [self enableCarryFlag];
             }
             
@@ -1517,6 +1543,27 @@
             // CMP (Immediate)
         case CMP_IMM:
             opcodeName = @"CMP_IMM";
+            break;
+        case CMP_ZP:
+            opcodeName = @"CMP_ZP";
+            break;
+        case CMP_ZPX:
+            opcodeName = @"CMP_ZPX";
+            break;
+        case CMP_ABS:
+            opcodeName = @"CMP_ABS";
+            break;
+        case CMP_ABSX:
+            opcodeName = @"CMP_ABSX";
+            break;
+        case CMP_ABSY:
+            opcodeName = @"CMP_ABSY";
+            break;
+        case CMP_INDX:
+            opcodeName = @"CMP_INDX";
+            break;
+        case CMP_INDY:
+            opcodeName = @"CMP_INDY";
             break;
         case CPX_IMM:
             opcodeName = @"CPX_IMM";
