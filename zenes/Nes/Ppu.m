@@ -158,6 +158,9 @@
 
 - (uint16_t)getBgColorAddress: (uint8_t)colorLookup
 {
+    if (self.cpu.counter > 300000) {
+        //NSLog(@"bg lookup: %X", 0x3F00+colorLookup);
+    }
     return self.memory[0x3F00+colorLookup];
 }
 
@@ -210,8 +213,7 @@
     
     uint8_t firstPattern, secondPattern = 0;
     
-    //for (int i = 0; i < 8; i++) {
-    //if (self.cpu.counter > 200000) {
+    if (self.cpu.counter > 200000) {
         firstPattern =  self.memory[patternTable+nameByte+(tileNumberY/2)];
         secondPattern =  self.memory[patternTable+nameByte+8+(tileNumberY/2)];
         //NSLog(@"first Pattern: %@", pixelPos, [BitHelper intToBinary: firstPattern]);
@@ -219,15 +221,16 @@
         //NSLog(@"low color: %d", (firstPattern >> pixelPos & 1));
         //NSLog(@"high color: %d", ((secondPattern >> pixelPos & 1) << 1));
 
-        uint8_t colorLookup = [self getBgColorAddress: (firstPattern >> pixelPos & 1) | ((secondPattern >> pixelPos & 1) << 1)];
-        //NSLog(@"color lookup: %d", colorLookup);
+    uint8_t colorLookup = [self getBgColorAddress: (firstPattern >> pixelPos & 1) | ((secondPattern >> pixelPos & 1) << 1)];
+    uint8_t attrLookup = self.memory[attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)];
+    //NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
+        //NSLog(@"color lookup: %d", colorLook, up);
         
         pixel[2] = colorPalette[colorLookup][0];// r
         pixel[3] = colorPalette[colorLookup][1];// g
         pixel[4] = colorPalette[colorLookup][2];// b
-    //}
+    }
     
-    //}
     
     //if (self.cpu.counter > 330000) {
     //    NSLog(@"%X", nameByte);
@@ -259,7 +262,7 @@
 {
     [self checkVBlank];
 
-    if (self.currentVerticalLine <= 340) {
+    if (self.currentVerticalLine < 340) {
         if (self.currentVerticalLine < 256 && self.currentScanline < 240) {
             //for (int i = 0; i < 3; i++) {
             uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine+0 andY: self.currentScanline];
@@ -275,7 +278,7 @@
             free(pixel3);
         }
         
-        if (self.currentScanline == 239 && self.currentVerticalLine == 255) {
+        if (self.currentScanline >= 239 && self.currentVerticalLine < 255) {
             [self.screen setNeedsDisplay: YES];
         }
         
