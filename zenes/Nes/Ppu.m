@@ -118,7 +118,11 @@
             [self setCanDraw: YES];
             
             if (self.cpu.notifyPpuWrite == YES) {
-                self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                // TODO: FIX GHETTO MIRRORING
+                if (self.currVramAddress >= 0x2000 || self.currVramAddress < 0x2400) {
+                    self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                    self.memory[self.currVramAddress+0x400] = self.cpu.memory[0x2007];
+                }
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
