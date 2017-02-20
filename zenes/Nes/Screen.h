@@ -11,8 +11,14 @@
 #include "NesInc.h"
 
 @interface Screen : NSOpenGLView
+{
+    uint8_t pixels[256*240][5];
+}
+
+@property (nonatomic, assign) int currPixel;
 
 - (void)drawPixelAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b;
 - (void)drawFrame;
+- (void)loadPixelsToDrawAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b;
 
 @end

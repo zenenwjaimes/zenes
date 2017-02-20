@@ -25,6 +25,7 @@
     Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
+    [self.window.nesScreen setCurrPixel: 0];
     nesInstance.screen = self.window.nesScreen;
     self.window.nesInstance = nesInstance;
     nesInstance.ppu.screen = self.window.nesScreen;
@@ -37,7 +38,7 @@
 - (void)updateRegs: (NSNotification *) notification
 {
     //if (DEBUGGING_ENABLED) {
-        [self.debuggerTable reloadData];
+     //   [self.debuggerTable reloadData];
     //}
 }
 

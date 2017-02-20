@@ -16,11 +16,9 @@
     if (self = [super init]) {
         self.cpu = cpu;
         [self bootupSequence];
-        //self.chrRom = tmpRom;
         
         for (int i = 0; i < 0x2000; i++) {
             self.memory[i] = tmpRom[i];
-            NSLog(@"tmp vrom (%X): %X", i, tmpRom[i]);
         }
     }
     return self;
@@ -31,7 +29,6 @@
     self.skipVBlank = NO;
     self.firstWrite = YES;
     self.incrementStep = 1;
-    //self.vramAddress = 0x0000;
     self.currentVerticalLine = self.currentScanline = 0;
     
     [self setupColorPalette];
@@ -81,12 +78,10 @@
     if ([self readPpuStatusReg: CR1_INCREMENT_BY_32]) {
         self.incrementStep = 32;
     }
-    //NSLog(@"value passed in: %X", vramAddress);
     
     // VRAM address is stored in 2 bytes, first write is low, second write is high
     if (self.firstWrite == YES) {
         self.currVramAddress = (vramAddress << 8);
-        //NSLog(@"First addy: %X", self.currVramAddress);
 
         self.firstWrite = NO;
     } else {
@@ -100,16 +95,14 @@
 {
     // NOTICE: DO NOT USE READ/WRITE METHODS FROM CPU HERE
     // DOING SO WILL CAUSE A LOOP AND CRASH!
-    uint8_t value = self.cpu.memory[self.cpu.notifyPpuAddress];//[self.cpu readValueAtAddress: self.cpu.notifyPpuAddress];
-
+    uint8_t value = self.cpu.memory[self.cpu.notifyPpuAddress];
+    
     switch (self.cpu.notifyPpuAddress) {
         case 0x2000:
             
             break;
         case 0x2002:
             if (self.cpu.notifyPpuWrite == NO) {
-                //NSLog(@"clearing vblank?");
-                // Any time $2002 is read, clear vblank and also the sprite/bg regs
                 self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] & (1<<7));
                 self.cpu.memory[0x2005] = self.cpu.memory[0x2006] = 0;
             }
@@ -118,20 +111,18 @@
             if (self.cpu.notifyPpuWrite == YES) {
                 [self setVramAddress: value];
             } else {
-                NSLog(@"read of 2006");
+
             }
             break;
         case 0x2007:
             [self setCanDraw: YES];
             
             if (self.cpu.notifyPpuWrite == YES) {
-                NSLog(@"Written to $2007 (%X): %X", self.currVramAddress, self.cpu.memory[0x2007]);
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
             }
-            //NSLog(@"Read of 0x2007");
             break;
     }
 }
@@ -139,7 +130,7 @@
 - (uint16_t)getNameTableAddress
 {
     uint16_t nameTableAddress = 0x00;
-    uint8_t ppuControlReg1 = [self.cpu readAbsoluteAddress1: 0x00 address2: 0x20];
+    uint8_t ppuControlReg1 = self.cpu.ppuReg1;
     uint8_t bits = [BitHelper checkBit: 0 on: ppuControlReg1] | ([BitHelper checkBit: 1 on: ppuControlReg1] << 1);
     
     switch (bits) {
@@ -158,15 +149,23 @@
 
     }
     
-    NSLog(@"status reg: %@ name table addy: %X with bits: %X", [BitHelper intToBinary: ppuControlReg1], nameTableAddress, bits);
-    
     return nameTableAddress;
+}
+
+- (uint16_t)getBgColorAddress: (uint8_t)colorLookup
+{
+    return self.memory[0x3F00+colorLookup];
+}
+
+- (uint16_t)getAttributeTableAddress
+{
+    return [self getNameTableAddress]+0x03C0;
 }
 
 - (uint16_t)getPatternTableAddress
 {
     uint16_t patternTableAddress = 0x0000;
-    uint8_t ppuControlReg1 = [self.cpu readAbsoluteAddress1: 0x00 address2: 0x20];
+    uint8_t ppuControlReg1 = self.cpu.ppuReg1;//[self.cpu readAbsoluteAddress1: 0x00 address2: 0x20];
     uint8_t bits = [BitHelper checkBit: 4 on: ppuControlReg1];
     
     switch (bits) {
@@ -175,22 +174,76 @@
             break;
     }
     
-    NSLog(@"status reg: %@ name table addy: %X with bits: %X", [BitHelper intToBinary: ppuControlReg1], patternTableAddress, bits);
-    
     return patternTableAddress;
+}
+
+- (uint8_t*)getBackgroundDataForX: (uint8_t)x andY: (uint8_t)y
+{
+    uint8_t *pixel = malloc(sizeof(uint8_t)*5);
+    pixel[0] = x;
+    pixel[1] = y;
+    
+    uint8_t tileNumberX = x/8;
+    uint8_t tileNumberY = y/8;
+    uint16_t nameTable = [self getNameTableAddress];
+    uint16_t attributeTable = [self getAttributeTableAddress];
+    uint16_t patternTable = [self getPatternTableAddress];
+    uint16_t nameByteAddress = 0x00;
+    //uint8_t paletteGrid[8];
+    
+    if (tileNumberY == 0) {
+        nameByteAddress = tileNumberX;
+    } else {
+        nameByteAddress = tileNumberY*32+tileNumberX;
+    }
+    
+    uint8_t nameByte = self.memory[nameTable+nameByteAddress];
+    // TODO: IMPLIMENT FETCHING ATTRIBUTE TABLE DATA
+    uint8_t pixelPos = (x & 0xF0 >> 4);
+    if (pixelPos > 7) {
+        pixelPos -=8;
+    }
+    
+    uint8_t firstPattern, secondPattern = 0;
+    
+    //for (int i = 0; i < 8; i++) {
+    //if (self.cpu.counter > 200000) {
+        firstPattern =  self.memory[patternTable+nameByte+(tileNumberY/2)];
+        secondPattern =  self.memory[patternTable+nameByte+8+(tileNumberY/2)];
+        //NSLog(@"first Pattern: %@", pixelPos, [BitHelper intToBinary: firstPattern]);
+        //NSLog(@"second Pattern: %@", [BitHelper intToBinary: secondPattern]);
+        //NSLog(@"low color: %d", (firstPattern >> pixelPos & 1));
+        //NSLog(@"high color: %d", ((secondPattern >> pixelPos & 1) << 1));
+
+        uint8_t colorLookup = [self getBgColorAddress: (firstPattern >> pixelPos & 1) | ((secondPattern >> pixelPos & 1) << 1)];
+        //NSLog(@"color lookup: %d", colorLookup);
+        
+        pixel[2] = colorPalette[colorLookup][0];// r
+        pixel[3] = colorPalette[colorLookup][1];// g
+        pixel[4] = colorPalette[colorLookup][2];// b
+    //}
+    
+    //}
+    
+    //if (self.cpu.counter > 330000) {
+    //    NSLog(@"%X", nameByte);
+    //}
+    //NSLog(@"");
+    //for (int i = 0; i < 256;) {
+    
+    //}
+    
+    return pixel;
 }
 
 - (void)checkVBlank
 {
     // Vblank set
     if (self.currentScanline ==  241 && self.currentVerticalLine == 0) {
-        //NSLog(@"vblank happening! %d", self.cpu.counter);
-        //NSLog(@"current addy at vblank: %@", self.cpu.currentLine);
         self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] | (1<<7));
         
         // Generate nmi if set in control reg 1
         if (self.cpu.memory[0x2000] >> 7) {
-            NSLog(@"TRIGGERING INT");
             [self.cpu triggerInterrupt: INT_NMI];
         }
     } else if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears
@@ -201,12 +254,32 @@
 - (void)drawFrame
 {
     [self checkVBlank];
-    
+
     if (self.currentVerticalLine <= 340) {
+        if (self.currentVerticalLine < 256 && self.currentScanline < 240) {
+            //for (int i = 0; i < 3; i++) {
+            uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine+0 andY: self.currentScanline];
+            [self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
+            free(pixel1);
+            
+                uint8_t *pixel2 = [self getBackgroundDataForX: self.currentVerticalLine+1 andY: self.currentScanline];
+                [self.screen loadPixelsToDrawAtX:pixel2[0] atY: pixel2[1] withR: pixel2[2] G: pixel2[3] B: pixel2[4]];
+                free(pixel2);
+            
+            uint8_t *pixel3 = [self getBackgroundDataForX: self.currentVerticalLine+2 andY: self.currentScanline];
+            [self.screen loadPixelsToDrawAtX:pixel3[0] atY: pixel3[1] withR: pixel3[2] G: pixel3[3] B: pixel3[4]];
+            free(pixel3);
+        }
+        
+        if (self.currentScanline == 239 && self.currentVerticalLine == 255) {
+            [self.screen setNeedsDisplay: YES];
+        }
+        
         self.currentVerticalLine += 3;
     } else {
         if (self.currentScanline < 261) {
             self.currentScanline++;
+            self.canDraw = YES;
         } else {
             self.currentScanline = 0;
         }
@@ -215,9 +288,8 @@
     }
     
     // draw 3 pixels at a time. this keeps the cpu and ppu in sync since the ppu is 3x as fast as the cpu
-    if (self.canDraw == YES) {
-        
-    }
+    //if (self.canDraw == YES) {
+    //}
 }
 
 - (void)setupColorPalette

@@ -1209,17 +1209,12 @@
             self.counter += 6;
             // Pull the stack address and put it into the pc
             uint16_t littlerti, bigrti = 0x00;
-            uint16_t oldpc = self.reg_pc;
             
-            //NSLog(@"Stack at current pos: %X", self.reg_sp);
-            //for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-            //    NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
-            //}
+
             self.reg_status = [self pullFromStack];
             littlerti = [self pullFromStack];
             bigrti = [self pullFromStack];
             self.reg_pc = ((bigrti << 8)| littlerti);
-            //NSLog(@"RTI FROM %X TO: %X", oldpc, self.reg_pc);
             break;
         case RTS:
             argCount = 1;
