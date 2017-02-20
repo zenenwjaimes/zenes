@@ -16,7 +16,12 @@
     if (self = [super init]) {
         self.cpu = cpu;
         [self bootupSequence];
-        self.chrRom = tmpRom;
+        //self.chrRom = tmpRom;
+        
+        for (int i = 0; i < 0x2000; i++) {
+            self.memory[i] = tmpRom[i];
+            NSLog(@"tmp vrom (%X): %X", i, tmpRom[i]);
+        }
     }
     return self;
 }
@@ -43,7 +48,7 @@
         tempChrRom[i] = 0x00;
     }
     
-    self.chrRom = tempChrRom;
+    //self.chrRom = tempChrRom;
     self.memory = tempMemory;    
 }
 
@@ -98,11 +103,14 @@
     uint8_t value = self.cpu.memory[self.cpu.notifyPpuAddress];//[self.cpu readValueAtAddress: self.cpu.notifyPpuAddress];
 
     switch (self.cpu.notifyPpuAddress) {
+        case 0x2000:
+            
+            break;
         case 0x2002:
             if (self.cpu.notifyPpuWrite == NO) {
-                NSLog(@"clearing vblank?");
+                //NSLog(@"clearing vblank?");
                 // Any time $2002 is read, clear vblank and also the sprite/bg regs
-                self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] & (1<<7));
+                self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] & (1<<7));
                 self.cpu.memory[0x2005] = self.cpu.memory[0x2006] = 0;
             }
             break;
@@ -117,11 +125,7 @@
             [self setCanDraw: YES];
             
             if (self.cpu.notifyPpuWrite == YES) {
-                    //NSLog(@"current vram address: %X", self.currVramAddress);
-                //if (self.currVramAddress < 0x2000 || self.currVramAddre) {
-                    if (self.cpu.memory[0x2007] != 0x20)
-                    NSLog(@"Written to $2007 (%X): %X", self.currVramAddress, self.cpu.memory[0x2007]);
-                //}
+                NSLog(@"Written to $2007 (%X): %X", self.currVramAddress, self.cpu.memory[0x2007]);
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
                 self.currVramAddress += self.incrementStep;
             } else {
@@ -183,7 +187,12 @@
         //NSLog(@"vblank happening! %d", self.cpu.counter);
         //NSLog(@"current addy at vblank: %@", self.cpu.currentLine);
         self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] | (1<<7));
-        [self.cpu triggerInterrupt: INT_NMI];
+        
+        // Generate nmi if set in control reg 1
+        if (self.cpu.memory[0x2000] >> 7) {
+            NSLog(@"TRIGGERING INT");
+            [self.cpu triggerInterrupt: INT_NMI];
+        }
     } else if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears
         [self.cpu readValueAtAddress: 0x2002];
     }
@@ -207,29 +216,6 @@
     
     // draw 3 pixels at a time. this keeps the cpu and ppu in sync since the ppu is 3x as fast as the cpu
     if (self.canDraw == YES) {
-        
-    }
-}
-
-- (void)setBackgroundDataFrom: (Cpu6502 *)cpu toPixels: (int ***)pixels
-{
-    uint16_t nameTableAddress = [self getNameTableAddress];
-    uint16_t patternTableAddress = [self getPatternTableAddress];
-    // TODO: Actually implement ppu proper drawing in sync with cpu clock
-    
-    //for (int i = 0; i < 64; i++) {
-    //    for (int j = 0; j < 3; j++) {
-    //        NSLog(@"color: %X", colorPalette[i][j]);
-    //    }
-    //}
-
-    if (patternTableAddress != 0x0000) {
-    
-        /*for (int i = 0; i < 262; i++) {
-            for (int j = 0; j < 340; j++) {
-                //pixels[i][j] = i*j;
-            }
-        }*/
         
     }
 }

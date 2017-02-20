@@ -12,9 +12,7 @@
 
 @interface Screen : NSOpenGLView
 
-@property (assign, nonatomic) int ***pixels;
-
-- (void)setFrameData: (int ***)frameData;
+- (void)drawPixelAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b;
 - (void)drawFrame;
 
 @end

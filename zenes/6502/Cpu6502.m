@@ -36,7 +36,7 @@
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
     for (int i = 0; i < 0x10000; i++) {
-        tempMemory[i] = 0xFF;
+        tempMemory[i] = 0x00;
     }
     
     //self.memory = tempMemory;
@@ -51,6 +51,7 @@
     // Hack for notifying the ppu of changes
     self.notifyPpu = NO;
     self.notifyPpuAddress = 0x0000;
+    //[self.ppu che];
 }
 
 - (void)setMemory:(uint8_t *)memory {
@@ -186,8 +187,8 @@
     
     // Send any notifications to the PPU about changes to regs
     if (address >= 0x2000 && address <= 0x2007) {
-        self.ppuReg1 = [self readValueAtAddress: 0x2000];
-        self.ppuReg2 = [self readValueAtAddress: 0x2001];
+        self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
+        self.ppuReg2 = self.memory[0x2001];//[self readValueAtAddress: 0x2001];
         self.notifyPpu = YES;
         self.notifyPpuAddress = address;
         self.notifyPpuWrite = YES;
@@ -213,10 +214,20 @@
         case 0x2007:
             break;
     }*/
-    
-    if (address == 0x2007) {
+    uint8_t value = self.memory[address];
+    if (address >= 0x2000 && address <= 0x2000) {
         self.ppuReg1 = [self readValueAtAddress: 0x2000];
         self.ppuReg2 = [self readValueAtAddress: 0x2001];
+
+        self.notifyPpuWrite = NO;
+        self.notifyPpuAddress = address;
+        [self.ppu observeCpuChanges];
+    }
+    /*
+    if (address == 0x2002) {
+        self.ppuReg1 = [self readValueAtAddress: 0x2000];
+        self.ppuReg2 = [self readValueAtAddress: 0x2001];
+
         self.notifyPpu = YES;
         self.notifyPpuAddress = address;
         NSLog(@"notfing of read: %X", address);
@@ -225,7 +236,16 @@
         [self.ppu observeCpuChanges];
     }
     
-    return self.memory[address];
+    if (address == 0x2007) {
+        self.notifyPpu = YES;
+        self.notifyPpuAddress = address;
+        NSLog(@"notfing of read: %X", address);
+        self.notifyPpuWrite = NO;
+        
+        [self.ppu observeCpuChanges];
+    }*/
+    
+    return value;
 }
 
 /**
@@ -615,6 +635,8 @@
                 uint8_t relativeAddress = self.memory[self.op1];
                 
                 self.reg_pc = [self getRelativeAddressWithAddress: self.reg_pc andOffset: relativeAddress];
+            } else {
+                
             }
             break;
             
@@ -774,6 +796,7 @@
             if (self.reg_y != 0) {
                 self.reg_y--;
             }
+
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             
             break;
@@ -906,11 +929,12 @@
             //self.reg_pc += 3;
             self.counter += 6;
             
-            uint16_t stackPc = self.reg_pc-1;
+            uint16_t stackPc = self.reg_pc+2;
             
             // Push new address to the stack and decrement the current PC
             [self pushToStack: stackPc >> 8];
-            [self pushToStack: stackPc];
+            [self pushToStack: (uint8_t)stackPc];
+            
             //TODO: FUCK
             self.reg_pc = (self.memory[self.op2] << 8 | self.memory[self.op1]);
             
@@ -1176,12 +1200,7 @@
             // 6 cycles
             self.counter += 6;
             // Pull the stack address and put it into the pc
-            uint16_t little, big = 0x00;
-            
-            //NSLog(@"Stack at current pos: %X", self.reg_sp);
-            //for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-            //    NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
-            //}
+            uint8_t little, big = 0x00;
             
             little = [self pullFromStack];
             big = [self pullFromStack];
@@ -1373,7 +1392,7 @@
             NSLog(@"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC);
             NSLog(@"Stack at current pos: %X", self.reg_sp);
             for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-                NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+                NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp+i], i);
             }
             self.isRunning = NO;
             //@throw [NSException exceptionWithName: @"Unknown OP" reason: @"Unknown OP" userInfo: nil];

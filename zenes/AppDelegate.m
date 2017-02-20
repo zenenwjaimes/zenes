@@ -27,6 +27,7 @@
 
     nesInstance.screen = self.window.nesScreen;
     self.window.nesInstance = nesInstance;
+    nesInstance.ppu.screen = self.window.nesScreen;
     
     [self.debuggerMemory setEditable: NO];
     [self.debuggerMemory setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
@@ -35,9 +36,9 @@
 
 - (void)updateRegs: (NSNotification *) notification
 {
-    if (DEBUGGING_ENABLED) {
+    //if (DEBUGGING_ENABLED) {
         [self.debuggerTable reloadData];
-    }
+    //}
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification

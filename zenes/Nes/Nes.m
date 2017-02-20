@@ -82,9 +82,9 @@
                 });
             
                 dispatch_sync(dispatch_get_main_queue(), ^{
-                    if (DEBUGGING_ENABLED) {
+                    //if (DEBUGGING_ENABLED) {
                         [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
-                    }
+                    //}
                 });
             }
             
@@ -95,12 +95,12 @@
 
 - (void) runNextInstructionInline {
     [self.cpu runNextInstruction];
-    [self.ppu drawFrame];
     
     if (DEBUGGING_ENABLED) {
         [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-        [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
     }
+    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
+
 }
 
 - (void) runNextInstruction {

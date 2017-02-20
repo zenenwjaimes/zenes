@@ -17,6 +17,7 @@
 }
 
 @property (retain) Cpu6502 *cpu;
+@property (retain) Screen *screen;
 @property uint16_t currentScanline;
 @property uint16_t currentVerticalLine;
 @property BOOL canDraw;
@@ -25,12 +26,11 @@
 @property (assign, nonatomic) uint8_t incrementStep;
 @property (assign, nonatomic) uint16_t currVramAddress;
 @property (assign, nonatomic) uint8_t *memory;
-@property (assign, nonatomic) uint8_t *chrRom;
+//@property (assign, nonatomic) uint8_t *chrRom;
 
 - (id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom;
 - (void)checkVBlank;
 - (void)drawFrame;
-- (void)setBackgroundDataFrom: (Cpu6502 *)cpu toPixels: (int ***)pixels;
 - (void)setVramAddress:(uint16_t)vramAddress;
 - (void)observeCpuChanges;
 
