@@ -33,6 +33,7 @@
 - (void)drawFrame;
 - (void)setVramAddress:(uint16_t)vramAddress;
 - (void)observeCpuChanges;
+- (uint8_t*)getBackgroundData2ForX: (uint8_t)x andY: (uint8_t)y;
 
 @end
 

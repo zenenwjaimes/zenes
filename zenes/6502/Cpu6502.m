@@ -175,6 +175,10 @@
     self.memory[address] = value;
 }
 
+- (void)writeZeroPage: (uint8_t)address withValue: (uint8_t)value withRegister: (uint8_t)reg {
+    self.memory[((self.memory[address] + reg) & 0xFF)] = value;
+}
+
 - (void)writeValue: (uint8_t)value toAbsoluteOp1: (uint8_t)absop1 andAbsoluteOp2: (uint8_t)absop2
 {
     uint16_t address = (absop2 << 8 | absop1);
@@ -367,6 +371,49 @@
     }
     [self toggleZeroAndSignFlagForReg: tempadd];
     self.reg_acc = (tempadd & 0xFF);
+}
+
+- (uint8_t)rotateLeft: (uint8_t)value
+{
+    //uint8_t rolzp = [self readZeroPage: self.memory[self.op1]];
+    //NSLog(@"initial value: %@", [BitHelper intToBinary: rolzp]);
+    
+    uint8_t rolzp_shifted = (value << 1) & 0xFE;
+    //NSLog(@"shifted value: %@", [BitHelper intToBinary: rolzp_shifted]);
+    
+    rolzp_shifted |= [self checkFlag: STATUS_CARRY_BIT];
+    
+    //NSLog(@"shifted value with carry tacked on: %@", [BitHelper intToBinary: rolzp_shifted]);
+    //NSLog(@"carry flag status: %X", [self checkFlag: STATUS_CARRY_BIT]);
+    
+    //[self writeZeroPage: self.memory[self.op1] withValue: rolzp_shifted];
+    if ([BitHelper checkBit: 7 on: value]) {
+        [self enableCarryFlag];
+    } else {
+        [self disableCarryFlag];
+    }
+    
+    [self toggleZeroAndSignFlagForReg: rolzp_shifted];
+    
+    return rolzp_shifted;
+}
+
+- (uint8_t)logicalShiftRight: (uint8_t)value
+{
+    // Since the shift is right, the 7th bit of the value will always be 0
+    // so we disable the sign flag
+    [self disableSignFlag];
+    uint8_t lsrtemp = (value >> 1) & 0x7F;
+    
+    if ([BitHelper checkBit: STATUS_CARRY_BIT on: value]) {
+        [self enableCarryFlag];
+    }
+    
+    if (lsrtemp == 0) {
+        [self enableZeroFlag];
+    }
+    
+    return lsrtemp;
 }
 
 - (void)pushToStack: (uint8_t)data {
@@ -910,7 +957,7 @@
             break;
         case INC_ZP:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 5;
             
             [self writeZeroPage: self.memory[self.op1] withValue: ((self.memory[self.op1]+1) & 0xFF)];
@@ -918,6 +965,19 @@
             [self toggleZeroAndSignFlagForReg: [self readZeroPage: self.memory[self.op1]]];
             
             break;
+            
+        case INC_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            uint8_t incabs = ([self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]+1) & 0xFF;
+            [self writeValue: incabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
+            
+            [self toggleZeroAndSignFlagForReg: incabs];
+            
+            break;
+            
         case INX:
             argCount = 1;
             self.reg_pc++;
@@ -1048,18 +1108,6 @@
             // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
-
-            // LDY (Load Y Immediate)
-        case LDY_IMM:
-            argCount = 2;
-            self.reg_pc += 2;
-            // Cycles: 2
-            self.counter += 2;
-            self.reg_y = self.memory[self.op1];
-            // 1 byte OP, jump to the next byte address
-            
-            [self toggleZeroAndSignFlagForReg: self.reg_y];
-            break;
             
         case LDA_INDY:
             argCount = 2;
@@ -1079,8 +1127,38 @@
             self.counter += 4;
             self.reg_y = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
             
-            // 1 byte OP, jump to the next byte address
-            // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_y];
+            break;
+            
+        // LDY (Load Y Immediate)
+        case LDY_IMM:
+            argCount = 2;
+            self.reg_pc += 2;
+            // Cycles: 2
+            self.counter += 2;
+            self.reg_y = self.memory[self.op1];
+            
+            [self toggleZeroAndSignFlagForReg: self.reg_y];
+            break;
+            
+            // LDY (Load Y Immediate)
+        case LDY_ZPX:
+            argCount = 2;
+            self.reg_pc += 2;
+            // Cycles: 2
+            self.counter += 4;
+            self.reg_y = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]; //self.memory[self.op1];
+            
+            [self toggleZeroAndSignFlagForReg: self.reg_y];
+            break;
+            
+        case LDY_ZP:
+            argCount = 2;
+            self.reg_pc += 2;
+            // Cycles: 2
+            self.counter += 3;
+            self.reg_y = [self readZeroPage: self.memory[self.op1]];
+            
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             break;
             
@@ -1101,7 +1179,6 @@
         case LSR_A:
             argCount = 1;
             self.reg_pc++;
-            // Cycles: 4
             self.counter += 2;
             // Since the shift is right, the 7th bit of the value will always be 0
             // so we disable the sign flag
@@ -1116,8 +1193,16 @@
             if (lsrtemp == 0) [self enableZeroFlag];
             self.reg_acc = lsrtemp;
             break;
-        //case LSR_ZP:
-        //    break;
+            
+        case LSR_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 5;
+            uint8_t lsrzp = [self logicalShiftRight: [self readZeroPage: self.memory[self.op1]]];
+
+            [self writeZeroPage: self.memory[self.op1] withValue: lsrzp];
+            
+            break;
         //case LSR_ZPX:
         //    break;
         //case LSR_ABS:
@@ -1179,6 +1264,14 @@
             self.reg_pc++;
             [self pushToStack: self.reg_status];
             break;
+        case ROL_ACC:
+            argCount = 1;
+            self.counter += 2;
+            self.reg_pc += argCount;
+            uint8_t rolAcc = [self rotateLeft: self.reg_acc];
+            self.reg_acc = rolAcc;
+            
+            break;
         case ROL_ZP:
             argCount = 2;
             self.counter += 5;
@@ -1202,6 +1295,29 @@
             }
             
             [self toggleZeroAndSignFlagForReg: rolzp];
+            break;
+            
+        case ROR_ZP:
+            argCount = 2;
+            self.counter += 5;
+            self.reg_pc += argCount;
+            uint8_t rorzp = [self readZeroPage: self.memory[self.op1]];
+            
+            uint8_t rorzp_shifted = (rorzp >> 1) & 0x7F;
+            
+            rorzp_shifted |= ([self checkFlag: STATUS_CARRY_BIT]?0x80:0x00);
+            
+            //NSLog(@"shifted value with carry tacked on: %@", [BitHelper intToBinary: rolzp_shifted]);
+            //NSLog(@"carry flag status: %X", [self checkFlag: STATUS_CARRY_BIT]);
+            
+            [self writeZeroPage: self.memory[self.op1] withValue: rorzp_shifted];
+            if ([BitHelper checkBit: 0 on: rorzp]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            [self toggleZeroAndSignFlagForReg: rorzp];
             break;
         case RTI:
             argCount = 1;
@@ -1314,6 +1430,14 @@
             // Cycles: 3
             self.counter += 3;
             [self writeZeroPage: self.memory[self.op1] withValue: self.reg_acc];
+            break;
+        case STA_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            // Cycles: 3
+            self.counter += 4;
+            //[self writeZeroPage: self.memory[self.op1] withValue: self.reg_acc];
+            [self writeZeroPage: self.memory[self.op1] withValue: self.reg_acc withRegister: self.reg_x];
             break;
         //TODO: Memory fix
         // STX (Store X Zero Page)
@@ -1617,6 +1741,9 @@
         case INC_ZP:
             opcodeName = @"INC_ZP";
             break;
+        case INC_ABS:
+            opcodeName = @"INC_ABS";
+            break;
         case INX:
             opcodeName = @"INX";
             break;
@@ -1667,6 +1794,12 @@
             // LDY (Load Y ABS)
         case LDY_ABS:
             opcodeName = @"LDY_ABS";
+            break;
+        case LDY_ZP:
+            opcodeName = @"LDY_ZP";
+            break;
+        case LDY_ZPX:
+            opcodeName = @"LDY_ZPX";
             break;
             // LDA (Load Accumulator Absolute)
         case LDA_ABS:
@@ -1734,6 +1867,9 @@
         case ROL_ABSX:
             opcodeName = @"ROL_ABSX";
             break;
+        case ROR_ZP:
+            opcodeName = @"ROR_ZP";
+            break;
         case SBC_IMM:
             opcodeName = @"SBC_IMM";
             break;
@@ -1758,6 +1894,9 @@
             // STA_ZP (Store Accumulator Zero Page)
         case STA_ZP:
             opcodeName = @"STA_ZP";
+            break;
+        case STA_ZPX:
+            opcodeName = @"STA_ZPX";
             break;
             // STX (Store X Zero Page)
         case STX_ZP:

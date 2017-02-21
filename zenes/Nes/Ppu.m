@@ -119,10 +119,14 @@
             
             if (self.cpu.notifyPpuWrite == YES) {
                 // TODO: FIX GHETTO MIRRORING
-                if (self.currVramAddress >= 0x2000 || self.currVramAddress < 0x2400) {
+                //if (self.currVramAddress >= 0x2000 || self.currVramAddress < 0x2400) {
+                //    self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                //    self.memory[self.currVramAddress+0x400] = self.cpu.memory[0x2007];
+                //}
+                //if (self.currVramAddress >= 0x2400 || self.currVramAddress < 0x2800) {
                     self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                    self.memory[self.currVramAddress+0x400] = self.cpu.memory[0x2007];
-                }
+                 //   self.memory[self.currVramAddress-0x400] = self.cpu.memory[0x2007];
+                //}
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
@@ -184,6 +188,18 @@
     return patternTableAddress;
 }
 
+- (uint8_t*)getBackgroundData2ForX: (uint8_t)x andY: (uint8_t)y
+{
+    uint8_t *pixel = malloc(sizeof(uint8_t)*5);
+    pixel[0] = x;
+    pixel[1] = y;
+    pixel[2] = x;
+    pixel[3] = y;
+    pixel[4] = x*y;
+    
+    return pixel;
+}
+
 - (uint8_t*)getBackgroundDataForX: (uint8_t)x andY: (uint8_t)y
 {
     uint8_t *pixel = malloc(sizeof(uint8_t)*5);
@@ -201,44 +217,37 @@
     if (tileNumberY == 0) {
         nameByteAddress = tileNumberX;
     } else {
+        //nameByteAddress = (tileNumberY*tileNumberX);
         nameByteAddress = tileNumberY*32+tileNumberX;
     }
-    
-    uint8_t nameByte = self.memory[nameTable+nameByteAddress];
+
     // TODO: IMPLIMENT FETCHING ATTRIBUTE TABLE DATA
     uint8_t pixelPos = (x & 0xF0 >> 4);
     if (pixelPos > 7) {
         pixelPos -=8;
     }
     
+    uint8_t pixelyPos = (y & 0xF0 >> 4);
+    if (pixelyPos > 7) {
+        pixelyPos -=8;
+    }
+    
+    uint8_t nameByte = self.memory[nameTable+nameByteAddress];
     uint8_t firstPattern, secondPattern = 0;
     
-    if (self.cpu.counter > 200000) {
-        firstPattern =  self.memory[patternTable+nameByte+(tileNumberY/2)];
-        secondPattern =  self.memory[patternTable+nameByte+8+(tileNumberY/2)];
-        //NSLog(@"first Pattern: %@", pixelPos, [BitHelper intToBinary: firstPattern]);
-        //NSLog(@"second Pattern: %@", [BitHelper intToBinary: secondPattern]);
-        //NSLog(@"low color: %d", (firstPattern >> pixelPos & 1));
-        //NSLog(@"high color: %d", ((secondPattern >> pixelPos & 1) << 1));
+    firstPattern =  self.memory[patternTable+nameByte+(pixelyPos*8)];
+    secondPattern =  self.memory[patternTable+nameByte+(pixelyPos*8)+8];
+    
 
-    uint8_t colorLookup = [self getBgColorAddress: (firstPattern >> pixelPos & 1) | ((secondPattern >> pixelPos & 1) << 1)];
-    uint8_t attrLookup = self.memory[attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)];
+    uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
+    //uint8_t attrLookup = self.memory[attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)];
     //NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
         //NSLog(@"color lookup: %d", colorLook, up);
-        
+    
         pixel[2] = colorPalette[colorLookup][0];// r
         pixel[3] = colorPalette[colorLookup][1];// g
         pixel[4] = colorPalette[colorLookup][2];// b
-    }
-    
-    
-    //if (self.cpu.counter > 330000) {
-    //    NSLog(@"%X", nameByte);
-    //}
-    //NSLog(@"");
-    //for (int i = 0; i < 256;) {
-    
-    //}
+//    }
     
     return pixel;
 }
@@ -294,10 +303,24 @@
         self.currentVerticalLine = 0;
     }
     
+    if (self.currentScanline == 260) {
+       /* for (int x = 0; x < 32; x++) {
+            for (int y = 0; y < 30; y++) {
+                //uint8_t *pixel1 = [self getBackgroundData2ForX: x andY: y];
+                //[self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
+                //free(pixel1);
+                //[self drawPatternForX: x andY: y];
+            }
+        }
+*/
+        [self.screen setNeedsDisplay: YES];
+    }
+    
     // draw 3 pixels at a time. this keeps the cpu and ppu in sync since the ppu is 3x as fast as the cpu
     //if (self.canDraw == YES) {
     //}
 }
+
 
 - (void)setupColorPalette
 {
