@@ -162,9 +162,6 @@
 
 - (uint16_t)getBgColorAddress: (uint8_t)colorLookup
 {
-    if (self.cpu.counter > 300000) {
-        //NSLog(@"bg lookup: %X", 0x3F00+colorLookup);
-    }
     return self.memory[0x3F00+colorLookup];
 }
 

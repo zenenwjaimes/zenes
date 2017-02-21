@@ -109,6 +109,7 @@ enum opcodes {
     BCS = 0xB0,
     BEQ = 0xF0,
     BIT_ZP = 0x24,
+    BIT_ABS = 0x2C,
     BMI = 0x30,
     BNE = 0xD0,
     BPL = 0x10,

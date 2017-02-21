@@ -679,6 +679,16 @@
             [self toggleOverflowFlagForReg: value withBit: 6];
             break;
             
+        case BIT_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 3;
+            uint8_t bitabs = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op1]] & self.reg_acc;
+            
+            [self toggleZeroAndSignFlagForReg: bitabs];
+            [self toggleOverflowFlagForReg: value withBit: 6];
+            break;
+            
         case BMI:
             argCount = 2;
             self.reg_pc += argCount;
@@ -1671,6 +1681,9 @@
             break;
         case BIT_ZP:
             opcodeName = @"BIT_ZP";
+            break;
+        case BIT_ABS:
+            opcodeName = @"BIT_ABS";
             break;
         case BMI:
             opcodeName = @"BMI";

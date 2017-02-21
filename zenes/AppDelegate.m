@@ -22,7 +22,7 @@
 
     [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/donkey.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/core.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     [self.window.nesScreen setCurrPixel: 0];
@@ -37,9 +37,9 @@
 
 - (void)updateRegs: (NSNotification *) notification
 {
-    if (DEBUGGING_ENABLED) {
+   //if (DEBUGGING_ENABLED) {
         [self.debuggerTable reloadData];
-    }
+    //}
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
