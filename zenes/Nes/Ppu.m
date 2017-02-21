@@ -218,7 +218,7 @@
         nameByteAddress = tileNumberX;
     } else {
         //nameByteAddress = (tileNumberY*tileNumberX);
-        nameByteAddress = (tileNumberY*32)+tileNumberX;
+        nameByteAddress = tileNumberY*32+tileNumberX;
     }
 
     // TODO: IMPLIMENT FETCHING ATTRIBUTE TABLE DATA
@@ -235,8 +235,8 @@
     uint8_t nameByte = self.memory[nameTable+nameByteAddress];
     uint8_t firstPattern, secondPattern = 0;
     
-    firstPattern =  self.memory[patternTable+nameByte+(pixelyPos*8)];
-    secondPattern =  self.memory[patternTable+nameByte+(pixelyPos*8)+8];
+    firstPattern =  self.memory[patternTable+(nameByte*16)+(pixelPos*pixelyPos)];
+    secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelPos*pixelyPos)+8];
     
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
