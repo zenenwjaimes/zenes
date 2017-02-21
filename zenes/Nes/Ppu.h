@@ -26,14 +26,12 @@
 @property (assign, nonatomic) uint8_t incrementStep;
 @property (assign, nonatomic) uint16_t currVramAddress;
 @property (assign, nonatomic) uint8_t *memory;
-//@property (assign, nonatomic) uint8_t *chrRom;
 
 - (id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom;
 - (void)checkVBlank;
 - (void)drawFrame;
 - (void)setVramAddress:(uint16_t)vramAddress;
 - (void)observeCpuChanges;
-- (uint8_t*)getBackgroundData2ForX: (uint8_t)x andY: (uint8_t)y;
 
 @end
 

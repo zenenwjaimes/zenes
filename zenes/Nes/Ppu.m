@@ -124,6 +124,9 @@
                 //    self.memory[self.currVramAddress+0x400] = self.cpu.memory[0x2007];
                 //}
                 //if (self.currVramAddress >= 0x2400 || self.currVramAddress < 0x2800) {
+                if (self.cpu.memory[0x2007] == 0x73) {
+                    NSLog(@"pickle!");
+                }
                     self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
                  //   self.memory[self.currVramAddress-0x400] = self.cpu.memory[0x2007];
                 //}

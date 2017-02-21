@@ -227,6 +227,10 @@
         self.notifyPpuAddress = address;
         [self.ppu observeCpuChanges];
     }
+    
+    if (address == 0x4016) {
+        NSLog(@"joystick writing: %d", self.counter);
+    }
     /*
     if (address == 0x2002) {
         self.ppuReg1 = [self readValueAtAddress: 0x2000];
@@ -284,7 +288,6 @@
 
 - (uint8_t)readIndexedIndirectAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset
 {
-    // TODO: Implement memory reading here from the memory read method
     uint16_t indexIndirect = (self.memory[(lowByte + offset + 1) & 0xFF] << 8) | (self.memory[(lowByte + offset) & 0xFF]);
     return [self readValueAtAddress: indexIndirect];
 //    return self.memory[indexIndirect];
@@ -292,15 +295,14 @@
 
 - (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset
 {
-    // TODO: Implement memory reading here from the memory read method
     uint16_t indirectIndexed = (((self.memory[(lowByte + 1) & 0xFF] << 8) | (self.memory[lowByte])) + offset) & 0xFFFF;
+    if (lowByte == 0xD0) NSLog(@"indirect indexed: %X", indirectIndexed);
     return [self readValueAtAddress: indirectIndexed];
 //    return self.memory[indirectIndexed];
 }
 
 - (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte
 {
-    // TODO: Implement memory reading here from the memory read method
     uint16_t tempAddress = ((highByte << 8) | lowByte);
     
     return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
@@ -470,6 +472,40 @@
     self.op1 = self.reg_pc+1;
     self.op2 = self.reg_pc+2;
     self.op3 = self.reg_pc+3;
+    
+    if (self.counter >= 201911 && self.counter <= 201911) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
+    if (self.counter >= 201928 && self.counter <= 201928) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
+    
+    if (self.counter >= 201945 && self.counter <= 201945) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
+    if (self.counter >= 201962 && self.counter <= 201962) {
+        NSLog(@"control firing?");
+        [self writeValue:0x1 toAddress: 0x4016];
+    }
+    if (self.counter >= 201979 && self.counter <= 201979) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
+    if (self.counter >= 201996 && self.counter <= 201996) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
+    if (self.counter >= 202013 && self.counter <= 202013) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
+    if (self.counter >= 202030 && self.counter <= 202030) {
+        NSLog(@"control firing?");
+        [self writeValue:0x0 toAddress: 0x4016];
+    }
     
     switch(opcode) {
         case ADC_IMM:

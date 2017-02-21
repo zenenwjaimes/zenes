@@ -71,6 +71,19 @@
     self.currPixel++;
 }
 
+- (void)keyDown:(NSEvent *)event
+{
+    NSLog(@"test");
+}
+
+
+- (BOOL)canBecomeKeyWindow {
+    return YES; }
+
+- (BOOL)canBecomeMainWindow {
+    return YES; }
+
+
 - (void)drawFrame
 {
 

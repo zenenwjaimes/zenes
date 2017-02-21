@@ -50,9 +50,9 @@
         uint8_t chrRom[0x2000] = {};
         
         if (self.rom.mapperType == 0) {
-        //    [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1, 0x2000)];
+            [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1, 0x2000)];
         } else {
-        //    [self.rom.data getBytes: chrRom range: NSMakeRange((prgRom1+0x4000), 0x2000)];
+            [self.rom.data getBytes: chrRom range: NSMakeRange((prgRom1+0x4000), 0x2000)];
         }
         
         self.ppu = [[Ppu alloc] initWithCpu: self.cpu andChrRom: chrRom];
