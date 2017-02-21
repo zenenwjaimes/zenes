@@ -373,6 +373,26 @@
     self.reg_acc = (tempadd & 0xFF);
 }
 
+- (void)subtractWithCarry: (uint8_t)value
+{
+    uint8_t tempsub = self.reg_acc - value - (1-[BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]);
+    uint8_t tempsuboverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
+    
+    if (tempsuboverflow != 0) {
+        [self enableOverflowFlag];
+    } else {
+        [self disableOverflowFlag];
+    }
+    if (tempsub > 0x00) {
+        [self enableCarryFlag];
+    } else {
+        [self disableCarryFlag];
+    }
+    [self toggleZeroAndSignFlagForReg: tempsub];
+    
+    self.reg_acc = (tempsub & 0xFF);
+}
+
 - (uint8_t)rotateLeft: (uint8_t)value
 {
     //uint8_t rolzp = [self readZeroPage: self.memory[self.op1]];
@@ -1053,7 +1073,7 @@
         // LDA_ZP (Load Acc ZP)
         case LDA_ZP:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             // Cycles: 2
             self.counter += 3;
             self.reg_acc = [self readZeroPage: self.memory[self.op1]];
@@ -1061,6 +1081,16 @@
             
             // 1 byte OP, jump to the next byte address
             // Accumulator is 0, enable the zero flag
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
+        case LDA_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            // Cycles: 2
+            self.counter += 4;
+            self.reg_acc = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
+
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
@@ -1346,8 +1376,9 @@
         case SBC_IMM:
             argCount = 2;
             self.counter += 2;
-            self.reg_pc += 2;
-            
+            self.reg_pc += argCount;
+            NSLog(@"subtract is happening");
+            // TODO: Switch over to the actual method subtractWithCarry. Also, double check this gorilla logic
             uint8_t tempsub = self.reg_acc - self.memory[self.op1] - (1-[BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]);
             uint8_t tempsuboverflow = ((!(((self.reg_acc ^ self.memory[self.op1]) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
             
@@ -1363,6 +1394,14 @@
             }
             [self toggleZeroAndSignFlagForReg: tempsub];
             self.reg_acc = (tempsub & 0xFF);
+            break;
+            
+        case SBC_ZP:
+            argCount = 2;
+            self.counter += 3;
+            self.reg_pc += argCount;
+            
+            [self subtractWithCarry: [self readZeroPage: self.memory[self.op1]]];
             break;
         // SEC (Set Carry)
         case SEC:
@@ -1808,6 +1847,9 @@
         case LDA_ZP:
             opcodeName = @"LDA_ZP";
             break;
+        case LDA_ZPX:
+            opcodeName = @"LDA_ZPX";
+            break;
             // NOP (no operation, do nothing but decrement the counter and move on)
         case LSR_A:
             opcodeName = @"LSR_A";
@@ -1872,6 +1914,9 @@
             break;
         case SBC_IMM:
             opcodeName = @"SBC_IMM";
+            break;
+        case SBC_ZP:
+            opcodeName = @"SBC_ZP";
             break;
             // SEC (Set Carry)
         case SEC:

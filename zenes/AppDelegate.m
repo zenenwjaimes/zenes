@@ -37,9 +37,9 @@
 
 - (void)updateRegs: (NSNotification *) notification
 {
-    //if (DEBUGGING_ENABLED) {
+    if (DEBUGGING_ENABLED) {
         [self.debuggerTable reloadData];
-    //}
+    }
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification

@@ -157,6 +157,8 @@ enum opcodes {
     LDA_IMM = 0xA9,
     LDA_INDY = 0xB1,
     LDA_ZP = 0xA5,
+    LDA_ZPX = 0xB5,
+
     LDX_IMM = 0xA2,
     LDX_ZP = 0xA6,
     LDX_ZPY = 0xB6,
@@ -193,6 +195,8 @@ enum opcodes {
     RTI = 0x40,
     RTS = 0x60,
     SBC_IMM = 0xE9,
+    SBC_ZP = 0xE5,
+
     SEC = 0x38,
     SED = 0xF8,
     SEI = 0x78,

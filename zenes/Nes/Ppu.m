@@ -218,7 +218,7 @@
         nameByteAddress = tileNumberX;
     } else {
         //nameByteAddress = (tileNumberY*tileNumberX);
-        nameByteAddress = tileNumberY*32+tileNumberX;
+        nameByteAddress = (tileNumberY*32)+tileNumberX;
     }
 
     // TODO: IMPLIMENT FETCHING ATTRIBUTE TABLE DATA
@@ -241,7 +241,10 @@
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
     //uint8_t attrLookup = self.memory[attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)];
-    //NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
+    
+//    if (self.cpu.counter > 200000) {
+//    NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
+//    }
         //NSLog(@"color lookup: %d", colorLook, up);
     
         pixel[2] = colorPalette[colorLookup][0];// r
