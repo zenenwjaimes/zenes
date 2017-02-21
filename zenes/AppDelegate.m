@@ -22,7 +22,7 @@
 
     [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/donkey.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     [self.window.nesScreen setCurrPixel: 0];

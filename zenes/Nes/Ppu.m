@@ -188,18 +188,6 @@
     return patternTableAddress;
 }
 
-- (uint8_t*)getBackgroundData2ForX: (uint8_t)x andY: (uint8_t)y
-{
-    uint8_t *pixel = malloc(sizeof(uint8_t)*5);
-    pixel[0] = x;
-    pixel[1] = y;
-    pixel[2] = x;
-    pixel[3] = y;
-    pixel[4] = x*y;
-    
-    return pixel;
-}
-
 - (uint8_t*)getBackgroundDataForX: (uint8_t)x andY: (uint8_t)y
 {
     uint8_t *pixel = malloc(sizeof(uint8_t)*5);
@@ -235,8 +223,8 @@
     uint8_t nameByte = self.memory[nameTable+nameByteAddress];
     uint8_t firstPattern, secondPattern = 0;
     
-    firstPattern =  self.memory[patternTable+(nameByte*16)+(pixelPos*pixelyPos)];
-    secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelPos*pixelyPos)+8];
+    firstPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)];
+    secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)+8];
     
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
@@ -276,7 +264,6 @@
 
     if (self.currentVerticalLine < 340) {
         if (self.currentVerticalLine < 256 && self.currentScanline < 240) {
-            //for (int i = 0; i < 3; i++) {
             uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine+0 andY: self.currentScanline];
             [self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
             free(pixel1);
