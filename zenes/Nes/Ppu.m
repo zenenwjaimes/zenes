@@ -34,19 +34,13 @@
     [self setupColorPalette];
     
     uint8_t tempMemory[0x10000] = {};
-    uint8_t tempChrRom[0x2000] = {};
 
     //TODO: Set everything to 0xFF on bootup. this could be wrong
     for (int i = 0; i < 0x10000; i++) {
         tempMemory[i] = 0x00;
     }
     
-    for (int i = 0; i < 0x2000; i++) {
-        tempChrRom[i] = 0x00;
-    }
-    
-    //self.chrRom = tempChrRom;
-    self.memory = tempMemory;    
+    self.memory = tempMemory;
 }
 
 - (void)setMemory:(uint8_t *)memory {
@@ -55,14 +49,6 @@
 
 - (uint8_t *)memory {
     return _memory;
-}
-
-- (void)setChrRom:(uint8_t *)chrRom {
-    memcpy(_chrRom, chrRom, sizeof(_chrRom));
-}
-
-- (uint8_t *)chrRom {
-    return _chrRom;
 }
 
 - (uint8_t)readPpuStatusReg: (uint8_t)flag
@@ -118,18 +104,8 @@
             [self setCanDraw: YES];
             
             if (self.cpu.notifyPpuWrite == YES) {
-                // TODO: FIX GHETTO MIRRORING
-                //if (self.currVramAddress >= 0x2000 || self.currVramAddress < 0x2400) {
-                //    self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                //    self.memory[self.currVramAddress+0x400] = self.cpu.memory[0x2007];
-                //}
-                //if (self.currVramAddress >= 0x2400 || self.currVramAddress < 0x2800) {
-                if (self.cpu.memory[0x2007] == 0x73) {
-                    NSLog(@"pickle!");
-                }
-                    self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                 //   self.memory[self.currVramAddress-0x400] = self.cpu.memory[0x2007];
-                //}
+                self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                NSLog(@"vram: %X and value there: %X", self.currVramAddress, self.cpu.memory[0x2007]);
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
@@ -264,26 +240,26 @@
 
     if (self.currentVerticalLine < 340) {
         if (self.currentVerticalLine < 256 && self.currentScanline < 240) {
-            uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine+0 andY: self.currentScanline];
+            uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine andY: self.currentScanline];
             [self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
             free(pixel1);
             
-                uint8_t *pixel2 = [self getBackgroundDataForX: self.currentVerticalLine+1 andY: self.currentScanline];
-                [self.screen loadPixelsToDrawAtX:pixel2[0] atY: pixel2[1] withR: pixel2[2] G: pixel2[3] B: pixel2[4]];
-                free(pixel2);
+            uint8_t *pixel2 = [self getBackgroundDataForX: self.currentVerticalLine+1 andY: self.currentScanline];
+            [self.screen loadPixelsToDrawAtX:pixel2[0] atY: pixel2[1] withR: pixel2[2] G: pixel2[3] B: pixel2[4]];
+            free(pixel2);
             
             uint8_t *pixel3 = [self getBackgroundDataForX: self.currentVerticalLine+2 andY: self.currentScanline];
             [self.screen loadPixelsToDrawAtX:pixel3[0] atY: pixel3[1] withR: pixel3[2] G: pixel3[3] B: pixel3[4]];
             free(pixel3);
         }
         
-        if (self.currentScanline >= 239 && self.currentVerticalLine < 255) {
+        if (self.currentScanline > 239) {
             [self.screen setNeedsDisplay: YES];
         }
         
         self.currentVerticalLine += 3;
     } else {
-        if (self.currentScanline < 261) {
+        if (self.currentScanline < 262) {
             self.currentScanline++;
             self.canDraw = YES;
         } else {

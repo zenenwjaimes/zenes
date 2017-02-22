@@ -40,6 +40,9 @@
 @property uint16_t notifyPpuAddress;
 @property uint16_t notifyPpuValue;
 
+@property uint16_t joystickCounter;
+
+
 // Memory reading instructions
 - (uint8_t)readValueAtAddress: (uint16_t)address;
 - (uint8_t)readAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2;

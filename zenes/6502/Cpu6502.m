@@ -32,6 +32,7 @@
     self.reg_y = 0x00;
     self.reg_acc = 0x00;
     self.reg_sp = 0xFF;
+    self.joystickCounter = 0;
     uint8_t tempMemory[0x10000] = {};
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
@@ -44,7 +45,7 @@
     
     // Clear interrupt flag and enable decimal mode on boot
     //[self enableInterrupts];
-    self.reg_status ^= (-1 ^ self.reg_status) & (1 << STATUS_UNUSED_BIT);
+    self.reg_status = 0x00;//(-1 ^ self.reg_status) & (1 << STATUS_UNUSED_BIT);
     
     self.isRunning = YES;
     
@@ -204,20 +205,6 @@
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
 {
-    // TODO: Fix this so certain reads perform certain actions
-    /*
-    switch (address) {
-            // TODO: Figure this one out
-        case 0x2005:
-            
-            break;
-            // VRAM Address Write
-        case 0x2006:
-            break;
-            // Value to read/write
-        case 0x2007:
-            break;
-    }*/
     uint8_t value = self.memory[address];
     if (address >= 0x2000 && address <= 0x2000) {
         self.ppuReg1 = [self readValueAtAddress: 0x2000];
@@ -227,31 +214,6 @@
         self.notifyPpuAddress = address;
         [self.ppu observeCpuChanges];
     }
-    
-    if (address == 0x4016) {
-        NSLog(@"joystick writing: %d", self.counter);
-    }
-    /*
-    if (address == 0x2002) {
-        self.ppuReg1 = [self readValueAtAddress: 0x2000];
-        self.ppuReg2 = [self readValueAtAddress: 0x2001];
-
-        self.notifyPpu = YES;
-        self.notifyPpuAddress = address;
-        NSLog(@"notfing of read: %X", address);
-        self.notifyPpuWrite = NO;
-        
-        [self.ppu observeCpuChanges];
-    }
-    
-    if (address == 0x2007) {
-        self.notifyPpu = YES;
-        self.notifyPpuAddress = address;
-        NSLog(@"notfing of read: %X", address);
-        self.notifyPpuWrite = NO;
-        
-        [self.ppu observeCpuChanges];
-    }*/
     
     return value;
 }
@@ -278,7 +240,6 @@
     }
     
     return [self readValueAtAddress: absoluteAddress];
-//    return self.memory[absoluteAddress];
 }
 
 - (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset
@@ -290,15 +251,12 @@
 {
     uint16_t indexIndirect = (self.memory[(lowByte + offset + 1) & 0xFF] << 8) | (self.memory[(lowByte + offset) & 0xFF]);
     return [self readValueAtAddress: indexIndirect];
-//    return self.memory[indexIndirect];
 }
 
 - (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset
 {
     uint16_t indirectIndexed = (((self.memory[(lowByte + 1) & 0xFF] << 8) | (self.memory[lowByte])) + offset) & 0xFFFF;
-    if (lowByte == 0xD0) NSLog(@"indirect indexed: %X", indirectIndexed);
     return [self readValueAtAddress: indirectIndexed];
-//    return self.memory[indirectIndexed];
 }
 
 - (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte
@@ -473,38 +431,8 @@
     self.op2 = self.reg_pc+2;
     self.op3 = self.reg_pc+3;
     
-    if (self.counter >= 201911 && self.counter <= 201911) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
-    }
-    if (self.counter >= 201928 && self.counter <= 201928) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
-    }
-    
-    if (self.counter >= 201945 && self.counter <= 201945) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
-    }
-    if (self.counter >= 201962 && self.counter <= 201962) {
-        NSLog(@"control firing?");
-        [self writeValue:0x1 toAddress: 0x4016];
-    }
-    if (self.counter >= 201979 && self.counter <= 201979) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
-    }
-    if (self.counter >= 201996 && self.counter <= 201996) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
-    }
-    if (self.counter >= 202013 && self.counter <= 202013) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
-    }
-    if (self.counter >= 202030 && self.counter <= 202030) {
-        NSLog(@"control firing?");
-        [self writeValue:0x0 toAddress: 0x4016];
+    if (self.counter > 200000) {
+        [self writeValue: 0x01 toAddress: 0x4016];
     }
     
     switch(opcode) {
@@ -919,9 +847,9 @@
             self.counter += 2;
             
             // TODO: This could be wrong... but if overflow isn't being triggered.
-            if (self.reg_x != 0) {
-                self.reg_x--;
-            }
+            //if (self.reg_x != 0) {
+                self.reg_x = (self.reg_x - 1) & 0xFF;
+            //}
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             
             break;
@@ -932,9 +860,10 @@
             self.counter += 2;
             
             // TODO: This could be wrong... but if overflow isn't being triggered.
-            if (self.reg_y != 0) {
-                self.reg_y--;
-            }
+            //if (self.reg_y != 0) {
+                self.reg_y = (self.reg_y - 1) & 0xFF;
+
+            //}
 
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             
@@ -948,7 +877,7 @@
 
             uint8_t deczp = [self readZeroPage: self.memory[self.op1]];
             // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
-            deczp--;
+            deczp = (deczp - 1) & 0xFF;
             [self writeZeroPage: self.memory[self.op1] withValue: deczp];
             [self toggleZeroAndSignFlagForReg: deczp];
             
@@ -961,7 +890,8 @@
             
             uint8_t deczpx = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
             // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
-            deczpx--;
+            deczpx = (deczpx - 1) & 0xFF;
+
             [self writeZeroPage: self.memory[self.op1] withValue: deczpx];
             [self toggleZeroAndSignFlagForReg: deczpx];
             
@@ -974,7 +904,7 @@
             
             uint8_t decabs = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
             // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
-            decabs--;
+            decabs = (decabs - 1) & 0xFF;
             [self writeValue: decabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op1]];
             [self toggleZeroAndSignFlagForReg: decabs];
             
@@ -987,7 +917,8 @@
             
             uint8_t decabsx = [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
             // TODO: Might need to not decrement if it's 0 already. overflow isn't being triggered by this op
-            decabsx--;
+            decabsx = (decabsx - 1) & 0xFF;
+
             uint16_t decabsxAddy = [self getIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
             [self writeValue: decabsx toAddress: decabsxAddy];
             [self toggleZeroAndSignFlagForReg: decabsx];
