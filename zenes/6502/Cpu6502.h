@@ -178,6 +178,7 @@ enum opcodes {
     LSR_ABS = 0x4E,
     LSR_ABSX = 0x5E,
     NOP = 0xEA,
+    NOP1A = 0x1A,
     ORA_IMM = 0x09,
     ORA_ZP = 0x05,
     ORA_ZPX = 0x15,
@@ -190,7 +191,10 @@ enum opcodes {
     PLP = 0x28,
     PHA = 0x48,
     PHP = 0x08,
+    ROR_ACC = 0x6A,
     ROR_ZP = 0x66,
+    ROR_ABSX = 0x7E,
+
     ROL_ACC = 0x2A,
     ROL_ZP = 0x26,
     ROL_ZPX = 0x36,
@@ -200,6 +204,7 @@ enum opcodes {
     RTS = 0x60,
     SBC_IMM = 0xE9,
     SBC_ZP = 0xE5,
+    SBC_ABSY = 0xF9,
 
     SEC = 0x38,
     SED = 0xF8,

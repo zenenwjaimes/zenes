@@ -77,7 +77,8 @@
             
             if (self.cpu.isRunning == YES) {
                 dispatch_sync(dispatch_get_main_queue(), ^{
-                    if (DEBUGGING_ENABLED) {
+                    if (self.cpu.currentLine != nil) {
+                    //if (DEBUGGING_ENABLED) {
                         [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
                     }
                 });

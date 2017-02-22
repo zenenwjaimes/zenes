@@ -72,7 +72,8 @@
         self.firstWrite = NO;
     } else {
         self.currVramAddress |= vramAddress;
-        // Wrap around instead of going up higher
+        self.currVramAddress &= 0x3FFF;
+        
         self.firstWrite = YES;
     }
 }
@@ -105,7 +106,7 @@
             
             if (self.cpu.notifyPpuWrite == YES) {
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                NSLog(@"vram: %X and value there: %X", self.currVramAddress, self.cpu.memory[0x2007]);
+                //NSLog(@"vram: %X and value there: %X", self.currVramAddress, self.cpu.memory[0x2007]);
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
@@ -204,11 +205,11 @@
     
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
-    //uint8_t attrLookup = self.memory[attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)];
+    uint8_t attrLookup = self.memory[attributeTable+((tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4))];
     
-//    if (self.cpu.counter > 200000) {
-//    NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+(tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
-//    }
+    if (self.cpu.counter > 200000) {
+    //NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+((tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
+    }
         //NSLog(@"color lookup: %d", colorLook, up);
     
         pixel[2] = colorPalette[colorLookup][0];// r

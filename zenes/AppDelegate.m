@@ -22,7 +22,7 @@
 
     [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/nestest.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/donkey.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     [self.window.nesScreen setCurrPixel: 0];
@@ -50,11 +50,13 @@
 - (void)appendToDebuggerWindow:(NSString*)text
 {
     dispatch_async(dispatch_get_main_queue(), ^{
-        if (DEBUGGING_ENABLED) {
+        //if (text != nil) {
+        //if (DEBUGGING_ENABLED) {
             NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
             [[self.debuggerMemory textStorage] appendAttributedString:attr];
             [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
-        }
+        //}
+        //}
     });
 }
 
