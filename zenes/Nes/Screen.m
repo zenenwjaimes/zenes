@@ -59,34 +59,17 @@
 
 - (void)loadPixelsToDrawAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b
 {
-    if (self.currPixel > 256*240) {
-        self.currPixel = 0;
-    }
+    //NSLog(@"x: %d, y: %d, current pixel: %d", x,y,self.currPixel);
     pixels[self.currPixel][0] = x;
     pixels[self.currPixel][1] = y;
     pixels[self.currPixel][2] = r;
     pixels[self.currPixel][3] = g;
     pixels[self.currPixel][4] = b;
-    
+
+    if (self.currPixel > 256*240) {
+        self.currPixel = 0;
+    }
     self.currPixel++;
-}
-
-- (void)keyDown:(NSEvent *)event
-{
-    NSLog(@"test");
-}
-
-
-- (BOOL)canBecomeKeyWindow {
-    return YES; }
-
-- (BOOL)canBecomeMainWindow {
-    return YES; }
-
-
-- (void)drawFrame
-{
-
 }
 
 - (void)drawPixelAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b

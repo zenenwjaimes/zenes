@@ -17,7 +17,7 @@
         self.cpu = cpu;
         [self bootupSequence];
         
-        for (int i = 0; i < 0x2000; i++) {
+        for (long i = 0; i < 0x2000; i++) {
             self.memory[i] = tmpRom[i];
         }
     }
@@ -36,7 +36,7 @@
     uint8_t tempMemory[0x10000] = {};
 
     //TODO: Set everything to 0xFF on bootup. this could be wrong
-    for (int i = 0; i < 0x10000; i++) {
+    for (long i = 0; i < 0x10000; i++) {
         tempMemory[i] = 0x00;
     }
     
@@ -106,7 +106,7 @@
             
             if (self.cpu.notifyPpuWrite == YES) {
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                //NSLog(@"vram: %X and value there: %X", self.currVramAddress, self.cpu.memory[0x2007]);
+
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
@@ -152,20 +152,20 @@
 
 - (uint16_t)getPatternTableAddress
 {
-    uint16_t patternTableAddress = 0x0000;
-    uint8_t ppuControlReg1 = self.cpu.ppuReg1;//[self.cpu readAbsoluteAddress1: 0x00 address2: 0x20];
-    uint8_t bits = [BitHelper checkBit: 4 on: ppuControlReg1];
-    
-    switch (bits) {
+    switch ([BitHelper checkBit: 4 on: self.cpu.ppuReg1]) {
+        case 0:
+            return 0x0000;
+            break;
         case 1:
-            patternTableAddress = 0x1000;
+            return 0x1000;
+            break;
+        default:
+            return 0x0000;
             break;
     }
-    
-    return patternTableAddress;
 }
 
-- (uint8_t*)getBackgroundDataForX: (uint8_t)x andY: (uint8_t)y
+- (uint8_t*)getBackgroundDataForX: (uint16_t)x andY: (uint16_t)y
 {
     uint8_t *pixel = malloc(sizeof(uint8_t)*5);
     pixel[0] = x;
@@ -203,21 +203,47 @@
     firstPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)];
     secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)+8];
     
+    
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
-    uint8_t attrLookup = self.memory[attributeTable+((tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4))];
-    
+    uint8_t attrLookup = self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
+
     if (self.cpu.counter > 200000) {
-    //NSLog(@"attr lookup addy: %X value at: %X, (%d, %d, %d, %d)", attributeTable+((tileNumberX/4)+(tileNumberY/4)*(tileNumberX/4)+(tileNumberY/4)), attrLookup, (tileNumberX/4), (tileNumberY/4), x, y);
+        //NSLog(@"full attr lookup (%X) at (%d, %d in tile %d, %d)", attributeTable+[self getTileAddressForRow: tileNumberY andCol: tileNumberX], x,y,tileNumberX, tileNumberY);
+        //NSLog(@"attribute table value: %X for (%d,%d) location: %X", attrLookup, x, y, attributeTable+(tileNumberY+tileNumberX));
+        //NSLog(@"pattern first at %X for (%d, %d with %d, %d) value: %X", patternTable+(nameByte*16)+(pixelyPos), pixelPos, pixelyPos,x,y, firstPattern);
     }
         //NSLog(@"color lookup: %d", colorLook, up);
     
-        pixel[2] = colorPalette[colorLookup][0];// r
-        pixel[3] = colorPalette[colorLookup][1];// g
-        pixel[4] = colorPalette[colorLookup][2];// b
+        uint8_t highColorBit = ((attrLookup >> ((x & 0xF0 >> 4) * -1)) & 1) | (((attrLookup >> ((x & 0xF0 >> 4) * -1)) & 1) << 1);
+    if (self.cpu.counter > 200000) {
+        NSLog(@"high color bit: %X for tile (%d,%d) at add: %X",highColorBit, tileNumberY, tileNumberX, attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]);
+    }
+        pixel[2] = colorPalette[highColorBit+colorLookup][0];// r
+        pixel[3] = colorPalette[highColorBit+colorLookup][1];// g
+        pixel[4] = colorPalette[highColorBit+colorLookup][2];// b
 //    }
     
     return pixel;
+}
+
+- (uint)getTileAddressForRow: (uint8_t)row andCol: (uint8_t)col
+{
+    uint16_t tileAddress = 0x00;
+    
+    if (row == 0) {
+        tileAddress = (col/4);
+    }
+    
+    if (col == 0) {
+        tileAddress = (row*8)/4;
+    }
+    
+    if (col != 0 && row != 0) {
+        tileAddress = (col+((row/4)*col))/4;
+    }
+    
+    return tileAddress;
 }
 
 - (void)checkVBlank
@@ -230,7 +256,9 @@
         if (self.cpu.memory[0x2000] >> 7) {
             [self.cpu triggerInterrupt: INT_NMI];
         }
-    } else if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears
+    }
+    
+    if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears
         [self.cpu readValueAtAddress: 0x2002];
     }
 }
@@ -240,7 +268,7 @@
     [self checkVBlank];
 
     if (self.currentVerticalLine < 340) {
-        if (self.currentVerticalLine < 256 && self.currentScanline < 240) {
+        if (self.currentVerticalLine < 253 && self.currentScanline < 240) {
             uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine andY: self.currentScanline];
             [self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
             free(pixel1);
@@ -270,7 +298,7 @@
         self.currentVerticalLine = 0;
     }
     
-    if (self.currentScanline == 260) {
+    if (self.currentScanline < 256 && self.currentVerticalLine == 0) {
        /* for (int x = 0; x < 32; x++) {
             for (int y = 0; y < 30; y++) {
                 //uint8_t *pixel1 = [self getBackgroundData2ForX: x andY: y];

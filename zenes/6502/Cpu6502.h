@@ -194,6 +194,7 @@ enum opcodes {
     ROR_ACC = 0x6A,
     ROR_ZP = 0x66,
     ROR_ABSX = 0x7E,
+    ROR_ABS = 0x6E,
 
     ROL_ACC = 0x2A,
     ROL_ZP = 0x26,

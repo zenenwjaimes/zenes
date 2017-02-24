@@ -22,13 +22,13 @@
 
     [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/donkey.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
 
     [self.window.nesScreen setCurrPixel: 0];
     nesInstance.screen = self.window.nesScreen;
-    self.window.nesInstance = nesInstance;
     nesInstance.ppu.screen = self.window.nesScreen;
+    self.window.nesInstance = nesInstance;
     
     [self.debuggerMemory setEditable: NO];
     [self.debuggerMemory setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
@@ -38,7 +38,7 @@
 - (void)updateRegs: (NSNotification *) notification
 {
    //if (DEBUGGING_ENABLED) {
-        [self.debuggerTable reloadData];
+     //   [self.debuggerTable reloadData];
     //}
 }
 
@@ -65,11 +65,11 @@
     dispatch_async(dispatch_get_main_queue(), ^{
         NSMutableString *text = [NSMutableString string];
         
-        for (int i = 0; i < 0x10000; i++) {
-            [text appendString: [NSString stringWithFormat: @"%X: %X\n", i, self.window.nesInstance.cpu.memory[i]]];
+        for (long i = 0; i < 0x10000; i++) {
+            [text appendString: [NSString stringWithFormat: @"%lX: %X\n", i, self.window.nesInstance.cpu.memory[i]]];
         }
-        for (int i = 0; i < 0x4000; i++) {
-            [text appendString: [NSString stringWithFormat: @"VRAM: %X: %X\n", i, self.window.nesInstance.cpu.ppu.memory[i]]];
+        for (long i = 0; i < 0x4000; i++) {
+            [text appendString: [NSString stringWithFormat: @"VRAM: %lX: %X\n", i, self.window.nesInstance.cpu.ppu.memory[i]]];
         }
         NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
         NSLog(@"10 to bits: %@", [BitHelper intToBinary: 16]);

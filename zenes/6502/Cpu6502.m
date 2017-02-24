@@ -36,7 +36,7 @@
     uint8_t tempMemory[0x10000] = {};
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
-    for (int i = 0; i < 0x10000; i++) {
+    for (long i = 0; i < 0x10000; i++) {
         tempMemory[i] = 0x00;
     }
     
@@ -64,7 +64,7 @@
 }
 
 - (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address {
-    for (int i = 0; i < 0x4000; i++) {
+    for (long i = 0; i < 0x4000; i++) {
         self.memory[address+i] = rom[i];
     }
 }
@@ -272,7 +272,6 @@
 - (void)writeIndirectIndexWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset withValue: (uint8_t)value
 {
     uint16_t indirectIndexed = (((self.memory[(lowByte + 1) & 0xFF] << 8) | (self.memory[lowByte])) + offset) & 0xFFFF;
-    //NSLog(@"writing: %X to: %X", value, indirectIndexed);
     [self writeValue: value toAddress: indirectIndexed];
 }
 
@@ -352,7 +351,7 @@
 
 - (void)subtractWithCarry: (uint8_t)value
 {
-    uint8_t tempsub = self.reg_acc - value - (1-[BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]);
+    uint8_t tempsub = self.reg_acc - value - ([BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]?0:1);
     uint8_t tempsuboverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
     
     if (tempsuboverflow != 0) {
@@ -620,9 +619,7 @@
             [self toggleCarryFlagForReg: valueabsx];
             uint8_t tempabsx = (valueabsx << 1) & 0xFE;
             
-            //[self writeValue: tempabsx toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
             uint16_t aslabsxaddress = [self getIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
-            //NSLog(@"asl absx write address: %X", aslabsxaddress);
             [self writeValue: tempabsx toAddress: aslabsxaddress];
             [self toggleOverflowFlagForReg: tempabsx withBit: 7];
             [self toggleZeroAndSignFlagForReg: tempabsx];
@@ -794,6 +791,8 @@
             [self toggleZeroAndSignFlagForReg: temp];
             if (self.reg_acc >= self.memory[self.op1]) {
                 [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
             }
             
             break;
@@ -807,6 +806,8 @@
             [self toggleZeroAndSignFlagForReg: tempcmpzp];
             if (self.reg_acc >= [self readZeroPage: self.memory[self.op1]]) {
                 [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
             }
             
             break;
@@ -818,8 +819,10 @@
             uint8_t tempcmpzpx = (self.reg_acc - [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]);
             
             [self toggleZeroAndSignFlagForReg: tempcmpzpx];
-            if (self.reg_acc >= [self readZeroPage: self.memory[self.op1]]) {
+            if (self.reg_acc >= [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]) {
                 [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
             }
             
             break;
@@ -862,9 +865,7 @@
             self.counter += 4;
             
             uint8_t cmpy_abs = self.reg_y - [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
-            //NSLog(@"cmpy abs: %X", cmpy_abs);
-            //NSLog(@"cmpy reg y: %X", self.reg_y);
-            //NSLog(@"cmpy data at address: %X", [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]);
+
             [self toggleZeroAndSignFlagForReg: cmpy_abs];
             
             if (self.reg_y >= [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]) {
@@ -1013,7 +1014,7 @@
             argCount = 1;
             self.reg_pc++;
             self.counter += 2;
-            self.reg_x++;
+            self.reg_x = (self.reg_x + 1) & 0xFF;
             
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             
@@ -1023,7 +1024,7 @@
             argCount = 1;
             self.reg_pc++;
             self.counter += 2;
-            self.reg_y++;
+            self.reg_y = (self.reg_y + 1) & 0xFF;
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             
@@ -1139,44 +1140,38 @@
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             
-        // TODO: Fix this and use actual memory methods instead
         case LDX_ABS:
             argCount = 3;
-            self.reg_pc += 3;
+            self.reg_pc += argCount;
             // Cycles: 4
             self.counter += 4;
-            self.reg_x = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
+            self.reg_x = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
             
-            // 1 byte OP, jump to the next byte address
-            // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             
         case LDA_INDY:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 5;
             
-            // TODO: Adjust for the extra cycles on page boundaries
             self.reg_acc = [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y];
-            //NSLog(@"reg acc for lda_indy: %X", self.reg_acc);
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
         case LDY_ABS:
             argCount = 3;
-            self.reg_pc += 3;
+            self.reg_pc += argCount;
             // Cycles: 4
             self.counter += 4;
-            self.reg_y = self.memory[(self.memory[self.op2] << 8 | self.memory[self.op1])];
+            self.reg_y = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             break;
             
-        // LDY (Load Y Immediate)
         case LDY_IMM:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             // Cycles: 2
             self.counter += 2;
             self.reg_y = self.memory[self.op1];
@@ -1184,7 +1179,6 @@
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             break;
             
-            // LDY (Load Y Immediate)
         case LDY_ZPX:
             argCount = 2;
             self.reg_pc += argCount;
@@ -1212,29 +1206,15 @@
             // Cycles: 4
             self.counter += 4;
             self.reg_acc = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
-            //NSLog(@"PC (%X) at low: %X high: %X loading accumulator with: %X ", currentPC, self.memory[self.op1], self.memory[self.op2], [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]);
 
-            //NSLog(@"self reg acc: %X", self.reg_acc);
-            // 1 byte OP, jump to the next byte address
-            // Accumulator is 0, enable the zero flag
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
         case LSR_A:
             argCount = 1;
             self.reg_pc++;
             self.counter += 2;
-            // Since the shift is right, the 7th bit of the value will always be 0
-            // so we disable the sign flag
-            [self disableSignFlag];
-            uint8_t lsra = [self readZeroPage: self.reg_acc];
-            uint8_t lsrtemp = (lsra >> 1) & 0x7F;
             
-            if ([BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_acc]) {
-                [self enableCarryFlag];
-            }
-            
-            if (lsrtemp == 0) [self enableZeroFlag];
-            self.reg_acc = lsrtemp;
+            self.reg_acc = [self logicalShiftRight: self.reg_acc];
             break;
             
         case LSR_ZP:
@@ -1299,11 +1279,6 @@
             argCount = 1;
             self.counter += 4;
             self.reg_pc++;
-
-            //NSLog(@"Current stack (%X) next SP (%X) at PC: %X", currentRegSP, currentPC);
-            //for (uint8_t i = 0xFF; i >= 0xDD; i--) {
-            //    NSLog(@"%X: %X", 0x100+i, self.memory[0x100+i]);
-            //}
             
             self.reg_status = [self pullFromStack];
             break;
@@ -1323,8 +1298,7 @@
             argCount = 1;
             self.counter += 2;
             self.reg_pc += argCount;
-            uint8_t rolAcc = [self rotateLeft: self.reg_acc];
-            self.reg_acc = rolAcc;
+            self.reg_acc = [self rotateLeft: self.reg_acc];
             
             break;
         case ROL_ZP:
@@ -1389,6 +1363,15 @@
             self.reg_pc += argCount;
             uint8_t rorabsx = [self rotateRight: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op1] withOffset: self.reg_x]];
             [self writeAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] andOffset: self.reg_x withValue: rorabsx];
+            
+            break;
+            
+        case ROR_ABS:
+            argCount = 3;
+            self.counter += 6;
+            self.reg_pc += argCount;
+            uint8_t rorabs = [self rotateRight: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]];
+            [self writeAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] andOffset: 0 withValue: rorabs];
             
             break;
         case RTI:
@@ -1548,28 +1531,20 @@
             self.counter += 4;
             [self writeZeroPage: self.memory[self.op1] withValue: self.reg_acc withRegister: self.reg_x];
             break;
-        //TODO: Memory fix
-        // STX (Store X Zero Page)
         case STX_ZP:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             [self writeZeroPage: self.memory[self.op1] withValue: self.reg_x];
-            // Cycles: 4
+            
             self.counter += 4;
-            // 1 byte OP, jump to the next byte address
             break;
-        //TODO: Memory fix
-        // STY (Store Y Zero Page)
         case STY_ZP:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             [self writeZeroPage: self.memory[self.op1] withValue: self.reg_y];
             // Cycles: 4
             self.counter += 4;
-            // 1 byte OP, jump to the next byte address
             break;
-        //TODO: Memory fix
-        // STX (Store X Absolute Page)
         case STX_ABS:
             argCount = 3;
             self.reg_pc += argCount;
@@ -1582,7 +1557,7 @@
         // STY (Store Y Absolute Page)
         case STY_ABS:
             argCount = 3;
-            self.reg_pc += 3;
+            self.reg_pc += argCount;
             [self writeValue: self.reg_y toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
             // Cycles: 4
             self.counter += 4;
@@ -2000,6 +1975,9 @@
             break;
         case ROR_ABSX:
             opcodeName = @"ROR_ABSX";
+            break;
+        case ROR_ABS:
+            opcodeName = @"ROR_ABS";
             break;
         case SBC_IMM:
             opcodeName = @"SBC_IMM";
