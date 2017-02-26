@@ -19,6 +19,7 @@
         
         for (long i = 0; i < 0x2000; i++) {
             self.memory[i] = tmpRom[i];
+            NSLog(@"value at %ld: %X", i, tmpRom[i]);
         }
     }
     return self;
@@ -92,6 +93,10 @@
             if (self.cpu.notifyPpuWrite == NO) {
                 self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] & (1<<7));
                 self.cpu.memory[0x2005] = self.cpu.memory[0x2006] = 0;
+                
+                if (self.cpu.memory[0x2000] >> 7) {
+                    [self.cpu triggerInterrupt: INT_NMI];
+                }
             }
             break;
         case 0x2006:
@@ -106,6 +111,9 @@
             
             if (self.cpu.notifyPpuWrite == YES) {
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                if (self.currVramAddress == 0x2229) {
+                    NSLog(@"writing to 0x2229: %X cycle: %X", self.cpu.memory[0x2007], self.cpu.counter);
+                }
 
                 self.currVramAddress += self.incrementStep;
             } else {
@@ -215,9 +223,11 @@
     }
         //NSLog(@"color lookup: %d", colorLook, up);
     
-        uint8_t highColorBit = ((attrLookup >> ((x & 0xF0 >> 4) * -1)) & 1) | (((attrLookup >> ((x & 0xF0 >> 4) * -1)) & 1) << 1);
+        uint8_t highColorBit = attrLookup >> ([self getSquareTileForX: x andY:y] * 2);
     if (self.cpu.counter > 200000) {
-        NSLog(@"high color bit: %X for tile (%d,%d) at add: %X",highColorBit, tileNumberY, tileNumberX, attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]);
+       // NSLog(@"poking :%X, calc for (%d, %d) is pixel pos (%d, %d), high color byte: %@, color bit is: %X", attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX],x,y,(x & 0xF0 >> 4)/8, (y & 0xF0 >> 4)/8, [BitHelper intToBinary: attrLookup], highColorBit);
+       // NSLog(@"high color bit: %X for tile (%d,%d) at add: %X",highColorBit, tileNumberY, tileNumberX, attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]);
+       // NSLog(@"((((%d)*(%d))/16))", tileNumberY+1, tileNumberX+1);
     }
         pixel[2] = colorPalette[highColorBit+colorLookup][0];// r
         pixel[3] = colorPalette[highColorBit+colorLookup][1];// g
@@ -227,93 +237,113 @@
     return pixel;
 }
 
-- (uint)getTileAddressForRow: (uint8_t)row andCol: (uint8_t)col
+- (uint8_t)getTileAddressForRow: (uint8_t)row andCol: (uint8_t)col
 {
-    uint16_t tileAddress = 0x00;
-    
-    if (row == 0) {
-        tileAddress = (col/4);
-    }
-    
-    if (col == 0) {
-        tileAddress = (row*8)/4;
-    }
-    
-    if (col != 0 && row != 0) {
-        tileAddress = (col+((row/4)*col))/4;
+    uint8_t tileAddress = (col/4);
+    if (row/4 == 0) {
+        tileAddress += 0x00;
+    } else if (row/4 == 1) {
+        tileAddress += 8;
+    } else if (row/4 == 2) {
+        tileAddress += 16;
+    } else if (row/4 == 3) {
+        tileAddress += 24;
+    } else if (row/4 == 4) {
+        tileAddress += 32;
+    } else if (row/4 == 5) {
+        tileAddress += 40;
+    } else if (row/4 == 6) {
+        tileAddress += 48;
+    } else if (row/4 == 7) {
+        tileAddress += 56;
     }
     
     return tileAddress;
 }
 
+- (uint8_t)getSquareTileForX: (uint8_t)x andY: (uint8_t)y
+{
+    uint8_t squareCol = (x & 0xF0 >> 4)/8;
+    uint8_t squareRow = (y & 0xF0 >> 4)/8;
+    uint8_t square = 0x00;
+
+    if (squareCol == 0 && squareRow == 0) {
+        square = 0x00;
+    } else if (squareCol == 1 && squareRow == 0) {
+        square = 0x01;
+    } else if (squareCol == 0 && squareRow == 1) {
+        square = 0x02;
+    } else if (squareCol == 1 && squareRow == 1) {
+        square = 0x03;
+    }
+    
+    return square;
+}
+
 - (void)checkVBlank
 {
     // Vblank set
-    if (self.currentScanline ==  241 && self.currentVerticalLine == 0) {
-        self.cpu.memory[0x2002] = ([self.cpu readValueAtAddress: 0x2002] | (1<<7));
+    if (self.cpu.counter >= 29781) {
+    //if (self.currentScanline == 1 && self.currentVerticalLine == 0) {
+        self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] | (1<<7));
         
         // Generate nmi if set in control reg 1
         if (self.cpu.memory[0x2000] >> 7) {
             [self.cpu triggerInterrupt: INT_NMI];
         }
+        
+        self.cpu.counter = 0;
     }
     
-    if (self.currentScanline == 261 && self.currentVerticalLine == 0) { // Vblank has finished. read the value so it clears
+    // Vblank has finished. read the value so it clears
+    if (self.cpu.memory[0x2002] >> 7 && self.cpu.counter >= 21*256) {
         [self.cpu readValueAtAddress: 0x2002];
+        self.cpu.counter = 0;
     }
 }
 
 - (void)drawFrame
 {
-    [self checkVBlank];
-
-    if (self.currentVerticalLine < 340) {
-        if (self.currentVerticalLine < 253 && self.currentScanline < 240) {
-            uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine andY: self.currentScanline];
+    if (self.currentScanline > 21) {
+        // Drawing 3 pixels at a time since each 3 is cpu cycles * 3
+        if (self.currentVerticalLine < 253) {
+            uint8_t *pixel1 = [self getBackgroundDataForX: self.currentVerticalLine andY: self.currentScanline-22];
             [self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
             free(pixel1);
             
-            uint8_t *pixel2 = [self getBackgroundDataForX: self.currentVerticalLine+1 andY: self.currentScanline];
+            uint8_t *pixel2 = [self getBackgroundDataForX: self.currentVerticalLine+1 andY: self.currentScanline-22];
             [self.screen loadPixelsToDrawAtX:pixel2[0] atY: pixel2[1] withR: pixel2[2] G: pixel2[3] B: pixel2[4]];
             free(pixel2);
             
-            uint8_t *pixel3 = [self getBackgroundDataForX: self.currentVerticalLine+2 andY: self.currentScanline];
+            uint8_t *pixel3 = [self getBackgroundDataForX: self.currentVerticalLine+2 andY: self.currentScanline-22];
             [self.screen loadPixelsToDrawAtX:pixel3[0] atY: pixel3[1] withR: pixel3[2] G: pixel3[3] B: pixel3[4]];
             free(pixel3);
-        }
-        
-        if (self.currentScanline > 239) {
-            [self.screen setNeedsDisplay: YES];
-        }
-        
-        self.currentVerticalLine += 3;
-    } else {
-        if (self.currentScanline < 262) {
-            self.currentScanline++;
-            self.canDraw = YES;
+            
+            self.currentVerticalLine += 3;
         } else {
-            self.currentScanline = 0;
-        }
-        
-        self.currentVerticalLine = 0;
-    }
-    
-    if (self.currentScanline < 256 && self.currentVerticalLine == 0) {
-       /* for (int x = 0; x < 32; x++) {
-            for (int y = 0; y < 30; y++) {
-                //uint8_t *pixel1 = [self getBackgroundData2ForX: x andY: y];
-                //[self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
-                //free(pixel1);
-                //[self drawPatternForX: x andY: y];
+            // Draw after every line... this will change
+            [self.screen setNeedsDisplay: YES];
+            
+            if (self.currentVerticalLine > 339) {
+                self.currentScanline++;
+                self.currentVerticalLine = 0;
+            } else {
+                self.currentVerticalLine += 3;
+            }
+            
+            if (self.currentScanline > 261) {
+                self.currentScanline = 0;
             }
         }
-*/
-        [self.screen setNeedsDisplay: YES];
+    } else {
+        [self checkVBlank];
+        if (self.currentVerticalLine > 339) {
+            self.currentScanline++;
+            self.currentVerticalLine = 0;
+        } else {
+            self.currentVerticalLine += 3;
+        }
     }
-    
-    // draw 3 pixels at a time. this keeps the cpu and ppu in sync since the ppu is 3x as fast as the cpu
-    //if (self.canDraw == YES) {
-    //}
 }
 
 

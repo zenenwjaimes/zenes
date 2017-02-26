@@ -15,9 +15,8 @@
     uint8_t pixels[256*240][5];
 }
 
-@property (nonatomic, assign) long currPixel;
+@property (nonatomic, assign) long currIndex;
 
-- (void)drawPixelAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b;
 - (void)loadPixelsToDrawAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b;
 
 @end
