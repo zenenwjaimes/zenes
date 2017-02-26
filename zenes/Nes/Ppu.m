@@ -322,7 +322,6 @@
             self.currentVerticalLine += 3;
         } else {
             // Draw after every line... this will change
-            [self.screen setNeedsDisplay: YES];
             
             if (self.currentVerticalLine > 339) {
                 self.currentScanline++;
@@ -333,6 +332,7 @@
             
             if (self.currentScanline > 261) {
                 self.currentScanline = 0;
+                [self.screen setNeedsDisplay: YES];
             }
         }
     } else {
