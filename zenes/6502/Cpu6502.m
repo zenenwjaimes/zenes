@@ -6,6 +6,7 @@
 //  Copyright © 2016 zenen jaimes. All rights reserved.
 //
 
+#import "Nes.h"
 #import "Cpu6502.h"
 #import "Ppu.h"
 #import "AppDelegate.h"
@@ -202,6 +203,15 @@
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
 {
+    if (address == 0x4016) {
+        [self.nes buttonStrobe: self.joystickCounter];
+        
+        self.joystickCounter++;
+        if (self.joystickCounter > 7) {
+            self.joystickCounter = 0;
+        }
+    }
+    
     uint8_t value = self.memory[address];
     if (address >= 0x2000 && address <= 0x2000) {
         self.ppuReg1 = [self readValueAtAddress: 0x2000];
@@ -482,6 +492,14 @@
             self.reg_pc += argCount;
             
             [self addWithCarry: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]];
+            break;
+            
+        case ADC_ABSY:
+            argCount = 3;
+            self.counter += 4;
+            self.reg_pc += argCount;
+            
+            [self addWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]];
             break;
             
         case AND_IMM:
@@ -828,6 +846,21 @@
             
             break;
             
+        case CMP_ABSY:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            uint8_t tempcmpabsy = (self.reg_acc - [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpabsy];
+            if (self.reg_acc >= [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
         case CPX_IMM:
             argCount = 2;
             self.reg_pc += 2;
@@ -1107,7 +1140,7 @@
             self.reg_pc += argCount;
             self.counter += 5;
             
-            NSLog(@"LDA_INDY: %X at cycle: %X", (((self.memory[(self.memory[self.op1] + 1) & 0xFF] << 8) | (self.memory[self.memory[self.op1]])) + self.reg_y) & 0xFFFF, self.counter);
+            //NSLog(@"LDA_INDY: %X at cycle: %X", (((self.memory[(self.memory[self.op1] + 1) & 0xFF] << 8) | (self.memory[self.memory[self.op1]])) + self.reg_y) & 0xFFFF, self.counter);
             
             self.reg_acc = [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y];
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
@@ -1168,6 +1201,15 @@
             // Cycles: 4
             self.counter += 4;
             self.reg_y = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
+            
+            [self toggleZeroAndSignFlagForReg: self.reg_y];
+            break;
+            
+        case LDY_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            self.reg_y = [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
             
             [self toggleZeroAndSignFlagForReg: self.reg_y];
             break;
@@ -1345,11 +1387,12 @@
             // Pull the stack address and put it into the pc
             uint16_t littlerti, bigrti = 0x00;
             
-
             self.reg_status = [self pullFromStack];
             littlerti = [self pullFromStack];
             bigrti = [self pullFromStack];
             self.reg_pc = ((bigrti << 8)| littlerti);
+           // NSLog(@"RTI! to :%X", self.reg_pc);
+
             break;
         case RTS:
             argCount = 1;
@@ -1556,8 +1599,8 @@
             NSLog(@"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC);
             NSLog(@"cycle counter: %X", self.counter);
             NSLog(@"Stack at current pos: %X", self.reg_sp);
-            for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-                NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp+i], i);
+            for (int i = 0x100; i <= 0x200; i++) {
+                NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
             }
             self.isRunning = NO;
             //@throw [NSException exceptionWithName: @"Unknown OP" reason: @"Unknown OP" userInfo: nil];
@@ -1565,14 +1608,14 @@
     }
     
     // TODO: Clean this up, this is terrible
-    NSString *line = nil;
-    uint16 opcodeLength = 10-[[Cpu6502 getOpcodeName: opcode] length];
-    NSString *opcodePadded = [Cpu6502 getOpcodeName: opcode];
-    if (opcodeLength > 0) {
-        NSString *padding = [[NSString string] stringByPaddingToLength: opcodeLength withString: @" " startingAtIndex: 0];
-        opcodePadded = [opcodePadded stringByAppendingString: padding];
-    }
     if (DEBUGGING_ENABLED) {
+        NSString *line = nil;
+        uint16 opcodeLength = 10-[[Cpu6502 getOpcodeName: opcode] length];
+        NSString *opcodePadded = [Cpu6502 getOpcodeName: opcode];
+        if (opcodeLength > 0) {
+            NSString *padding = [[NSString string] stringByPaddingToLength: opcodeLength withString: @" " startingAtIndex: 0];
+            opcodePadded = [opcodePadded stringByAppendingString: padding];
+        }
         if (argCount == 1) {
             line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter];
         } else if (argCount == 2) {
@@ -1604,6 +1647,12 @@
             break;
         case ADC_ABS:
             opcodeName = @"ADC_ABS";
+            break;
+        case ADC_ABSY:
+            opcodeName = @"ADC_ABSY";
+            break;
+        case ADC_ABSX:
+            opcodeName = @"ADC_ABSX";
             break;
         case AND_ZP:
             opcodeName = @"AND_ZP";
@@ -1823,6 +1872,9 @@
             // LDY (Load Y ABS)
         case LDY_ABS:
             opcodeName = @"LDY_ABS";
+            break;
+        case LDY_ABSX:
+            opcodeName = @"LDY_ABSX";
             break;
         case LDY_ZP:
             opcodeName = @"LDY_ZP";

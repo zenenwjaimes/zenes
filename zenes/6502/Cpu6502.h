@@ -12,6 +12,8 @@
 #import "BitHelper.h"
 
 @class Ppu;
+@class Nes;
+
 @interface Cpu6502 : NSObject
 {
     uint8_t _memory[0x10000];
@@ -31,6 +33,7 @@
 @property uint16_t reg_pc;
 @property (assign, nonatomic) uint8_t *memory;
 @property NSString *currentLine;
+@property Nes *nes;
 @property Ppu *ppu;
 @property uint8_t ppuReg1;
 @property uint8_t ppuReg2;
@@ -39,8 +42,7 @@
 @property BOOL notifyPpuWrite;
 @property uint16_t notifyPpuAddress;
 @property uint16_t notifyPpuValue;
-
-@property uint16_t joystickCounter;
+@property uint8_t joystickCounter;
 
 
 // Memory reading instructions
@@ -170,6 +172,7 @@ enum opcodes {
     LDX_ABSY = 0xBE,
     LDY_IMM = 0xA0,
     LDY_ABS = 0xAC,
+    LDY_ABSX = 0xBC,
     LDY_ZPX = 0xB4,
     LDY_ZP = 0xA4,
     LSR_A = 0x4A,

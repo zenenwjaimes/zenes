@@ -15,11 +15,13 @@
 @property (retain) Cpu6502 *cpu;
 @property (retain) Screen *screen;
 @property (retain) Ppu *ppu;
-
+@property int buttonPressed;
 
 - (id) initWithRom: (Rom *)rom;
 - (void) run;
 - (void) runNextInstruction;
 - (void) runNextInstructionInline;
+- (void)keyDown:(NSEvent *)theEvent;
+- (void)buttonStrobe: (int) button;
 
 @end

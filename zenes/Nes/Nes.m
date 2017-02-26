@@ -17,6 +17,7 @@
     if (self = [super init]) {
         self.rom = rom;
         self.cpu = [[Cpu6502 alloc] init];
+        self.cpu.nes = self;
         
         uint16_t prgRom0 = 0x00;
         uint16_t prgRom1 = 0x00;
@@ -64,6 +65,7 @@
         // set pc to the address stored at FFFD/FFFC (usually 0x8000)
         self.cpu.reg_pc = (self.cpu.memory[0xFFFD] << 8) | (self.cpu.memory[0xFFFC]);
         NSLog(@"Boot Reg PC: %X", self.cpu.reg_pc);
+
         self.cpu.ppu = self.ppu;
     }
     return self;
@@ -71,23 +73,22 @@
 
 //TODO: Fix this run loop up a bit. Make it so you can step through operations
 - (void) run {
-    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_DEFAULT, 0), ^{
+    dispatch_async(dispatch_get_global_queue(DISPATCH_QUEUE_PRIORITY_HIGH, 0), ^{
         for (;;) {
             [self runNextInstruction];
             
             if (self.cpu.isRunning == YES) {
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    if (self.cpu.currentLine != nil) {
-                    //if (DEBUGGING_ENABLED) {
-                        [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-                    }
-                });
-            
-                dispatch_sync(dispatch_get_main_queue(), ^{
-                    //if (DEBUGGING_ENABLED) {
+                if (DEBUGGING_ENABLED) {
+                    dispatch_sync(dispatch_get_main_queue(), ^{
+                        if (self.cpu.currentLine != nil) {
+                            [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+                        }
+                    });
+                    
+                    dispatch_sync(dispatch_get_main_queue(), ^{
                         [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
-                    //}
-                });
+                    });
+                }
             }
             
             //[NSThread sleepForTimeInterval:0.005];
@@ -108,6 +109,59 @@
 - (void) runNextInstruction {
     [self.cpu runNextInstruction];
     [self.ppu drawFrame];
+}
+
+- (void)buttonStrobe: (int) button
+{
+    if (self.buttonPressed == (button+1)) {
+        [self.cpu writeValue: 1 toAddress: 0x4016];
+        self.buttonPressed = 0;
+    } else {
+        [self.cpu writeValue: 0 toAddress: 0x4016];
+    }
+}
+
+- (void)keyDown:(NSEvent *)theEvent
+{
+    int key = [[theEvent valueForKey: @"keyCode"] intValue];
+    switch (key) {
+        case 0:
+            NSLog(@"A Key Pressed");
+            self.buttonPressed = 1;
+            break;
+        case 1:
+            NSLog(@"B Key Pressed");
+            self.buttonPressed = 2;
+            break;
+        case 126:
+            NSLog(@"Up Key Pressed");
+            self.buttonPressed = 5;
+            break;
+        case 125:
+            NSLog(@"Down Key Pressed");
+            self.buttonPressed = 6;
+            break;
+        case 123:
+            NSLog(@"Left Key Pressed");
+            self.buttonPressed = 7;
+            break;
+        case 124:
+            NSLog(@"Right Key Pressed");
+            self.buttonPressed = 8;
+            break;
+        case 36:
+            NSLog(@"Start Key Pressed");
+            self.buttonPressed = 4;
+            break;
+        case 42:
+            NSLog(@"Select Key Pressed");
+            self.buttonPressed = 3;
+            break;
+            // Ignore all other input
+        default:
+            self.buttonPressed = 0;
+            break;
+    }
 }
 
 @end

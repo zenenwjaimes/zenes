@@ -10,13 +10,15 @@
 
 @implementation NesWindow
 
-- (IBAction)playButton:(id)sender {
+- (IBAction)playButton:(id)sender
+{
     if (self.nesInstance.cpu.isRunning == YES) {
         [self.nesInstance run];
     }
 }
 
-- (IBAction)pauseButton:(id)sender {
+- (IBAction)pauseButton:(id)sender
+{
     if (self.nesInstance.cpu.isRunning == NO) {
         [self.nesInstance.cpu setIsRunning: YES];
     } else {
@@ -24,7 +26,8 @@
     }
 }
 
-- (IBAction)stepIntoButton:(id)sender {
+- (IBAction)stepIntoButton:(id)sender
+{
     if (self.nesInstance.cpu.isRunning == NO) {
         [self.nesInstance.cpu setIsRunning: YES];
     }
@@ -34,8 +37,13 @@
 }
 
 
-- (IBAction)memoryDumpButton:(id)sender {
+- (IBAction)memoryDumpButton:(id)sender
+{
     [self.nesInstance.cpu dumpMemoryToLog];
+}
+- (void)keyDown:(NSEvent *)theEvent
+{
+    [self.nesInstance keyDown: theEvent];
 }
 
 @end
