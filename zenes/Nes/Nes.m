@@ -18,6 +18,7 @@
         self.rom = rom;
         self.cpu = [[Cpu6502 alloc] init];
         self.cpu.nes = self;
+        self.debuggerEnabled = NO;
         
         uint16_t prgRom0 = 0x00;
         uint16_t prgRom1 = 0x00;
@@ -78,7 +79,7 @@
             [self runNextInstruction];
             
             if (self.cpu.isRunning == YES) {
-                if (DEBUGGING_ENABLED) {
+                if (self.debuggerEnabled == YES) {
                     dispatch_sync(dispatch_get_main_queue(), ^{
                         if (self.cpu.currentLine != nil) {
                             [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
@@ -90,8 +91,6 @@
                     });
                 }
             }
-            
-            //[NSThread sleepForTimeInterval:0.005];
         }
     });
 }
@@ -99,11 +98,10 @@
 - (void) runNextInstructionInline {
     [self.cpu runNextInstruction];
     
-    if (DEBUGGING_ENABLED) {
+    if (self.debuggerEnabled == YES) {
         [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
+        [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
     }
-    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
-
 }
 
 - (void) runNextInstruction {

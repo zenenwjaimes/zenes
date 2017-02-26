@@ -861,6 +861,21 @@
             
             break;
             
+        case CMP_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            uint8_t tempcmpabs = (self.reg_acc - [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpabs];
+            if (self.reg_acc >= [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
         case CPX_IMM:
             argCount = 2;
             self.reg_pc += 2;
@@ -1345,6 +1360,15 @@
             [self writeZeroPage: self.memory[self.op1] withValue: rolzp];
             break;
             
+        case ROL_ABS:
+            argCount = 3;
+            self.counter += 6;
+            self.reg_pc += argCount;
+            
+            uint8_t rolabs = [self rotateLeft: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]];
+            [self writeValue: rolabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
+            break;
+            
         case ROR_ZP:
             argCount = 2;
             self.counter += 5;
@@ -1608,7 +1632,7 @@
     }
     
     // TODO: Clean this up, this is terrible
-    if (DEBUGGING_ENABLED) {
+    if (self.nes.debuggerEnabled == YES) {
         NSString *line = nil;
         uint16 opcodeLength = 10-[[Cpu6502 getOpcodeName: opcode] length];
         NSString *opcodePadded = [Cpu6502 getOpcodeName: opcode];

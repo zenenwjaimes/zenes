@@ -39,7 +39,11 @@
 
 - (IBAction)memoryDumpButton:(id)sender
 {
-    [self.nesInstance.cpu dumpMemoryToLog];
+    if (self.nesInstance.debuggerEnabled == YES) {
+        self.nesInstance.debuggerEnabled = NO;
+    } else {
+        self.nesInstance.debuggerEnabled = YES;
+    }
 }
 - (void)keyDown:(NSEvent *)theEvent
 {

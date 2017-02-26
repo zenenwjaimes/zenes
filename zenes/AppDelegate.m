@@ -22,7 +22,7 @@
 
     [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/nestest.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/mario.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
     [self.window makeFirstResponder: nil];
     nesInstance.screen = self.window.nesScreen;
@@ -36,9 +36,9 @@
 
 - (void)updateRegs: (NSNotification *) notification
 {
-   //if (DEBUGGING_ENABLED) {
-     //   [self.debuggerTable reloadData];
-    //}
+   if (self.window.nesInstance.debuggerEnabled == YES) {
+       [self.debuggerTable reloadData];
+   }
 }
 
 - (void)applicationWillTerminate:(NSNotification *)aNotification
@@ -48,15 +48,14 @@
 
 - (void)appendToDebuggerWindow:(NSString*)text
 {
-    dispatch_async(dispatch_get_main_queue(), ^{
-        //if (text != nil) {
-        //if (DEBUGGING_ENABLED) {
+    if (self.window.nesInstance.debuggerEnabled == YES) {
+
+        dispatch_async(dispatch_get_main_queue(), ^{
             NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
             [[self.debuggerMemory textStorage] appendAttributedString:attr];
             [self.debuggerMemory scrollRangeToVisible:NSMakeRange([[self.debuggerMemory string] length], 0)];
-        //}
-        //}
-    });
+        });
+    }
 }
 
 - (IBAction)memoryDumpButton:(id)sender
@@ -243,9 +242,7 @@
             }
             break;
     }
-    //result.stringValue = @"test";
-    
-    // Return the result
+
     return result;
 }
 

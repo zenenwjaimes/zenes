@@ -16,6 +16,7 @@
 @property (retain) Screen *screen;
 @property (retain) Ppu *ppu;
 @property int buttonPressed;
+@property BOOL debuggerEnabled;
 
 - (id) initWithRom: (Rom *)rom;
 - (void) run;
