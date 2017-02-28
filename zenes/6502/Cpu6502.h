@@ -120,6 +120,7 @@ enum opcodes {
     BPL = 0x10,
     BVC = 0x50,
     BVS = 0x70,
+    BRK = 0x00,
     CLC = 0x18,
     CLD = 0xD8,
     CLI = 0x58,
@@ -165,6 +166,8 @@ enum opcodes {
     LDA_ABSY = 0xB9,
     LDA_IMM = 0xA9,
     LDA_INDY = 0xB1,
+    LDA_INDX = 0xA1,
+
     LDA_ZP = 0xA5,
     LDA_ZPX = 0xB5,
 
@@ -191,8 +194,8 @@ enum opcodes {
     ORA_ABS = 0x0D,
     ORA_ABSX = 0x1D,
     ORA_ABSY = 0x19,
-    ORA_IX = 0x01,
-    ORA_IY = 0x11,
+    ORA_INDX = 0x01,
+    ORA_INDY = 0x11,
     PLA = 0x68,
     PLP = 0x28,
     PHA = 0x48,
@@ -214,6 +217,8 @@ enum opcodes {
     SBC_IMM = 0xE9,
     SBC_ZP = 0xE5,
     SBC_ABSY = 0xF9,
+    SBC_INDX = 0xE1,
+    SBC_INDY = 0xF1,
 
     SEC = 0x38,
     SED = 0xF8,

@@ -490,6 +490,14 @@
             [self addWithCarry: [self readZeroPage: self.memory[self.op1]]];
             break;
             
+        case ADC_ZPX:
+            argCount = 2;
+            self.counter += 4;
+            self.reg_pc += argCount;
+            
+            [self addWithCarry: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
+            break;
+            
         case ADC_ABS:
             argCount = 3;
             self.counter += 4;
@@ -505,6 +513,23 @@
             
             [self addWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]];
             break;
+            
+        case ADC_INDX:
+            argCount = 2;
+            self.counter += 6;
+            self.reg_pc += argCount;
+            
+            [self addWithCarry: [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]];
+            break;
+
+        case ADC_INDY:
+            argCount = 2;
+            self.counter += 5;
+            self.reg_pc += argCount;
+            
+            [self addWithCarry: [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]];
+            break;
+
             
         case AND_IMM:
             argCount = 2;
@@ -778,6 +803,14 @@
             }
             
             break;
+        case CLI:
+            argCount = 1;
+            [self disableInterrupts];
+            // Cycles: 2
+            self.counter += 2;
+            // 1 byte OP, jump to the next byte address
+            self.reg_pc++;
+            break;
             
         // CLC (Clear Carry Flag)
         case CLC:
@@ -878,6 +911,20 @@
                 [self disableCarryFlag];
             }
             
+            break;
+            
+        case CMP_INDX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            uint8_t tempcmpindx = (self.reg_acc - [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpindx];
+            if (self.reg_acc >= [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
             break;
             
         case CPX_IMM:
@@ -1089,6 +1136,16 @@
             
             break;
             
+        case EOR_INDX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            self.reg_acc ^= [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+            
         case INC_ZP:
             argCount = 2;
             self.reg_pc += argCount;
@@ -1219,11 +1276,19 @@
             self.reg_pc += argCount;
             self.counter += 5;
             
-            //NSLog(@"LDA_INDY: %X at cycle: %X", (((self.memory[(self.memory[self.op1] + 1) & 0xFF] << 8) | (self.memory[self.memory[self.op1]])) + self.reg_y) & 0xFFFF, self.counter);
-            
             self.reg_acc = [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y];
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
+            
+        case LDA_INDX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            self.reg_acc = [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
             
         // LDA (Load Accumulator Absolute)
         case LDA_ABS:
@@ -1420,6 +1485,16 @@
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
+        case ORA_INDX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            self.reg_acc |= [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+            
         case PLA:
             argCount = 1;
             self.counter += 4;
@@ -1575,6 +1650,15 @@
             [self subtractWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]];
             break;
             
+        case SBC_INDX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            [self subtractWithCarry: [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]];
+            
+            break;
+            
         // SEC (Set Carry)
         case SEC:
             argCount = 1;
@@ -1641,6 +1725,15 @@
             
             [self writeIndirectIndexWithByte: self.memory[self.op1] andOffset: self.reg_y withValue: self.reg_acc];
             break;
+            
+        case STA_INDX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            [self writeIndirectIndexWithByte: self.memory[self.op1] andOffset: self.reg_x withValue: self.reg_acc];
+            break;
+            
         // STA_ZP (Store Accumulator Zero Page)
         case STA_ZP:
             argCount = 2;
@@ -1804,6 +1897,9 @@
         case ADC_ZP:
             opcodeName = @"ADC_ZP";
             break;
+        case ADC_ZPX:
+            opcodeName = @"ADC_ZPX";
+            break;
         case ADC_ABS:
             opcodeName = @"ADC_ABS";
             break;
@@ -1812,6 +1908,12 @@
             break;
         case ADC_ABSX:
             opcodeName = @"ADC_ABSX";
+            break;
+        case ADC_INDX:
+            opcodeName = @"ADC_INDX";
+            break;
+        case ADC_INDY:
+            opcodeName = @"ADC_INDY";
             break;
         case AND_ZP:
             opcodeName = @"AND_ZP";
@@ -1881,6 +1983,12 @@
             break;
         case BVS:
             opcodeName = @"BVS";
+            break;
+        case BRK:
+            opcodeName = @"BRK";
+            break;
+        case CLI:
+            opcodeName = @"CLI";
             break;
             // CLC (Clear Carry Flag)
         case CLC:
@@ -2013,6 +2121,9 @@
         case LDA_INDY:
             opcodeName = @"LDA_INDY";
             break;
+        case LDA_INDX:
+            opcodeName = @"LDA_INDX";
+            break;
             // LDX (Load X Immediate)
         case LDX_IMM:
             opcodeName = @"LDX_IMM";
@@ -2089,6 +2200,12 @@
         case ORA_ABS:
             opcodeName = @"ORA_ABS";
             break;
+        case ORA_INDX:
+            opcodeName = @"ORA_INDX";
+            break;
+        case ORA_INDY:
+            opcodeName = @"ORA_INDY";
+            break;
         case PLA:
             opcodeName = @"PLA";
             break;
@@ -2146,6 +2263,9 @@
         case SBC_ABSY:
             opcodeName = @"SBC_ABSY";
             break;
+        case SBC_INDX:
+            opcodeName = @"SBC_INDX";
+            break;
             // SEC (Set Carry)
         case SEC:
             opcodeName = @"SEC";
@@ -2169,6 +2289,9 @@
             break;
         case STA_INDY:
             opcodeName = @"STA_INDY";
+            break;
+        case STA_INDX:
+            opcodeName = @"STA_INDX";
             break;
             // STA_ZP (Store Accumulator Zero Page)
         case STA_ZP:
