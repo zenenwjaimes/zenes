@@ -217,7 +217,7 @@
     }
     
     uint8_t value = self.memory[address];
-    if (address >= 0x2000 && address <= 0x2000) {
+    if (address == 0x2000) {
         self.ppuReg1 = [self readValueAtAddress: 0x2000];
         self.ppuReg2 = [self readValueAtAddress: 0x2001];
 
@@ -298,6 +298,7 @@
     uint16_t tempAddress = (lowAddress | (highAddress << 8));
     NSLog(@"jmp pc: %X", self.reg_pc);
     NSLog(@"jmp indirect! low shifted: %X, low: %X, high: %X, total: %X, low add: %X, high add: %X, tt: %X", ((lowByte+1)&0xFF),  lowByte, highByte, tempAddress, lowAddress, highAddress, (lowAddress | (highAddress << 8)));
+    NSLog(@"reg pc: %X", self.reg_pc);
 
     return tempAddress;
 //    return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
@@ -447,14 +448,26 @@
 
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
+    NSLog(@"pushing: %X to %X", data, 0x100+self.reg_sp);
     [self writeValue: data toAddress: 0x100+self.reg_sp];
-    self.reg_sp -= 1;
+    if (self.reg_sp == 0) {
+        self.reg_sp = 0xFF;
+    } else {
+        self.reg_sp -= 1;
+    }
 }
 
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be incremented by 1
-    self.reg_sp += 1;
-    return [self readAbsoluteAddress1: self.reg_sp address2: 0x01];
+    if (self.reg_sp == 0xFF) {
+        self.reg_sp = 0;
+    } else {
+        self.reg_sp += 1;
+    }
+    uint8_t data = [self readValueAtAddress: 0x100+self.reg_sp];
+    NSLog(@"pulling: %X from %X", data, 0x100+self.reg_sp);
+
+    return data;
 }
 
 - (void)runNextInstruction {
@@ -518,6 +531,14 @@
             self.reg_pc += argCount;
             
             [self addWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]];
+            break;
+            
+        case ADC_ABSX:
+            argCount = 3;
+            self.counter += 4;
+            self.reg_pc += argCount;
+            
+            [self addWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x]];
             break;
             
         case ADC_INDX:
@@ -904,6 +925,22 @@
             
             break;
             
+            
+        case CMP_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            uint8_t tempcmpabsx = (self.reg_acc - [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpabsx];
+            if (self.reg_acc >= [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
         case CMP_ABS:
             argCount = 3;
             self.reg_pc += argCount;
@@ -982,7 +1019,7 @@
             
         case CPX_ABS:
             argCount = 3;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             
             uint8_t cmpxabs= self.reg_x - [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
@@ -1156,6 +1193,26 @@
             
             break;
             
+        case EOR_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            
+            self.reg_acc ^= [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+            
+        case EOR_ABSY:
+            argCount = 3;
+            self.reg_pc += argCount;
+            // Cycles
+            self.counter += 4;
+            self.reg_acc ^= [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y];
+
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
         case EOR_INDX:
             argCount = 2;
             self.reg_pc += argCount;
@@ -1187,6 +1244,17 @@
             
             break;
             
+        case INC_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            uint8_t inczpx = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
+            [self writeZeroPage: self.memory[self.op1] withValue: ((inczpx+1) & 0xFF) withRegister: self.reg_x];
+            
+            [self toggleZeroAndSignFlagForReg: [self readZeroPage: self.memory[self.op1]]];
+            
+            break;
+            
         case INC_ABS:
             argCount = 3;
             self.reg_pc += argCount;
@@ -1194,6 +1262,18 @@
             
             uint8_t incabs = ([self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]+1) & 0xFF;
             [self writeValue: incabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
+            
+            [self toggleZeroAndSignFlagForReg: incabs];
+            
+            break;
+            
+        case INC_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 7;
+            
+            uint8_t incabsx = ([self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x]+1) & 0xFF;
+            [self writeAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] andOffset: self.reg_x withValue: incabsx];
             
             [self toggleZeroAndSignFlagForReg: incabs];
             
@@ -1241,6 +1321,8 @@
             // Push new address to the stack and decrement the current PC
             [self pushToStack: stackPc >> 8];
             [self pushToStack: (uint8_t)stackPc];
+            
+            NSLog(@"JSR pushing high: %X, low: %X for: %X", stackPc >> 8, (uint8_t)stackPc, stackPc);
             
             //TODO: FUCK
             self.reg_pc = (self.memory[self.op2] << 8 | self.memory[self.op1]);
@@ -1454,12 +1536,26 @@
             [self writeZeroPage: self.memory[self.op1] withValue: lsrzpx];
             
             break;
-        //case LSR_ZPX:
-        //    break;
-        //case LSR_ABS:
-        //    break;
-        //case LSR_ABSX:
-        //    break;
+            
+        case LSR_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            uint8_t lsrabs = [self logicalShiftRight: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]];
+            
+            //[self writeZeroPage: self.memory[self.op1] withValue: lsrabs];
+            [self writeAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] andOffset: 0 withValue: lsrabs];
+            break;
+            
+        case LSR_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 7;
+            
+            uint8_t lsrabsx = [self logicalShiftRight: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op1] withOffset: self.reg_x]];
+            [self writeAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] andOffset: self.reg_x withValue: lsrabsx];
+            break;
+            
         // NOP (no operation, do nothing but decrement the counter and move on)
         case NOP:
             argCount = 1;
@@ -1504,6 +1600,16 @@
             // Cycles
             self.counter += 3;
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
+        case ORA_ABSX:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            
+            self.reg_acc |= [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
             break;
             
         case ORA_ABS:
@@ -1594,6 +1700,15 @@
             [self writeValue: rolabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
             break;
             
+        case ROL_ABSX:
+            argCount = 3;
+            self.counter += 7;
+            self.reg_pc += argCount;
+            
+            uint8_t rolabsx = [self rotateLeft: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x]];
+            [self writeAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] andOffset: self.reg_x withValue: rolabsx];
+            break;
+            
         case ROR_ZP:
             argCount = 2;
             self.counter += 5;
@@ -1651,7 +1766,7 @@
             littlerti = [self pullFromStack];
             bigrti = [self pullFromStack];
             self.reg_pc = ((bigrti << 8)| littlerti);
-           // NSLog(@"RTI! to :%X", self.reg_pc);
+            NSLog(@"RTI! to :%X with reg stat: %X, %X, %X", self.reg_pc, self.reg_status, littlerti, bigrti);
 
             break;
         case RTS:
@@ -1659,11 +1774,13 @@
             // 6 cycles
             self.counter += 6;
             // Pull the stack address and put it into the pc
-            uint8_t little, big = 0x00;
+            uint16_t little, big = 0x00;
             
             little = [self pullFromStack];
             big = [self pullFromStack];
             self.reg_pc = ((big << 8)| little)+1;
+            NSLog(@"RTS! to :%X with reg stat: %X, %X, %X", self.reg_pc, self.reg_status, little, big);
+
             break;
         case SBC_IMM:
             argCount = 2;
@@ -1681,6 +1798,21 @@
             [self subtractWithCarry: [self readZeroPage: self.memory[self.op1]]];
             break;
             
+        case SBC_ZPX:
+            argCount = 2;
+            self.counter += 3;
+            self.reg_pc += argCount;
+            
+            [self subtractWithCarry: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
+            break;
+            
+        case SBC_ABS:
+            argCount = 3;
+            self.counter += 4;
+            self.reg_pc += argCount;
+            
+            [self subtractWithCarry: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]];
+            break;
             
         case SBC_ABSY:
             argCount = 3;
@@ -1688,6 +1820,14 @@
             self.reg_pc += argCount;
             
             [self subtractWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y]];
+            break;
+            
+        case SBC_ABSX:
+            argCount = 3;
+            self.counter += 4;
+            self.reg_pc += argCount;
+            
+            [self subtractWithCarry: [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x]];
             break;
             
         case SBC_INDX:
@@ -1882,7 +2022,9 @@
             argCount = 1;
             self.reg_pc ++;
             self.counter += 2;
-            
+            if (self.reg_x == 0xFA) {
+                NSLog(@"TXS is 0xFA at reg: %X", self.reg_pc);
+            }
             [self pushToStack: self.reg_x];
             
             break;
@@ -2138,8 +2280,14 @@
         case INC_ZP:
             opcodeName = @"INC_ZP";
             break;
+        case INC_ZPX:
+            opcodeName = @"INC_ZPX";
+            break;
         case INC_ABS:
             opcodeName = @"INC_ABS";
+            break;
+        case INC_ABSX:
+            opcodeName = @"INC_ABSX";
             break;
         case INX:
             opcodeName = @"INX";
@@ -2243,6 +2391,9 @@
         case ORA_ZP:
             opcodeName = @"ORA_ZP";
             break;
+        case ORA_ABSX:
+            opcodeName = @"ORA_ABSX";
+            break;
         case ORA_ABSY:
             opcodeName = @"ORA_ABSY";
             break;
@@ -2309,8 +2460,17 @@
         case SBC_ZP:
             opcodeName = @"SBC_ZP";
             break;
+        case SBC_ZPX:
+            opcodeName = @"SBC_ZPX";
+            break;
+        case SBC_ABS:
+            opcodeName = @"SBC_ABS";
+            break;
         case SBC_ABSY:
             opcodeName = @"SBC_ABSY";
+            break;
+        case SBC_ABSX:
+            opcodeName = @"SBC_ABSX";
             break;
         case SBC_INDX:
             opcodeName = @"SBC_INDX";

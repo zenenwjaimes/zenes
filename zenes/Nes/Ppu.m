@@ -16,6 +16,7 @@
     if (self = [super init]) {
         self.cpu = cpu;
         [self bootupSequence];
+        self.canDraw = self.canDrawBg = YES;
         
         for (long i = 0; i < 0x2000; i++) {
             self.memory[i] = tmpRom[i];
@@ -47,7 +48,7 @@
     memcpy(_memory, memory, sizeof(_memory));
 }
 
-- (uint8_t *)memory {
+- (uint8_t*)memory {
     return _memory;
 }
 
@@ -86,7 +87,17 @@
     
     switch (self.cpu.notifyPpuAddress) {
         case 0x2000:
+            if (self.cpu.notifyPpuWrite == YES) {
+                NSLog(@"changing pattern table? %X", self.cpu.memory[0x2000]);
+            }
+            break;
             
+        case 0x2001:
+            if (([BitHelper checkBit: CR2_SHOW_BACKGROUND on: self.cpu.memory[0x2001]])) {
+                self.canDrawBg = YES;
+            } else {
+                self.canDrawBg = NO;
+            }
             break;
         case 0x2002:
             if (self.cpu.notifyPpuWrite == NO) {
@@ -109,13 +120,9 @@
             [self setCanDraw: YES];
             
             if (self.cpu.notifyPpuWrite == YES) {
-                //self.cpu.nes.debuggerEnabled = YES;
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                //if (self.currVramAddress == 0x2229) {
-                //NSLog(@"writing to %X: %X cycle: %X", self.currVramAddress, self.cpu.memory[0x2007], self.cpu.counter);
-                //}
-
                 self.currVramAddress += self.incrementStep;
+
             } else {
                 NSLog(@"Read of 0x2007");
             }
@@ -167,10 +174,9 @@
         case 1:
             return 0x1000;
             break;
-        default:
-            return 0x0000;
-            break;
     }
+    
+    return 0x0000;
 }
 
 - (uint8_t*)getBackgroundDataForX: (uint16_t)x andY: (uint16_t)y
@@ -185,12 +191,10 @@
     uint16_t attributeTable = [self getAttributeTableAddress];
     uint16_t patternTable = [self getPatternTableAddress];
     uint16_t nameByteAddress = 0x00;
-    //uint8_t paletteGrid[8];
     
     if (tileNumberY == 0) {
         nameByteAddress = tileNumberX;
     } else {
-        //nameByteAddress = (tileNumberY*tileNumberX);
         nameByteAddress = tileNumberY*32+tileNumberX;
     }
 

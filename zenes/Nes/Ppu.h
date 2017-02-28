@@ -21,6 +21,7 @@
 @property uint16_t currentScanline;
 @property uint16_t currentVerticalLine;
 @property BOOL canDraw;
+@property BOOL canDrawBg;
 @property BOOL skipVBlank;
 @property BOOL firstWrite;
 @property (assign, nonatomic) uint8_t incrementStep;
