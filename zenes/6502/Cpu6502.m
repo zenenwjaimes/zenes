@@ -292,9 +292,15 @@
 
 - (uint16_t)getIndirectAddressWithLow: (uint8_t)lowByte andHigh: (uint8_t)highByte
 {
-    uint16_t tempAddress = ((highByte << 8) | lowByte);
-    
-    return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
+    uint8_t lowAddress = [self readAbsoluteAddress1: lowByte address2: highByte];
+    uint8_t highAddress = [self readAbsoluteAddress1: ((lowByte+1)&0xFF) address2: highByte];
+
+    uint16_t tempAddress = (lowAddress | (highAddress << 8));
+    NSLog(@"jmp pc: %X", self.reg_pc);
+    NSLog(@"jmp indirect! low shifted: %X, low: %X, high: %X, total: %X, low add: %X, high add: %X, tt: %X", ((lowByte+1)&0xFF),  lowByte, highByte, tempAddress, lowAddress, highAddress, (lowAddress | (highAddress << 8)));
+
+    return tempAddress;
+//    return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
 }
 
 - (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (uint8_t)offset {
@@ -927,6 +933,20 @@
             }
             break;
             
+        case CMP_INDY:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 5;
+            uint8_t tempcmpindy = (self.reg_acc - [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]);
+            
+            [self toggleZeroAndSignFlagForReg: tempcmpindy];
+            if (self.reg_acc >= [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            break;
+            
         case CPX_IMM:
             argCount = 2;
             self.reg_pc += argCount;
@@ -1142,6 +1162,16 @@
             self.counter += 6;
             
             self.reg_acc ^= [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+            
+        case EOR_INDY:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            self.reg_acc ^= [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y];
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
@@ -1495,6 +1525,16 @@
             
             break;
             
+        case ORA_INDY:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            
+            self.reg_acc |= [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+            
         case PLA:
             argCount = 1;
             self.counter += 4;
@@ -1656,6 +1696,15 @@
             self.counter += 6;
             
             [self subtractWithCarry: [self readIndexedIndirectAddressWithByte: self.memory[self.op1] andOffset: self.reg_x]];
+            
+            break;
+            
+        case SBC_INDY:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 5;
+            
+            [self subtractWithCarry: [self readIndirectIndexAddressWithByte: self.memory[self.op1] andOffset: self.reg_y]];
             
             break;
             

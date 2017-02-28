@@ -142,6 +142,8 @@
             self.buttonPressed = 8;
             break;
         case 36:
+            //self.debuggerEnabled = YES;
+
             NSLog(@"Start Key Pressed");
             self.buttonPressed = 4;
             break;
