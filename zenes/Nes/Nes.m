@@ -19,49 +19,43 @@
         self.cpu = [[Cpu6502 alloc] init];
         self.cpu.nes = self;
         self.debuggerEnabled = NO;
-        
+
         uint16_t prgRom0 = 0x00;
         uint16_t prgRom1 = 0x00;
         uint8_t bank0[0x4000] = {};
         uint8_t bank1[0x4000] = {};
         
-        // TODO: Hack
-        // MMC-1
-        if (self.rom.mapperType == 1) {
-            prgRom0 = [self.rom.mapper getPrgRomAddress: 0];
-            prgRom1 = [self.rom.mapper getPrgRomAddress: 1];
-        } else { // No mapper, generic rom
-            prgRom0 = [self.rom.mapper getPrgRomAddress: 0];
-            prgRom1 = [self.rom.mapper getPrgRomAddress: 1];
+        prgRom0 = [self.rom.mapper getPrgRomAddress: 0];
+        prgRom1 = [self.rom.mapper getPrgRomAddress: 1];
+
+        if (self.rom.prgRomSize == 1) {
+            prgRom1 = prgRom0;
         }
         
-        // TODO: Hack
-        if (self.rom.mapperType == 0) {
-            prgRom1 = 0x10;
-        }
+        NSLog(@"prg0: %X, prg1: %X", prgRom0, prgRom1);
         
         [self.rom.data getBytes: bank0 range: NSMakeRange(prgRom0, 0x4000)];
         [self.rom.data getBytes: bank1 range: NSMakeRange(prgRom1, 0x4000)];
         
-        // TODO: Hack
-        if (self.rom.mapperType == 0) {
-            prgRom1 = 0x4010;
-        }
-        
         // Offset from the last rom bank, this is where vrom lies in the nes format
         uint8_t chrRom[0x2000] = {};
         
-        if (self.rom.mapperType == 0) {
-            [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1, 0x2000)];
-        } else {
-            [self.rom.data getBytes: chrRom range: NSMakeRange((prgRom1+0x4000), 0x2000)];
-        }
+        [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1+0x4000, 0x2000*self.rom.chrRomSize)];
         
         self.ppu = [[Ppu alloc] initWithCpu: self.cpu andChrRom: chrRom];
+
+        uint16_t prgBank0 = (prgRom0-16)+0x8000;
+        uint16_t prgBank1 = (prgRom1-16)+0x8000;
+
+        if (self.rom.prgRomSize == 1) {
+            prgBank1 += 0x4000;
+        }
+        
+        NSLog(@"prgBank0: %X, prgBank1: %X", prgBank0, prgBank1);
         
         // write prg rom to cpu mem
-        [self.cpu writePrgRom:bank0 toAddress: (prgRom0-16)+0x8000];
-        [self.cpu writePrgRom:bank1 toAddress: (prgRom1-16)+0x8000];
+        [self.cpu writePrgRom:bank0 toAddress: prgBank0];
+        [self.cpu writePrgRom:bank1 toAddress: prgBank1];
         
         // set pc to the address stored at FFFD/FFFC (usually 0x8000)
         self.cpu.reg_pc = (self.cpu.memory[0xFFFD] << 8) | (self.cpu.memory[0xFFFC]);
@@ -98,7 +92,7 @@
 - (void) runNextInstructionInline {
     [self.cpu runNextInstruction];
     
-    if (self.debuggerEnabled == YES) {
+    if (self.debuggerEnabled) {
         [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
         [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
     }

@@ -12,8 +12,7 @@
 
 - (id) initWithType: (uint8_t) mapperType {
     if (self = [super init]) {
-        self.mapperType = mapperType;
-        NSLog(@"Mapper Type %d", self.mapperType);
+        // TODO: Add better mapper support here
     }
     
     return self;
@@ -25,7 +24,7 @@
     // offset for the header
     uint8_t offset = 16;
     uint16_t address = 0x0;
-    
+    /*
     switch (self.mapperType) {
         case 0:
             address = ((0x4000 * bank) + offset);
@@ -36,7 +35,8 @@
         default:
             @throw [NSException exceptionWithName: @"InvalidMapperType" reason: @"This rom isn't supported" userInfo: nil];
             break;
-    }
+    }*/
+    address = ((0x4000 * bank) + offset);
     
     return address;
 }

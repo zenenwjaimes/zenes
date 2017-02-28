@@ -19,7 +19,6 @@
         
         for (long i = 0; i < 0x2000; i++) {
             self.memory[i] = tmpRom[i];
-            NSLog(@"value at %ld: %X", i, tmpRom[i]);
         }
     }
     return self;
@@ -110,10 +109,11 @@
             [self setCanDraw: YES];
             
             if (self.cpu.notifyPpuWrite == YES) {
+                //self.cpu.nes.debuggerEnabled = YES;
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
-                if (self.currVramAddress == 0x2229) {
-                    NSLog(@"writing to 0x2229: %X cycle: %X", self.cpu.memory[0x2007], self.cpu.counter);
-                }
+                //if (self.currVramAddress == 0x2229) {
+                //NSLog(@"writing to %X: %X cycle: %X", self.currVramAddress, self.cpu.memory[0x2007], self.cpu.counter);
+                //}
 
                 self.currVramAddress += self.incrementStep;
             } else {

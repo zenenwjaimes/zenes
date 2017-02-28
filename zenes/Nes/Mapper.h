@@ -10,9 +10,7 @@
 
 @interface Mapper : NSObject
 
-@property (assign) uint8_t mapperType;
-
-- (id) initWithType: (uint8_t) mapperType;
+- (id) initWithType;
 
 - (uint16_t) getPrgRomAddress: (uint8_t) bank;
 @end

@@ -15,7 +15,6 @@
 @property (assign) uint16_t header;
 @property (assign) uint8_t prgRomSize;
 @property (assign) uint8_t chrRomSize;
-@property (assign) uint8_t mapperType;
 @property (retain) Mapper *mapper;
 
 - (id) init: (NSString *) path;

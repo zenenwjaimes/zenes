@@ -133,6 +133,9 @@ enum opcodes {
     CMP_INDX = 0xC1,
     CMP_INDY = 0xD1,
     CPX_IMM = 0xE0,
+    CPX_ZP = 0xE4,
+    CPX_ABS = 0xEC,
+
     CPY_IMM = 0xC0,
     CPY_ZP = 0xC4,
     CPY_ABS = 0xCC,
@@ -196,6 +199,8 @@ enum opcodes {
     PHP = 0x08,
     ROR_ACC = 0x6A,
     ROR_ZP = 0x66,
+    ROR_ZPX = 0x76,
+
     ROR_ABSX = 0x7E,
     ROR_ABS = 0x6E,
 
@@ -220,10 +225,13 @@ enum opcodes {
     STA_ABSY = 0x99,
     STA_INDX = 0x81,
     STA_INDY = 0x91,
-    STX_ABS = 0x8E,
     STY_ABS = 0x8C,
+    STX_ABS = 0x8E,
     STX_ZP = 0x86,
+    STX_ZPY = 0x96,
     STY_ZP = 0x84,
+    STY_ZPX = 0x94,
+
     TAX = 0xAA,
     TXA = 0x8A,
     TAY = 0xA8,

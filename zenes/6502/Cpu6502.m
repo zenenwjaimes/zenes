@@ -199,6 +199,10 @@
         
         [self.ppu observeCpuChanges];
     }
+    
+    if (address == 0xA000) {
+        NSLog(@"Something happening? : %X", [self readValueAtAddress: 0xA000]);
+    }
 }
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
@@ -878,13 +882,46 @@
             
         case CPX_IMM:
             argCount = 2;
-            self.reg_pc += 2;
+            self.reg_pc += argCount;
             self.counter += 2;
             
             uint8_t cmpx = self.reg_x - self.memory[self.op1];
             [self toggleZeroAndSignFlagForReg: cmpx];
             
             if (self.reg_x >= self.memory[self.op1]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
+        case CPX_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 3;
+            
+            uint8_t cmpxzp = self.reg_x - [self readZeroPage: self.memory[self.op1]];
+            [self toggleZeroAndSignFlagForReg: cmpxzp];
+            
+            if (self.reg_x >= [self readZeroPage: self.memory[self.op1]]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
+            
+        case CPX_ABS:
+            argCount = 3;
+            self.reg_pc += 2;
+            self.counter += 2;
+            
+            uint8_t cmpxabs= self.reg_x - [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
+            [self toggleZeroAndSignFlagForReg: cmpxabs];
+            
+            if (self.reg_x >= [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]) {
                 [self enableCarryFlag];
             } else {
                 [self disableCarryFlag];
@@ -918,6 +955,22 @@
             [self toggleZeroAndSignFlagForReg: cmpy_abs];
             
             if (self.reg_y >= [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]]) {
+                [self enableCarryFlag];
+            } else {
+                [self disableCarryFlag];
+            }
+            
+            break;
+            
+        case CPY_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 3;
+            
+            uint8_t cmpyzp = self.reg_y - [self readZeroPage: self.memory[self.op1]];
+            [self toggleZeroAndSignFlagForReg: cmpyzp];
+            
+            if (self.reg_y >= [self readZeroPage: self.memory[self.op1]]) {
                 [self enableCarryFlag];
             } else {
                 [self disableCarryFlag];
@@ -1025,6 +1078,17 @@
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             
             break;
+            
+        case EOR_ABS:
+            argCount = 3;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            
+            self.reg_acc ^= [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            
+            break;
+            
         case INC_ZP:
             argCount = 2;
             self.reg_pc += argCount;
@@ -1200,6 +1264,15 @@
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             
+        case LDX_ZPY:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 3;
+            self.reg_x = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_y];
+            
+            [self toggleZeroAndSignFlagForReg: self.reg_x];
+            break;
+            
         case LDX_ABS:
             argCount = 3;
             self.reg_pc += argCount;
@@ -1276,6 +1349,16 @@
             [self writeZeroPage: self.memory[self.op1] withValue: lsrzp];
             
             break;
+            
+        case LSR_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 6;
+            uint8_t lsrzpx = [self logicalShiftRight: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
+            
+            [self writeZeroPage: self.memory[self.op1] withValue: lsrzpx];
+            
+            break;
         //case LSR_ZPX:
         //    break;
         //case LSR_ABS:
@@ -1308,6 +1391,16 @@
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
+        case ORA_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            
+            self.reg_acc |= [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
+            // Cycles
+            self.counter += 3;
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
         case ORA_ABSY:
             argCount = 3;
             self.reg_acc |= [self readIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_y];
@@ -1315,6 +1408,15 @@
             self.reg_pc += argCount;
             // Cycles
             self.counter += 3;
+            [self toggleZeroAndSignFlagForReg: self.reg_acc];
+            break;
+            
+        case ORA_ABS:
+            argCount = 3;
+            self.reg_acc |= [self readAbsoluteAddress1:self.memory[self.op1] address2: self.memory[self.op2]];
+            
+            self.reg_pc += argCount;
+            self.counter += 4;
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             
@@ -1359,6 +1461,14 @@
             uint8_t rolzp = [self rotateLeft: [self readZeroPage: self.memory[self.op1]]];
             [self writeZeroPage: self.memory[self.op1] withValue: rolzp];
             break;
+        case ROL_ZPX:
+            argCount = 2;
+            self.counter += 6;
+            self.reg_pc += argCount;
+            
+            uint8_t rolzpx = [self rotateLeft: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
+            [self writeZeroPage: self.memory[self.op1] withValue: rolzpx];
+            break;
             
         case ROL_ABS:
             argCount = 3;
@@ -1378,6 +1488,17 @@
             [self writeZeroPage: self.memory[self.op1] withValue: rorzp];
             
             break;
+            
+        case ROR_ZPX:
+            argCount = 2;
+            self.counter += 6;
+            self.reg_pc += argCount;
+            
+            uint8_t rorzpx = [self rotateRight: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
+            [self writeZeroPage: self.memory[self.op1] withValue: rorzpx];
+            
+            break;
+            
         case ROR_ACC:
             argCount = 1;
             self.counter += 2;
@@ -1542,12 +1663,26 @@
 
             [self writeZeroPage: self.memory[self.op1] withValue: self.reg_x];
             break;
-        case STY_ZP:
+        case STX_ZPY:
             argCount = 2;
             self.reg_pc += argCount;
             self.counter += 4;
+            
+            [self writeZeroPage: self.memory[self.op1] withValue: self.reg_x withRegister: self.reg_y];
+            break;
+        case STY_ZP:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 3;
 
             [self writeZeroPage: self.memory[self.op1] withValue: self.reg_y];
+            break;
+        case STY_ZPX:
+            argCount = 2;
+            self.reg_pc += argCount;
+            self.counter += 4;
+            
+            [self writeZeroPage: self.memory[self.op1] withValue: self.reg_y withRegister: self.reg_x];
             break;
         case STX_ABS:
             argCount = 3;
@@ -1786,6 +1921,12 @@
         case CPX_IMM:
             opcodeName = @"CPX_IMM";
             break;
+        case CPX_ABS:
+            opcodeName = @"CPX_ABS";
+            break;
+        case CPX_ZP:
+            opcodeName = @"CPX_ZP";
+            break;
         case CPY_IMM:
             opcodeName = @"CPY_IMM";
             break;
@@ -1945,6 +2086,9 @@
         case ORA_ABSY:
             opcodeName = @"ORA_ABSY";
             break;
+        case ORA_ABS:
+            opcodeName = @"ORA_ABS";
+            break;
         case PLA:
             opcodeName = @"PLA";
             break;
@@ -1983,6 +2127,9 @@
             break;
         case ROR_ZP:
             opcodeName = @"ROR_ZP";
+            break;
+        case ROR_ZPX:
+            opcodeName = @"ROR_ZPX";
             break;
         case ROR_ABSX:
             opcodeName = @"ROR_ABSX";
@@ -2034,9 +2181,15 @@
         case STX_ZP:
             opcodeName = @"STX_ZP";
             break;
+        case STX_ZPY:
+            opcodeName = @"STX_ZPY";
+            break;
             // STY (Store Y Zero Page)
         case STY_ZP:
             opcodeName = @"STY_ZP";
+            break;
+        case STY_ZPX:
+            opcodeName = @"STY_ZPX";
             break;
         case STX_ABS:
             opcodeName = @"STX_ABS";
