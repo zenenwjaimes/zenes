@@ -126,6 +126,13 @@
             
             if (self.cpu.notifyPpuWrite == YES) {
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+                if (self.currVramAddress >= 0x2000 && self.currVramAddress <= 0x2400) {
+                    self.memory[self.currVramAddress+0x800] = self.cpu.memory[0x2007];
+                }
+                if (self.currVramAddress >= 0x2400 && self.currVramAddress <= 0x2800) {
+                    self.memory[self.currVramAddress+0x800] = self.cpu.memory[0x2007];
+                }
+
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");

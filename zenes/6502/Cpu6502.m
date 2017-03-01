@@ -340,12 +340,35 @@
 - (void)toggleZeroAndSignFlagForReg: (uint8_t)cpu_reg
 {
     // CPU Reg is 0, enable the zero flag
-    if (cpu_reg == 0x00) {
+    /*if (cpu_reg == 0x00) {
         [self enableZeroFlag];
     } else {
         [self disableZeroFlag];
     }
     
+    // Sign flag set on CPU Reg
+    if ([BitHelper checkBit: 7 on: cpu_reg]) {
+        [self enableSignFlag];
+    } else {
+        [self disableSignFlag];
+    }*/
+    [self toggleZeroFlagForReg: cpu_reg];
+    [self toggleSignFlagForReg: cpu_reg];
+}
+
+
+- (void)toggleZeroFlagForReg: (uint8_t)cpu_reg
+{
+    // CPU Reg is 0, enable the zero flag
+    if (cpu_reg == 0x00) {
+        [self enableZeroFlag];
+    } else {
+        [self disableZeroFlag];
+    }
+}
+
+- (void)toggleSignFlagForReg: (uint8_t)cpu_reg
+{
     // Sign flag set on CPU Reg
     if ([BitHelper checkBit: 7 on: cpu_reg]) {
         [self enableSignFlag];
@@ -357,9 +380,11 @@
 - (void)addWithCarry: (uint8_t)value
 {
     uint16_t tempadd = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+    uint8_t tempadd2 = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+
     //boolean_t isOverflow = [BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc];
     
-    if ([BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc]) {
+    if ([BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd2] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc]) {
         [self enableOverflowFlag];
     } else {
         [self disableOverflowFlag];
@@ -368,8 +393,8 @@
         //NSLog(@"overflow: %X", tempadd);
         [self enableCarryFlag];
     }
-    [self toggleZeroAndSignFlagForReg: tempadd];
-    self.reg_acc = (tempadd & 0xFF);
+    [self toggleZeroAndSignFlagForReg: tempadd2];
+    self.reg_acc = (tempadd2 & 0xFF);
 }
 
 - (void)subtractWithCarry: (uint8_t)value
@@ -748,8 +773,13 @@
             self.counter += 3;
             uint8_t value = self.reg_acc & [self readZeroPage: self.memory[self.op1]];
 
-            [self toggleZeroAndSignFlagForReg: value];
-            [self toggleOverflowFlagForReg: value withBit: 6];
+            if (currentPC == 0xF9E4) {
+                NSLog(@"bit for %X is %X, memory is: %X, conv: %@", self.reg_acc, self.reg_acc & 0xFF, [self readZeroPage: self.memory[self.op1]], [BitHelper intToBinary: self.reg_acc & 0xFF]);
+            }
+            
+            [self toggleZeroFlagForReg: value];
+            [self toggleSignFlagForReg: [self readZeroPage: self.memory[self.op1]]];
+            [self toggleOverflowFlagForReg: [self readZeroPage: self.memory[self.op1]] withBit: 6];
             break;
             
         case BIT_ABS:
@@ -758,8 +788,9 @@
             self.counter += 3;
             uint8_t bitabs = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op1]] & self.reg_acc;
             
-            [self toggleZeroAndSignFlagForReg: bitabs];
-            [self toggleOverflowFlagForReg: value withBit: 6];
+            [self toggleZeroFlagForReg: bitabs];
+            [self toggleSignFlagForReg: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op1]]];
+            [self toggleOverflowFlagForReg: [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op1]] withBit: 6];
             break;
             
         case BMI:
