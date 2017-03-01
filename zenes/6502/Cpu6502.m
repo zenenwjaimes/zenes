@@ -1112,7 +1112,7 @@
             uint8_t deczp = [self readZeroPage: self.memory[self.op1]];
             deczp = (deczp - 1) & 0xFF;
             //if (self.nes.debuggerEnabled == YES) {
-                NSLog(@"deczp: %X at loc: %X initial value: %X, regpc: %X", deczp, self.memory[self.op1], [self readZeroPage: self.memory[self.op1]], self.reg_pc);
+            //    NSLog(@"deczp: %X at loc: %X initial value: %X, regpc: %X", deczp, self.memory[self.op1], [self readZeroPage: self.memory[self.op1]], self.reg_pc);
             //}
             [self writeZeroPage: self.memory[self.op1] withValue: deczp];
             [self toggleZeroAndSignFlagForReg: deczp];
