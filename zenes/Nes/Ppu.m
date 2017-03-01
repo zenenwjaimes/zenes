@@ -63,6 +63,7 @@
     // Observe changes to increment stepping, in case any
     // games/demos switch between modes during writes to vram
     if ([self readPpuStatusReg: CR1_INCREMENT_BY_32]) {
+//        NSLog(@"changing increment step to 32");
         self.incrementStep = 32;
     }
     
@@ -88,7 +89,11 @@
     switch (self.cpu.notifyPpuAddress) {
         case 0x2000:
             if (self.cpu.notifyPpuWrite == YES) {
-                NSLog(@"changing pattern table? %X", self.cpu.memory[0x2000]);
+                if ([BitHelper checkBit: CR1_INCREMENT_BY_32 on: self.cpu.memory[0x2000]]) {
+                    self.incrementStep = 32;
+                } else {
+                    self.incrementStep = 1;
+                }
             }
             break;
             
@@ -122,7 +127,6 @@
             if (self.cpu.notifyPpuWrite == YES) {
                 self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
                 self.currVramAddress += self.incrementStep;
-
             } else {
                 NSLog(@"Read of 0x2007");
             }
@@ -214,30 +218,15 @@
     
     firstPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)];
     secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)+8];
-    
-    
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
     uint8_t attrLookup = self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
-
-    if (self.cpu.counter > 200000) {
-        //NSLog(@"full attr lookup (%X) at (%d, %d in tile %d, %d)", attributeTable+[self getTileAddressForRow: tileNumberY andCol: tileNumberX], x,y,tileNumberX, tileNumberY);
-        //NSLog(@"attribute table value: %X for (%d,%d) location: %X", attrLookup, x, y, attributeTable+(tileNumberY+tileNumberX));
-        //NSLog(@"pattern first at %X for (%d, %d with %d, %d) value: %X", patternTable+(nameByte*16)+(pixelyPos), pixelPos, pixelyPos,x,y, firstPattern);
-    }
-        //NSLog(@"color lookup: %d", colorLook, up);
     
         uint8_t highColorBit = attrLookup >> ([self getSquareTileForX: x andY:y] * 2);
-    if (self.cpu.counter > 200000) {
-       // NSLog(@"poking :%X, calc for (%d, %d) is pixel pos (%d, %d), high color byte: %@, color bit is: %X", attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX],x,y,(x & 0xF0 >> 4)/8, (y & 0xF0 >> 4)/8, [BitHelper intToBinary: attrLookup], highColorBit);
-       // NSLog(@"high color bit: %X for tile (%d,%d) at add: %X",highColorBit, tileNumberY, tileNumberX, attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]);
-       // NSLog(@"((((%d)*(%d))/16))", tileNumberY+1, tileNumberX+1);
-    }
         pixel[2] = colorPalette[highColorBit+colorLookup][0];// r
         pixel[3] = colorPalette[highColorBit+colorLookup][1];// g
         pixel[4] = colorPalette[highColorBit+colorLookup][2];// b
-//    }
-    
+        
     return pixel;
 }
 

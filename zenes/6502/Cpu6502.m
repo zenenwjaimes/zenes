@@ -448,7 +448,7 @@
 
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
-    NSLog(@"pushing: %X to %X", data, 0x100+self.reg_sp);
+//    NSLog(@"pushing: %X to %X", data, 0x100+self.reg_sp);
     [self writeValue: data toAddress: 0x100+self.reg_sp];
     if (self.reg_sp == 0) {
         self.reg_sp = 0xFF;
@@ -465,7 +465,7 @@
         self.reg_sp += 1;
     }
     uint8_t data = [self readValueAtAddress: 0x100+self.reg_sp];
-    NSLog(@"pulling: %X from %X", data, 0x100+self.reg_sp);
+//    NSLog(@"pulling: %X from %X", data, 0x100+self.reg_sp);
 
     return data;
 }
@@ -1111,6 +1111,9 @@
 
             uint8_t deczp = [self readZeroPage: self.memory[self.op1]];
             deczp = (deczp - 1) & 0xFF;
+            //if (self.nes.debuggerEnabled == YES) {
+                NSLog(@"deczp: %X at loc: %X initial value: %X, regpc: %X", deczp, self.memory[self.op1], [self readZeroPage: self.memory[self.op1]], self.reg_pc);
+            //}
             [self writeZeroPage: self.memory[self.op1] withValue: deczp];
             [self toggleZeroAndSignFlagForReg: deczp];
             
@@ -1322,7 +1325,7 @@
             [self pushToStack: stackPc >> 8];
             [self pushToStack: (uint8_t)stackPc];
             
-            NSLog(@"JSR pushing high: %X, low: %X for: %X", stackPc >> 8, (uint8_t)stackPc, stackPc);
+//NSLog(@"JSR pushing high: %X, low: %X for: %X", stackPc >> 8, (uint8_t)stackPc, stackPc);
             
             //TODO: FUCK
             self.reg_pc = (self.memory[self.op2] << 8 | self.memory[self.op1]);
@@ -1766,7 +1769,7 @@
             littlerti = [self pullFromStack];
             bigrti = [self pullFromStack];
             self.reg_pc = ((bigrti << 8)| littlerti);
-            NSLog(@"RTI! to :%X with reg stat: %X, %X, %X", self.reg_pc, self.reg_status, littlerti, bigrti);
+//NSLog(@"RTI! to :%X with reg stat: %X, %X, %X", self.reg_pc, self.reg_status, littlerti, bigrti);
 
             break;
         case RTS:
@@ -1779,7 +1782,7 @@
             little = [self pullFromStack];
             big = [self pullFromStack];
             self.reg_pc = ((big << 8)| little)+1;
-            NSLog(@"RTS! to :%X with reg stat: %X, %X, %X", self.reg_pc, self.reg_status, little, big);
+//NSLog(@"RTS! to :%X with reg stat: %X, %X, %X", self.reg_pc, self.reg_status, little, big);
 
             break;
         case SBC_IMM:
