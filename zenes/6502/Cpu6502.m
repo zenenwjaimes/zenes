@@ -373,7 +373,7 @@
 
 - (void)subtractWithCarry: (uint8_t)value
 {
-    uint8_t tempsub = self.reg_acc - value - ([BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]?0:1);
+    uint8_t tempsub = self.reg_acc - value - ![BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
     uint8_t tempsuboverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
     
     if (tempsuboverflow != 0) {
@@ -381,7 +381,7 @@
     } else {
         [self disableOverflowFlag];
     }
-    if (tempsub > 0x00) {
+    if (tempsub >= 0x00) {
         [self enableCarryFlag];
     } else {
         [self disableCarryFlag];
