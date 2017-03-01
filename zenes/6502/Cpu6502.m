@@ -296,9 +296,9 @@
     uint8_t highAddress = [self readAbsoluteAddress1: ((lowByte+1)&0xFF) address2: highByte];
 
     uint16_t tempAddress = (lowAddress | (highAddress << 8));
-    NSLog(@"jmp pc: %X", self.reg_pc);
-    NSLog(@"jmp indirect! low shifted: %X, low: %X, high: %X, total: %X, low add: %X, high add: %X, tt: %X", ((lowByte+1)&0xFF),  lowByte, highByte, tempAddress, lowAddress, highAddress, (lowAddress | (highAddress << 8)));
-    NSLog(@"reg pc: %X", self.reg_pc);
+    //NSLog(@"jmp pc: %X", self.reg_pc);
+    //NSLog(@"jmp indirect! low shifted: %X, low: %X, high: %X, total: %X, low add: %X, high add: %X, tt: %X", ((lowByte+1)&0xFF),  lowByte, highByte, tempAddress, lowAddress, highAddress, (lowAddress | (highAddress << 8)));
+    //NSLog(@"reg pc: %X", self.reg_pc);
 
     return tempAddress;
 //    return ((self.memory[tempAddress+1] & 0xFF) << 8) | self.memory[tempAddress];
@@ -357,14 +357,15 @@
 - (void)addWithCarry: (uint8_t)value
 {
     uint16_t tempadd = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-    boolean_t isOverflow = [BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc];
+    //boolean_t isOverflow = [BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc];
     
-    if (isOverflow) {
+    if ([BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc]) {
         [self enableOverflowFlag];
     } else {
         [self disableOverflowFlag];
     }
     if (tempadd > 0xFF) {
+        //NSLog(@"overflow: %X", tempadd);
         [self enableCarryFlag];
     }
     [self toggleZeroAndSignFlagForReg: tempadd];
@@ -373,10 +374,11 @@
 
 - (void)subtractWithCarry: (uint8_t)value
 {
-    uint8_t tempsub = self.reg_acc - value - ![BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+    int16_t tempsubneg = self.reg_acc - value - ![BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+    uint16_t tempsub = self.reg_acc - value - ![BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
     uint8_t tempsuboverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
     
-    if (tempsuboverflow != 0) {
+    if (tempsub > 127) {
         [self enableOverflowFlag];
     } else {
         [self disableOverflowFlag];
@@ -650,12 +652,15 @@
             self.reg_pc += argCount;
             self.counter += 5;
             uint8_t valuezp = [self readZeroPage: self.memory[self.op1]];
-            
+
             [self toggleCarryFlagForReg: valuezp];
             uint8_t tempzp = (valuezp << 1) & 0xFE;
             
             [self writeZeroPage: self.memory[self.op1] withValue: tempzp];
-            [self toggleOverflowFlagForReg: tempzp withBit: 7];
+            //NSLog(@"shifting over %X", valuezp);
+            //NSLog(@"asl to bits: %@", [BitHelper intToBinary: valuezp]);
+            //NSLog(@"asl to bits: %@", [BitHelper intToBinary: (valuezp << 1) &0xFE]);
+            
             [self toggleZeroAndSignFlagForReg: tempzp];
             break;
             
@@ -669,7 +674,6 @@
             uint8_t tempzpx = (valuezp << 1) & 0xFE;
             
             [self writeZeroPage: self.memory[self.op1] withValue: tempzpx withRegister: self.reg_x];
-            [self toggleOverflowFlagForReg: tempzpx withBit: 7];
             [self toggleZeroAndSignFlagForReg: tempzpx];
             break;
             
@@ -683,7 +687,6 @@
             uint8_t tempabs = (valueabs << 1) & 0xFE;
             
             [self writeValue: tempabs toAbsoluteOp1: self.memory[self.op1] andAbsoluteOp2: self.memory[self.op2]];
-            [self toggleOverflowFlagForReg: tempabs withBit: 7];
             [self toggleZeroAndSignFlagForReg: tempabs];
             break;
         case ASL_ABSX:
@@ -697,7 +700,6 @@
             
             uint16_t aslabsxaddress = [self getIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: self.reg_x];
             [self writeValue: tempabsx toAddress: aslabsxaddress];
-            [self toggleOverflowFlagForReg: tempabsx withBit: 7];
             [self toggleZeroAndSignFlagForReg: tempabsx];
             break;
             
@@ -744,7 +746,7 @@
             argCount = 2;
             self.reg_pc += argCount;
             self.counter += 3;
-            uint16_t value = [self readZeroPage: self.memory[self.op1]] & self.reg_acc;
+            uint8_t value = self.reg_acc & [self readZeroPage: self.memory[self.op1]];
 
             [self toggleZeroAndSignFlagForReg: value];
             [self toggleOverflowFlagForReg: value withBit: 6];
