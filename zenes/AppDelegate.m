@@ -70,7 +70,6 @@
             [text appendString: [NSString stringWithFormat: @"VRAM: %lX: %X\n", i, self.window.nesInstance.cpu.ppu.memory[i]]];
         }
         NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
-        NSLog(@"10 to bits: %@", [BitHelper intToBinary: 16]);
         [[self.debuggerFull textStorage] setAttributedString: attr];
     });
 }

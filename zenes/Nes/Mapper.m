@@ -10,7 +10,7 @@
 
 @implementation Mapper
 
-- (id) initWithType: (uint8_t) mapperType {
+- (id) initWithType {
     if (self = [super init]) {
         // TODO: Add better mapper support here
     }

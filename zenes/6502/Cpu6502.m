@@ -450,7 +450,7 @@
     // Wraps around if need be. reg_sp will be lowered by 1
 //    NSLog(@"pushing: %X to %X", data, 0x100+self.reg_sp);
     [self writeValue: data toAddress: 0x100+self.reg_sp];
-    if (self.reg_sp == 0) {
+    if (self.reg_sp == 0x00) {
         self.reg_sp = 0xFF;
     } else {
         self.reg_sp -= 1;
@@ -460,13 +460,14 @@
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be incremented by 1
     if (self.reg_sp == 0xFF) {
-        self.reg_sp = 0;
+        self.reg_sp = 0x00;
     } else {
         self.reg_sp += 1;
     }
     uint8_t data = [self readValueAtAddress: 0x100+self.reg_sp];
 //    NSLog(@"pulling: %X from %X", data, 0x100+self.reg_sp);
-
+    [self writeZeroPage: 0x100+self.reg_sp withValue: 0x00];
+    
     return data;
 }
 
@@ -667,7 +668,7 @@
             [self toggleCarryFlagForReg: valuezpx];
             uint8_t tempzpx = (valuezp << 1) & 0xFE;
             
-            [self writeZeroPage: self.memory[self.op1] withValue: tempzpx];
+            [self writeZeroPage: self.memory[self.op1] withValue: tempzpx withRegister: self.reg_x];
             [self toggleOverflowFlagForReg: tempzpx withBit: 7];
             [self toggleZeroAndSignFlagForReg: tempzpx];
             break;
@@ -743,7 +744,7 @@
             argCount = 2;
             self.reg_pc += argCount;
             self.counter += 3;
-            uint8_t value = [self readZeroPage: self.memory[self.op1]] & self.reg_acc;
+            uint16_t value = [self readZeroPage: self.memory[self.op1]] & self.reg_acc;
 
             [self toggleZeroAndSignFlagForReg: value];
             [self toggleOverflowFlagForReg: value withBit: 6];
@@ -885,8 +886,8 @@
             self.reg_pc += argCount;
             self.counter += 2;
             uint8_t tempcmpzp = (self.reg_acc - [self readZeroPage: self.memory[self.op1]]);
-            
             [self toggleZeroAndSignFlagForReg: tempcmpzp];
+            
             if (self.reg_acc >= [self readZeroPage: self.memory[self.op1]]) {
                 [self enableCarryFlag];
             } else {
@@ -1127,7 +1128,7 @@
             uint8_t deczpx = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
             deczpx = (deczpx - 1) & 0xFF;
 
-            [self writeZeroPage: self.memory[self.op1] withValue: deczpx];
+            [self writeZeroPage: self.memory[self.op1] withValue: deczpx withRegister: self.reg_x];
             [self toggleZeroAndSignFlagForReg: deczpx];
             
             break;
@@ -1254,7 +1255,7 @@
             uint8_t inczpx = [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x];
             [self writeZeroPage: self.memory[self.op1] withValue: ((inczpx+1) & 0xFF) withRegister: self.reg_x];
             
-            [self toggleZeroAndSignFlagForReg: [self readZeroPage: self.memory[self.op1]]];
+            [self toggleZeroAndSignFlagForReg: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
             
             break;
             
@@ -1536,7 +1537,7 @@
             self.counter += 6;
             uint8_t lsrzpx = [self logicalShiftRight: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
             
-            [self writeZeroPage: self.memory[self.op1] withValue: lsrzpx];
+            [self writeZeroPage: self.memory[self.op1] withValue: lsrzpx withRegister: self.reg_x];
             
             break;
             
@@ -1691,7 +1692,7 @@
             self.reg_pc += argCount;
             
             uint8_t rolzpx = [self rotateLeft: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
-            [self writeZeroPage: self.memory[self.op1] withValue: rolzpx];
+            [self writeZeroPage: self.memory[self.op1] withValue: rolzpx withRegister: self.reg_x];
             break;
             
         case ROL_ABS:
@@ -1728,7 +1729,7 @@
             self.reg_pc += argCount;
             
             uint8_t rorzpx = [self rotateRight: [self readZeroPage: self.memory[self.op1] withRegister: self.reg_x]];
-            [self writeZeroPage: self.memory[self.op1] withValue: rorzpx];
+            [self writeZeroPage: self.memory[self.op1] withValue: rorzpx withRegister: self.reg_x];
             
             break;
             
@@ -2062,12 +2063,13 @@
             NSString *padding = [[NSString string] stringByPaddingToLength: opcodeLength withString: @" " startingAtIndex: 0];
             opcodePadded = [opcodePadded stringByAppendingString: padding];
         }
+        NSString *flags = [Cpu6502 getFlagsForStatus: self.reg_status];
         if (argCount == 1) {
-            line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter];
+            line = [NSString stringWithFormat: @"%X\t\t%X\t%@\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d F:%@\n", currentPC, opcode, @"", @"", opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter, flags];
         } else if (argCount == 2) {
-            line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], @"", opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter];
+            line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%@\t%@\t\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d F:%@\n", currentPC, opcode, self.memory[self.op1], @"", opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter, flags];
         } else if (argCount == 3) {
-            line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter];
+            line = [NSString stringWithFormat: @"%X\t\t%X\t%X\t%X\t%@\t\tA:%X X:%X Y:%X P:%@ SP:%X CYC:%d F:%@\n", currentPC, opcode, self.memory[self.op1], self.memory[self.op2], opcodePadded, currentRegA, currentRegX, currentRegY, [BitHelper intToBinary: currentRegStatus], currentRegSP, self.counter, flags];
         } else {
             line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
             
@@ -2081,7 +2083,39 @@
     }
 }
 
-+ (NSString *)getOpcodeName: (uint8_t)opcode{
++ (NSString *)getFlagsForStatus: (uint8_t)status
+{
+    NSMutableString *flags = [NSMutableString string];
+    
+    if ([BitHelper checkBit: STATUS_NEGATIVE_BIT on: status]) {
+        [flags appendString: @"N"];
+    }
+    if ([BitHelper checkBit: STATUS_OVERFLOW_BIT on: status]) {
+        [flags appendString: @"V"];
+    }
+    if ([BitHelper checkBit: STATUS_BREAK_BIT on: status]) {
+        [flags appendString: @"B"];
+    }
+    
+    if ([BitHelper checkBit: STATUS_DECIMAL_BIT on: status]) {
+        [flags appendString: @"D"];
+    }
+    if ([BitHelper checkBit: STATUS_IRQ_BIT on: status]) {
+        [flags appendString: @"I"];
+    }
+    if ([BitHelper checkBit: STATUS_ZERO_BIT on: status]) {
+        [flags appendString: @"Z"];
+    }
+    
+    if ([BitHelper checkBit: STATUS_CARRY_BIT on: status]) {
+        [flags appendString: @"C"];
+    }
+    
+    return flags;
+}
+
++ (NSString *)getOpcodeName: (uint8_t)opcode
+{
     NSString *opcodeName = nil;
     
     switch(opcode) {

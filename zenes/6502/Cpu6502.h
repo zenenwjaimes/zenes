@@ -79,6 +79,7 @@
 - (void)triggerInterrupt: (int)interruptType;
 
 + (NSString *)getOpcodeName: (uint8_t)opcode;
++ (NSString *)getFlagsForStatus: (uint8_t)status;
 
 @end
 
