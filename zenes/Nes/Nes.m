@@ -118,37 +118,37 @@
     int key = [[theEvent valueForKey: @"keyCode"] intValue];
     switch (key) {
         case 0:
-            NSLog(@"A Key Pressed");
+            //NSLog(@"A Key Pressed");
             self.buttonPressed = 1;
             break;
         case 1:
-            NSLog(@"B Key Pressed");
+            //NSLog(@"B Key Pressed");
             self.buttonPressed = 2;
             break;
         case 126:
-            NSLog(@"Up Key Pressed");
+            //NSLog(@"Up Key Pressed");
             self.buttonPressed = 5;
             break;
         case 125:
-            NSLog(@"Down Key Pressed");
+            //NSLog(@"Down Key Pressed");
             self.buttonPressed = 6;
             break;
         case 123:
-            NSLog(@"Left Key Pressed");
+            //NSLog(@"Left Key Pressed");
             self.buttonPressed = 7;
             break;
         case 124:
-            NSLog(@"Right Key Pressed");
+            //NSLog(@"Right Key Pressed");
             self.buttonPressed = 8;
             break;
         case 36:
             //self.debuggerEnabled = YES;
 
-            NSLog(@"Start Key Pressed");
+            //NSLog(@"Start Key Pressed");
             self.buttonPressed = 4;
             break;
         case 42:
-            NSLog(@"Select Key Pressed");
+            //NSLog(@"Select Key Pressed");
             self.buttonPressed = 3;
             break;
             // Ignore all other input

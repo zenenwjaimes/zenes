@@ -379,8 +379,8 @@
 
 - (void)addWithCarry: (uint8_t)value
 {
-    uint16_t tempadd = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-    uint8_t tempadd2 = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+    uint16_t tempadd = self.reg_acc + value; //+ [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+    uint8_t tempadd2 = self.reg_acc + value; //+ [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
 
     //boolean_t isOverflow = [BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc];
     
@@ -399,11 +399,10 @@
 
 - (void)subtractWithCarry: (uint8_t)value
 {
-    int16_t tempsubneg = self.reg_acc - value - ![BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-    uint16_t tempsub = self.reg_acc - value - ![BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-    uint8_t tempsuboverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempsub) & 0x80))!=0)?1:0);
+    int8_t tempsub = self.reg_acc - value - (1 - [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status]);
+    uint8_t tempsuboverflow = ((((self.reg_acc^tempsub)&0x80)!=0 && ((self.reg_acc^value)&0x80)!=0)?1:0);
     
-    if (tempsub > 127) {
+    if (tempsuboverflow) {
         [self enableOverflowFlag];
     } else {
         [self disableOverflowFlag];
@@ -413,9 +412,10 @@
     } else {
         [self disableCarryFlag];
     }
-    [self toggleZeroAndSignFlagForReg: tempsub];
-    
+    //[self toggleZeroAndSignFlagForReg: tempsub];
+    [self toggleSignFlagForReg: tempsub];
     self.reg_acc = (tempsub & 0xFF);
+    [self toggleZeroFlagForReg: self.reg_acc];
 }
 
 - (uint8_t)rotateLeft: (uint8_t)value
@@ -772,10 +772,6 @@
             self.reg_pc += argCount;
             self.counter += 3;
             uint8_t value = self.reg_acc & [self readZeroPage: self.memory[self.op1]];
-
-            if (currentPC == 0xF9E4) {
-                NSLog(@"bit for %X is %X, memory is: %X, conv: %@", self.reg_acc, self.reg_acc & 0xFF, [self readZeroPage: self.memory[self.op1]], [BitHelper intToBinary: self.reg_acc & 0xFF]);
-            }
             
             [self toggleZeroFlagForReg: value];
             [self toggleSignFlagForReg: [self readZeroPage: self.memory[self.op1]]];
