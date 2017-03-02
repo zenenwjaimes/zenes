@@ -379,22 +379,22 @@
 
 - (void)addWithCarry: (uint8_t)value
 {
-    uint16_t tempadd = self.reg_acc + value; //+ [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-    uint8_t tempadd2 = self.reg_acc + value; //+ [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
-
-    //boolean_t isOverflow = [BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc];
+    uint16_t tempadd = self.reg_acc + value + [BitHelper checkBit: STATUS_CARRY_BIT on: self.reg_status];
+    boolean_t isOverflow = ((!(((self.reg_acc ^ value) & 0x80)!=0) && (((self.reg_acc ^ tempadd) & 0x80))!=0)?1:0);
     
-    if ([BitHelper checkBit: STATUS_NEGATIVE_BIT on: tempadd2] != [BitHelper checkBit: STATUS_NEGATIVE_BIT on: self.reg_acc]) {
+    if (isOverflow) {
         [self enableOverflowFlag];
     } else {
         [self disableOverflowFlag];
     }
     if (tempadd > 0xFF) {
-        //NSLog(@"overflow: %X", tempadd);
         [self enableCarryFlag];
+    } else {
+        [self disableCarryFlag];
     }
-    [self toggleZeroAndSignFlagForReg: tempadd2];
-    self.reg_acc = (tempadd2 & 0xFF);
+    
+    [self toggleZeroAndSignFlagForReg: tempadd];
+    self.reg_acc = (tempadd & 0xFF);
 }
 
 - (void)subtractWithCarry: (uint8_t)value
