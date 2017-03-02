@@ -145,6 +145,11 @@
             //self.debuggerEnabled = YES;
 
             //NSLog(@"Start Key Pressed");
+            if (self.debuggerEnabled == NO) {
+            //    [self setDebuggerEnabled: YES];
+            } else {
+            //    [self setDebuggerEnabled: NO];
+            }
             self.buttonPressed = 4;
             break;
         case 42:
