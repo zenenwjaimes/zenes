@@ -38,8 +38,7 @@
         [self.rom.data getBytes: bank1 range: NSMakeRange(prgRom1, 0x4000)];
         
         // Offset from the last rom bank, this is where vrom lies in the nes format
-        uint8_t chrRom[0x2000] = {};
-        
+        uint8_t chrRom[0x10000] = {};
         [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1+0x4000, 0x2000*self.rom.chrRomSize)];
         
         self.ppu = [[Ppu alloc] initWithCpu: self.cpu andChrRom: chrRom];
