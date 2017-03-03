@@ -499,9 +499,8 @@
 }
 
 - (void)pushToStack: (uint8_t)data {
-    // Wraps around if need be. reg_sp will be lowered by 1
-   //NSLog(@"pushing: %X to %X", data, 0x100+self.reg_sp);
     [self writeValue: data toAddress: self.reg_sp];
+    // Wraps around if need be. reg_sp will be lowered by 1
     if (self.reg_sp == 0x100) {
         self.reg_sp = 0x1FF;
     } else {
@@ -2109,9 +2108,8 @@
             self.reg_pc ++;
             self.counter += 2;
             
-            self.reg_x = 0x100^self.reg_sp;
-            
-            [self toggleSignFlagForReg: self.reg_x];
+            self.reg_x = 0x100^self.reg_sp;            
+            [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             
         // Unknown OP
