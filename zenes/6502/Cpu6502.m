@@ -294,7 +294,7 @@
 {
     uint16_t indexIndirect = (self.memory[(lowByte + offset + 1) & 0xFF] << 8) | (self.memory[(lowByte + offset) & 0xFF]);
     //uint16_t indexIndirect = [self readIndexedIndirectAddressWithByte: lowByte andOffset: offset];//(self.memory[(lowByte + offset + 1) & 0xFF] << 8) | (self.memory[(lowByte + offset) & 0xFF]);
-    NSLog(@"indexed indirect write: %X value: %X low byte: %X offset: %X", indexIndirect, value, lowByte, offset);
+    //NSLog(@"indexed indirect write: %X value: %X low byte: %X offset: %X", indexIndirect, value, lowByte, offset);
     //return [self readValueAtAddress: indexIndirect];
     [self writeValue: value toAddress: indexIndirect];
 }
@@ -1469,9 +1469,6 @@
             // Cycles: 4
             self.counter += 4;
             self.reg_acc = [self readAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2]];
-            if (currentPC == 0xD8C9) {
-                NSLog(@"reading %X, value %X", [self getIndexedAbsoluteAddress1: self.memory[self.op1] address2: self.memory[self.op2] withOffset: 0] , self.reg_acc);
-            }
             [self toggleZeroAndSignFlagForReg: self.reg_acc];
             break;
             

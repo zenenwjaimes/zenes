@@ -172,6 +172,20 @@
 
 - (uint16_t)getBgColorAddress: (uint8_t)colorLookup withAttr: (uint8_t)attr
 {
+    switch (attr) {
+        case 0:
+            attr = 0;
+            break;
+        case 1:
+            attr = 0x04;
+            break;
+        case 2:
+            attr = 0x08;
+            break;
+        case 3:
+            attr = 0xC;
+            break;
+    }
     return self.memory[0x3F00+colorLookup+attr];
 }
 
@@ -232,7 +246,6 @@
 
     uint8_t attrLookup = self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
     uint8_t highColorBit = ([BitHelper checkBit: ([self getSquareTileForX: pixelPos andY: pixelyPos]*2)+1 on: attrLookup] << 1) | ([BitHelper checkBit: ([self getSquareTileForX: pixelPos andY: pixelyPos]*2) on: attrLookup]);
-    highColorBit <<= 2;
     uint8_t colorLookup = [self getBgColorAddress: (((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)) withAttr: highColorBit];
     //(lowattrLookup >> ([self getSquareTileForX: pixelPos andY: pixelyPos]*2));
     //    highColorBit += (attrLookup >> (([self getSquareTileForX: pixelPos andY: pixelyPos]*2)+1));
