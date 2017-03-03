@@ -28,7 +28,7 @@
 @property uint8_t reg_acc;
 @property uint8_t reg_x;
 @property uint8_t reg_y;
-@property uint8_t reg_sp;
+@property uint16_t reg_sp;
 @property uint8_t reg_status;
 @property uint16_t reg_pc;
 @property (assign, nonatomic) uint8_t *memory;

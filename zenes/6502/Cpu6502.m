@@ -32,7 +32,7 @@
     self.reg_x = 0x00;
     self.reg_y = 0x00;
     self.reg_acc = 0x00;
-    self.reg_sp = 0xFF;
+    self.reg_sp = 0x1FF;
     self.joystickCounter = 0;
     uint8_t tempMemory[0x10000] = {};
     
@@ -120,6 +120,25 @@
     self.reg_status &= ~ (1 << STATUS_OVERFLOW_BIT);
 }
 
+- (void)enableUnusedFlag {
+    self.reg_status |= (1 << STATUS_UNUSED_BIT);
+}
+
+- (void)disableUnusedFlag
+{
+    self.reg_status &= ~ (1 << STATUS_UNUSED_BIT);
+}
+
+- (void)enableBreakFlag
+{
+    self.reg_status |= (1 << STATUS_BREAK_BIT);
+}
+
+- (void)disableBreakFlag
+{
+    self.reg_status &= ~ (1 << STATUS_BREAK_BIT);
+}
+
 - (uint8_t)checkFlag: (uint8_t)flag {
     return (self.reg_status & (1 << flag));
 }
@@ -134,6 +153,7 @@
             
         case INT_NMI:
             // Push current PC to the stack
+            [self disableBreakFlag];
             [self pushToStack: self.reg_pc >> 8];
             [self pushToStack: self.reg_pc];
             [self pushToStack: self.reg_status];
@@ -481,24 +501,23 @@
 - (void)pushToStack: (uint8_t)data {
     // Wraps around if need be. reg_sp will be lowered by 1
    //NSLog(@"pushing: %X to %X", data, 0x100+self.reg_sp);
-    [self writeValue: data toAddress: 0x100+self.reg_sp];
-    if (self.reg_sp == 0x00) {
-        self.reg_sp = 0xFF;
+    [self writeValue: data toAddress: self.reg_sp];
+    if (self.reg_sp == 0x100) {
+        self.reg_sp = 0x1FF;
     } else {
-        self.reg_sp -= 1;
+        self.reg_sp--;
     }
 }
 
 - (uint8_t)pullFromStack {
     // Wraps around if need be. reg_sp will be incremented by 1
-    if (self.reg_sp == 0xFF) {
-        self.reg_sp = 0x00;
+    if (self.reg_sp == 0x1FF) {
+        self.reg_sp = 0x100;
     } else {
-        self.reg_sp += 1;
+        self.reg_sp++;
     }
-    uint8_t data = [self readValueAtAddress: 0x100+self.reg_sp];
-//    NSLog(@"pulling: %X from %X", data, 0x100+self.reg_sp);
-    [self writeZeroPage: 0x100+self.reg_sp withValue: 0x00];
+    uint8_t data = [self readValueAtAddress: self.reg_sp];
+    [self writeZeroPage: self.reg_sp withValue: 0x00];
     
     return data;
 }
@@ -863,6 +882,21 @@
                 
                 self.reg_pc = [self getRelativeAddressWithAddress: self.reg_pc andOffset: relativeAddress];
             }
+            
+            break;
+            
+        case BRK:
+            argCount = 1;
+            self.reg_pc += 2;
+            self.counter += 7;
+            [self enableBreakFlag];
+            [self enableUnusedFlag];
+            
+            [self pushToStack: (self.reg_pc >> 8)];
+            [self pushToStack: self.reg_pc];
+            [self pushToStack: self.reg_status];
+            
+            self.reg_pc = ((self.memory[0xFFFF] << 8)) | (self.memory[0xFFFE]);
             
             break;
         case CLI:
@@ -1706,6 +1740,8 @@
             argCount = 1;
             self.counter += 3;
             self.reg_pc++;
+            [self enableUnusedFlag];
+            [self enableBreakFlag];
             [self pushToStack: self.reg_status];
             break;
         case ROL_ACC:
@@ -2064,9 +2100,6 @@
             argCount = 1;
             self.reg_pc ++;
             self.counter += 2;
-            if (self.reg_x == 0xFA) {
-                NSLog(@"TXS is 0xFA at reg: %X", self.reg_pc);
-            }
             [self pushToStack: self.reg_x];
             
             break;
@@ -2076,7 +2109,9 @@
             self.reg_pc ++;
             self.counter += 2;
             
-            self.reg_x = self.reg_sp;
+            self.reg_x = 0x100^self.reg_sp;
+            
+            [self toggleSignFlagForReg: self.reg_x];
             break;
             
         // Unknown OP
@@ -2084,7 +2119,7 @@
             NSLog(@"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC);
             NSLog(@"cycle counter: %X", self.counter);
             NSLog(@"Stack at current pos: %X", self.reg_sp);
-            for (int i = 0x100; i <= 0x200; i++) {
+            for (int i = 0x100; i < 0x200; i++) {
                 NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
             }
             self.isRunning = NO;
@@ -2112,8 +2147,8 @@
             line = [NSString stringWithFormat: @"OP not found: %X, next 3 bytes %X %X %X PC: %X", opcode, self.memory[self.op1], self.memory[self.op2], self.memory[self.op3], currentPC];
             
             NSLog(@"Stack at current pos: %X", self.reg_sp);
-            for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-                NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+            for (int i = self.reg_sp; i <= 0x200; i++) {
+                NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
             }
         }
         
@@ -2633,8 +2668,8 @@
 
 - (void)dumpMemoryToLog {
     NSLog(@"Stack at current pos: %X", self.reg_sp);
-    for (int i = 0x100+self.reg_sp; i <= 0x200; i++) {
-        NSLog(@"Value %X at SP Pos %X", self.memory[0x100+self.reg_sp], i);
+    for (int i = self.reg_sp; i < 0x200; i++) {
+        NSLog(@"Value %X at SP Pos %X", self.memory[i], i);
     }
     
     NSMutableArray *dump = [NSMutableArray arrayWithCapacity: 0xFFFF];
