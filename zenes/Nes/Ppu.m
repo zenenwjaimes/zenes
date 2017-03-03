@@ -132,6 +132,10 @@
                 if (self.currVramAddress >= 0x2400 && self.currVramAddress <= 0x2800) {
                     self.memory[self.currVramAddress+0x800] = self.cpu.memory[0x2007];
                 }
+                
+                if (self.currVramAddress == 0x3F00 || self.currVramAddress == 0x3F04 || self.currVramAddress == 0x3F08 || self.currVramAddress == 0x3F0C) {
+                    self.memory[self.currVramAddress+0x10] = self.cpu.memory[0x2007];
+                }
 
                 self.currVramAddress += self.incrementStep;
             } else {
@@ -227,7 +231,7 @@
     secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)+8];
 
     uint8_t colorLookup = [self getBgColorAddress: ((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)];
-    uint8_t attrLookup = self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
+    uint8_t attrLookup = 0x00;//self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
     
         uint8_t highColorBit = attrLookup >> ([self getSquareTileForX: x andY:y] * 2);
         pixel[2] = colorPalette[highColorBit+colorLookup][0];// r

@@ -237,6 +237,7 @@
         self.ppuReg1 = [self readValueAtAddress: 0x2000];
         self.ppuReg2 = [self readValueAtAddress: 0x2001];
 
+        self.notifyPpu = YES;
         self.notifyPpuWrite = NO;
         self.notifyPpuAddress = address;
         [self.ppu observeCpuChanges];
@@ -364,19 +365,6 @@
 
 - (void)toggleZeroAndSignFlagForReg: (uint8_t)cpu_reg
 {
-    // CPU Reg is 0, enable the zero flag
-    /*if (cpu_reg == 0x00) {
-        [self enableZeroFlag];
-    } else {
-        [self disableZeroFlag];
-    }
-    
-    // Sign flag set on CPU Reg
-    if ([BitHelper checkBit: 7 on: cpu_reg]) {
-        [self enableSignFlag];
-    } else {
-        [self disableSignFlag];
-    }*/
     [self toggleZeroFlagForReg: cpu_reg];
     [self toggleSignFlagForReg: cpu_reg];
 }
@@ -2099,8 +2087,9 @@
             argCount = 1;
             self.reg_pc ++;
             self.counter += 2;
-            [self pushToStack: self.reg_x];
-            
+            //[self pushToStack: self.reg_x];
+            // TODO: Fix the SP to wrap around
+            self.reg_sp = 0x100+self.reg_x;
             break;
             
         case TSX:
@@ -2108,7 +2097,7 @@
             self.reg_pc ++;
             self.counter += 2;
             
-            self.reg_x = 0x100^self.reg_sp;            
+            self.reg_x = 0x100^self.reg_sp;
             [self toggleZeroAndSignFlagForReg: self.reg_x];
             break;
             

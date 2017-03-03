@@ -20,9 +20,9 @@
 - (void)applicationDidFinishLaunching:(NSNotification *)aNotification
 {
 
-    [NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
+    //[NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
     
-    Rom *rom = [[Rom alloc] init: @"/Users/zenenjaimes/Desktop/nestest.nes"];
+    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/bros.nes"];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
     [self.window makeFirstResponder: nil];
     nesInstance.screen = self.window.nesScreen;
