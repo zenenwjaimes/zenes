@@ -259,8 +259,6 @@
 - (void)writeAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 andOffset: (uint8_t)offset withValue: (uint8_t)value
 {
     uint16_t absoluteAddress = [self getIndexedAbsoluteAddress1: address1 address2: address2 withOffset: offset];
-
-    //return [self readIndexedAbsoluteAddress1: address1 address2: address2 withOffset: 0];
     [self writeValue: value toAddress: absoluteAddress];
 }
 

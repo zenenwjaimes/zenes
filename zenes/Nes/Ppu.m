@@ -382,8 +382,6 @@
             [self.screen loadPixelsToDrawAtX:pixel3[0] atY: pixel3[1] withR: pixel3[2] G: pixel3[3] B: pixel3[4]];
             free(pixel3);
             
-            // Sprite drawing
-            
             self.currentVerticalLine += 3;
         } else {
             // Draw after every line... this will change
