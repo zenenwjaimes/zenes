@@ -234,7 +234,8 @@
         }
     }
     
-    if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
+    if (address == 0x2000 || (address >= 0x2003 && address <= 0x2007) || address == 0x4014) {
+    //if (address == 0x2000) {
         self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
         self.ppuReg2 = self.memory[0x2001];
 
