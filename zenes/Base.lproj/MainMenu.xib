@@ -433,11 +433,11 @@
             <connections>
                 <outlet property="nesScreen" destination="KGG-m6-8Q9" id="Hwl-17-p0W"/>
             </connections>
-            <point key="canvasLocation" x="-38" y="379"/>
+            <point key="canvasLocation" x="-204" y="292"/>
         </window>
         <userDefaultsController representsSharedInstance="YES" id="Qoj-BY-tII"/>
-        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" frameAutosaveName="" animationBehavior="default" id="NY9-bS-AAk" customClass="NSPanel">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES" utility="YES"/>
+        <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" visibleAtLaunch="NO" frameAutosaveName="" animationBehavior="default" id="NY9-bS-AAk" customClass="NSPanel">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
             <windowPositionMask key="initialPositionMask" topStrut="YES" bottomStrut="YES"/>
             <rect key="contentRect" x="0.0" y="81" width="958" height="465"/>
             <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
@@ -614,7 +614,7 @@
                     </button>
                 </subviews>
             </view>
-            <point key="canvasLocation" x="875" y="675.5"/>
+            <point key="canvasLocation" x="861" y="679"/>
         </window>
     </objects>
     <resources>

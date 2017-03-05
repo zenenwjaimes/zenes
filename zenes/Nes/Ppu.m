@@ -186,6 +186,7 @@
             attr = 0xC;
             break;
     }
+
     return self.memory[0x3F00+colorLookup+attr];
 }
 
@@ -228,12 +229,12 @@
     }
 
     // TODO: IMPLIMENT FETCHING ATTRIBUTE TABLE DATA
-    uint8_t pixelPos = (x & 0xF0 >> 4);
+    uint8_t pixelPos = (x & 0xFF >> 4);
     if (pixelPos > 7) {
         pixelPos -=8;
     }
     
-    uint8_t pixelyPos = (y & 0xF0 >> 4);
+    uint8_t pixelyPos = (y & 0xF8 >> 4);
     if (pixelyPos > 7) {
         pixelyPos -=8;
     }
@@ -245,23 +246,9 @@
     secondPattern =  self.memory[patternTable+(nameByte*16)+(pixelyPos)+8];
 
     uint8_t attrLookup = self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
-    uint8_t highColorBit = ([BitHelper checkBit: ([self getSquareTileForX: pixelPos andY: pixelyPos]*2)+1 on: attrLookup] << 1) | ([BitHelper checkBit: ([self getSquareTileForX: pixelPos andY: pixelyPos]*2) on: attrLookup]);
+    uint8_t highColorBit = ([BitHelper checkBit: ([self getSquareTileForX: x andY: y]*2)+1 on: attrLookup] << 1) | ([BitHelper checkBit: ([self getSquareTileForX: x andY: y]*2) on: attrLookup]);
     uint8_t colorLookup = [self getBgColorAddress: (((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)) withAttr: highColorBit];
-    //(lowattrLookup >> ([self getSquareTileForX: pixelPos andY: pixelyPos]*2));
-    //    highColorBit += (attrLookup >> (([self getSquareTileForX: pixelPos andY: pixelyPos]*2)+1));
 
-    //highColorBit <<= 1;
-    if (tileNumberX == 19 && tileNumberY == 9) {
-        for (int i = 0; i < 10; i++) {
-          //  NSLog(@"palette entry at %X is: %X", 0x3F00+i, self.memory[0x3F00+i]);
-        }
-        //NSLog(@"high color %X: %d, %d, %X", highColorBit << , x, y, 0x3F00+(((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)));
-        //NSLog(@"attr lookup found: %d, attr: %X total: %X", [self getTileAddressForRow: tileNumberY andCol: tileNumberX], attributeTable, attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]);
-        //NSLog(@"color bit: %X", highColorBit);
-        //NSLog(@"value for 16/9 is: %@ (%d), (%d, %d) %d (%X)", [BitHelper intToBinary: attrLookup], (attrLookup >> ([self getSquareTileForX: pixelPos andY: pixelyPos]*2)),x,y, [self getSquareTileForX:pixelPos andY: pixelyPos], highColorBit);
-        
-       // NSLog(@"color lookup %X for address: %X high color bit: %X (%d, %d)", colorLookup, (((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)), highColorBit, x, y);
-    }
         pixel[2] = colorPalette[colorLookup][0];// r
         pixel[3] = colorPalette[colorLookup][1];// g
         pixel[4] = colorPalette[colorLookup][2];// b
@@ -295,18 +282,18 @@
 
 - (uint8_t)getSquareTileForX: (uint8_t)x andY: (uint8_t)y
 {
-    uint8_t squareCol = x/4;//(x & 0xF0 >> 4)/8;
-    uint8_t squareRow = y/4;//(y & 0xF0 >> 4)/8;
+    uint8_t squareCol = (x | 0xE0 >> 4)>7?1:0;//([BitHelper checkBit: 1 on: x]  << 1) | [BitHelper checkBit: 0 on: x];
+    uint8_t squareRow = (y | 0xD0 >> 4)>7?1:0;//([BitHelper checkBit: 1 on: y]  << 1) | [BitHelper checkBit: 0 on: y];
     uint8_t square = 0x00;
 
     if (squareCol == 0 && squareRow == 0) {
-        square = 0;
+        square = 0; // 0,1
     } else if (squareCol == 1 && squareRow == 0) {
-        square = 1;
+        square = 1; // 2,3
     } else if (squareCol == 0 && squareRow == 1) {
-        square = 2;
+        square = 2; // 4,5
     } else if (squareCol == 1 && squareRow == 1) {
-        square = 3;
+        square = 3; // 6,7
     }
     
     return square;

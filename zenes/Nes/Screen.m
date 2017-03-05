@@ -43,6 +43,17 @@
     glFlush();
 }
 
+- (void)resetScreen
+{
+    for (int i = 0; i < 240*256; i++) {
+        pixels[i][0] = 0;
+        pixels[i][1] = 0;
+        pixels[i][2] = 0;
+        pixels[i][3] = 0;
+        pixels[i][4] = 0;
+    }
+}
+
 - (void)loadPixelsToDrawAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b
 {
     pixels[self.currIndex][0] = x;

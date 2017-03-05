@@ -21,9 +21,11 @@
 @property IBOutlet NSTableView *debuggerTable;
 @property IBOutlet NSTextView *debuggerMemory;
 @property IBOutlet NSTextView *debuggerFull;
+@property NSString *romPath;
 
 - (void)appendToDebuggerWindow:(NSString*)text;
 - (IBAction)memoryDumpButton:(id)sender;
+- (IBAction)openDocument:(id)sender;
 
 @end
 

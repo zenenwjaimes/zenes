@@ -60,6 +60,7 @@
         self.cpu.reg_pc = (self.cpu.memory[0xFFFD] << 8) | (self.cpu.memory[0xFFFC]);
         NSLog(@"Boot Reg PC: %X", self.cpu.reg_pc);
 
+        [self.screen resetScreen];
         self.cpu.ppu = self.ppu;
     }
     return self;

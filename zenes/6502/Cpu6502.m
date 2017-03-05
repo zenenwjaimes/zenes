@@ -234,7 +234,7 @@
     
     uint8_t value = self.memory[address];
     if (address == 0x2000) {
-        self.ppuReg1 = [self readValueAtAddress: 0x2000];
+        self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
         self.ppuReg2 = [self readValueAtAddress: 0x2001];
 
         self.notifyPpu = YES;

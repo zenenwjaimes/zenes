@@ -21,17 +21,41 @@
 {
 
     //[NSApplication sharedApplication].automaticCustomizeTouchBarMenuItemEnabled = YES;
-    
-    Rom *rom = [[Rom alloc] init: @"/Users/slasherx/Desktop/x.nes"];
-    Nes *nesInstance = [[Nes alloc] initWithRom: rom];
     [self.window makeFirstResponder: nil];
-    nesInstance.screen = self.window.nesScreen;
-    nesInstance.ppu.screen = self.window.nesScreen;
-    self.window.nesInstance = nesInstance;
-    
+
     [self.debuggerMemory setEditable: NO];
     [self.debuggerMemory setFont: [NSFont fontWithName: @"Menlo" size: 11.0]];
     [[NSNotificationCenter defaultCenter] addObserver: self selector: @selector(updateRegs:) name: @"debuggerUpdate" object: nil];
+}
+
+- (IBAction)openDocument:(id)sender
+{
+    NSOpenPanel *panel = [NSOpenPanel openPanel];
+    [panel setCanChooseFiles: YES];
+    [panel setCanChooseDirectories: NO];
+    [panel setCanCreateDirectories: NO];
+    [panel setAllowsMultipleSelection: NO];
+    [panel setAllowedFileTypes: [NSArray arrayWithObjects: @"nes", @"NES", nil]];
+    [panel setResolvesAliases: YES];
+     
+//    NSInteger buttonRet = ;
+     //[panel select];
+    [panel beginWithCompletionHandler:^(NSInteger result){
+
+    if (result == NSFileHandlingPanelOKButton) {
+        self.romPath = [panel.URL path];
+        [self setupEmulator];
+    }
+    }];
+}
+
+- (void)setupEmulator
+{
+    Rom *rom = [[Rom alloc] init: self.romPath];
+    Nes *nesInstance = [[Nes alloc] initWithRom: rom];
+    nesInstance.screen = self.window.nesScreen;
+    nesInstance.ppu.screen = self.window.nesScreen;
+    self.window.nesInstance = nesInstance;
 }
 
 - (void)updateRegs: (NSNotification *) notification

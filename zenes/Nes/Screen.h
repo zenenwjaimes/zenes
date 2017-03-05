@@ -18,5 +18,6 @@
 @property (nonatomic, assign) long currIndex;
 
 - (void)loadPixelsToDrawAtX: (uint8_t)x atY: (uint8_t)y withR: (uint8_t)r G: (uint8_t)g B: (uint8_t)b;
+- (void)resetScreen;
 
 @end
