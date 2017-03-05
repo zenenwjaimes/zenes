@@ -13,6 +13,7 @@
 {
     uint8_t _memory[0x10000];
     uint8_t _chrRom[0x2000];
+    uint8_t _oamMemory[0x100];
     uint8_t colorPalette[64][3];
 }
 
@@ -27,6 +28,8 @@
 @property (assign, nonatomic) uint8_t incrementStep;
 @property (assign, nonatomic) uint16_t currVramAddress;
 @property (assign, nonatomic) uint8_t *memory;
+@property (assign, nonatomic) uint8_t *oamMemory;
+@property uint8_t oamAddress;
 
 - (id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom;
 - (void)checkVBlank;

@@ -35,13 +35,19 @@
     [self setupColorPalette];
     
     uint8_t tempMemory[0x10000] = {};
+    uint8_t tempOamMemory[0x100] = {};
 
     //TODO: Set everything to 0xFF on bootup. this could be wrong
     for (long i = 0; i < 0x10000; i++) {
         tempMemory[i] = 0x00;
     }
     
+    for (int i = 0; i < 0x100; i++) {
+        tempOamMemory[i] = 0x00;
+    }
+    
     self.memory = tempMemory;
+    self.oamMemory = tempOamMemory;
 }
 
 - (void)setMemory:(uint8_t *)memory {
@@ -50,6 +56,14 @@
 
 - (uint8_t*)memory {
     return _memory;
+}
+
+- (void)setOamMemory:(uint8_t *)memory {
+    memcpy(_oamMemory, memory, sizeof(_oamMemory));
+}
+
+- (uint8_t*)oamMemory {
+    return _oamMemory;
 }
 
 - (uint8_t)readPpuStatusReg: (uint8_t)flag
@@ -114,6 +128,23 @@
                 }
             }
             break;
+        case 0x2003:
+            if (self.cpu.notifyPpuWrite == YES) {
+                self.oamAddress = self.cpu.memory[0x2003];
+            }
+            break;
+        case 0x2004:
+            NSLog(@"2004 write");
+            if (self.cpu.notifyPpuWrite == YES) {
+                self.oamMemory[self.oamAddress] = self.cpu.memory[0x2004];
+            } else {
+                NSLog(@"2004 read");
+                self.cpu.memory[0x2004] = self.oamMemory[self.oamAddress];
+            }
+            break;
+        case 0x2005:
+            //NSLog(@"2005 write");
+            break;
         case 0x2006:
             if (self.cpu.notifyPpuWrite == YES) {
                 [self setVramAddress: value];
@@ -140,6 +171,19 @@
                 self.currVramAddress += self.incrementStep;
             } else {
                 NSLog(@"Read of 0x2007");
+                self.cpu.memory[0x2007] = self.memory[self.currVramAddress];
+            }
+            break;
+        case 0x4014:
+            if (self.cpu.notifyPpuWrite == YES) {
+                for (int i = 0; i < 0x100; i++) {
+                    self.oamMemory[self.oamAddress + i] = self.cpu.memory[(self.cpu.memory[0x4014]*0x100)+i];
+                }
+                
+                self.cpu.counter += 513;
+                if ((self.cpu.counter % 2) == 1) {
+                    self.cpu.counter++;
+                }
             }
             break;
     }
@@ -337,6 +381,8 @@
             uint8_t *pixel3 = [self getBackgroundDataForX: self.currentVerticalLine+2 andY: self.currentScanline-22];
             [self.screen loadPixelsToDrawAtX:pixel3[0] atY: pixel3[1] withR: pixel3[2] G: pixel3[3] B: pixel3[4]];
             free(pixel3);
+            
+            // Sprite drawing
             
             self.currentVerticalLine += 3;
         } else {

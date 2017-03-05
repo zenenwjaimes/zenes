@@ -209,7 +209,7 @@
     self.memory[address] = value;
     
     // Send any notifications to the PPU about changes to regs
-    if (address >= 0x2000 && address <= 0x2007) {
+    if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
         self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
         self.ppuReg2 = self.memory[0x2001];//[self readValueAtAddress: 0x2001];
         self.notifyPpu = YES;
@@ -218,6 +218,8 @@
         self.notifyPpuValue = value;
         
         [self.ppu observeCpuChanges];
+    } else {
+        self.notifyPpuWrite = NO;
     }
 }
 
@@ -232,10 +234,9 @@
         }
     }
     
-    uint8_t value = self.memory[address];
-    if (address == 0x2000) {
+    if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
         self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
-        self.ppuReg2 = [self readValueAtAddress: 0x2001];
+        self.ppuReg2 = self.memory[0x2001];
 
         self.notifyPpu = YES;
         self.notifyPpuWrite = NO;
@@ -243,7 +244,7 @@
         [self.ppu observeCpuChanges];
     }
     
-    return value;
+    return self.memory[address];
 }
 
 /**
