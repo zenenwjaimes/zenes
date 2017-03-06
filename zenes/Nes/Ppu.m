@@ -201,7 +201,7 @@
 {
     uint16_t nameTableAddress = 0x00;
     uint8_t ppuControlReg1 = self.cpu.ppuReg1;
-    uint8_t bits = [BitHelper checkBit: 0 on: ppuControlReg1] | ([BitHelper checkBit: 1 on: ppuControlReg1] << 1);
+    uint8_t bits = ((ppuControlReg1 >> 0) & 1) | ((ppuControlReg1 >> 1) & 1 << 1);
     
     switch (bits) {
         case 0:
@@ -269,7 +269,7 @@
 
 - (uint16_t)getPatternTableAddress: (uint8_t)patternType
 {
-    switch ([BitHelper checkBit: patternType on: self.cpu.ppuReg1]) {
+    switch ((self.cpu.ppuReg1 >> patternType) & 1) {
         case 0:
             return 0x0000;
             break;
@@ -319,6 +319,7 @@
 
     uint8_t attrLookup = self.memory[attributeTable + [self getTileAddressForRow: tileNumberY andCol: tileNumberX]];
     uint8_t highColorBit = ([BitHelper checkBit: ([self getSquareTileForX: x andY: y]*2)+1 on: attrLookup] << 1) | ([BitHelper checkBit: ([self getSquareTileForX: x andY: y]*2) on: attrLookup]);
+
     uint8_t colorLookup = [self getBgColorAddress: (((firstPattern >> ((pixelPos-7) * -1)) & 1) | (((secondPattern >> ((pixelPos-7) * -1)) & 1) << 1)) withAttr: highColorBit];
 
         pixel[2] = colorPalette[colorLookup][0];// r
