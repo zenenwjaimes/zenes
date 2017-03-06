@@ -14,15 +14,15 @@
 {
     self.currIndex = 0;
     [super prepareOpenGL];
-}
-
-- (void)drawRect:(NSRect)dirtyRect
-{
-    [super drawRect:dirtyRect];
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
     glOrtho(0, 256, 240, 0, 0, 1);
     glMatrixMode(GL_MODELVIEW);
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+  //[super drawRect:dirtyRect];
     glClearColor(1, 1, 1, 0);
     glClear(GL_COLOR_BUFFER_BIT);
 

@@ -58,8 +58,8 @@
     return _memory;
 }
 
-- (void)setOamMemory:(uint8_t *)memory {
-    memcpy(_oamMemory, memory, sizeof(_oamMemory));
+- (void)setOamMemory:(uint8_t *)oamMemory {
+    memcpy(_oamMemory, oamMemory, sizeof(_oamMemory));
 }
 
 - (uint8_t*)oamMemory {
@@ -69,6 +69,12 @@
 - (uint8_t)readPpuStatusReg: (uint8_t)flag
 {
     uint8_t ppuStatusReg = self.cpu.ppuReg1;
+    return ((ppuStatusReg >> flag) & 1);
+}
+
+- (uint8_t)readPpuStatus2Reg: (uint8_t)flag
+{
+    uint8_t ppuStatusReg = self.cpu.ppuReg2;
     return ((ppuStatusReg >> flag) & 1);
 }
 
@@ -123,22 +129,25 @@
                 self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] & (1<<7));
                 self.cpu.memory[0x2005] = self.cpu.memory[0x2006] = 0;
                 
-                if (self.cpu.memory[0x2000] >> 7) {
-                    [self.cpu triggerInterrupt: INT_NMI];
+                if ([BitHelper checkBit: 7 on: self.cpu.memory[0x2000]]) {
+                //TODO: There is something wrong here. causing nmi breaks nestest
+                // Should this even be an nmi? I read somewhere that it was but i could be wrong
+                //    [self.cpu triggerInterrupt: INT_NMI];
                 }
             }
             break;
         case 0x2003:
             if (self.cpu.notifyPpuWrite == YES) {
                 self.oamAddress = self.cpu.memory[0x2003];
+            } else {
+                //NSLog(@"reading 2003");
             }
             break;
         case 0x2004:
-            NSLog(@"2004 write");
             if (self.cpu.notifyPpuWrite == YES) {
                 self.oamMemory[self.oamAddress] = self.cpu.memory[0x2004];
             } else {
-                NSLog(@"2004 read");
+                //NSLog(@"2004 read");
                 self.cpu.memory[0x2004] = self.oamMemory[self.oamAddress];
             }
             break;
@@ -148,8 +157,6 @@
         case 0x2006:
             if (self.cpu.notifyPpuWrite == YES) {
                 [self setVramAddress: value];
-            } else {
-
             }
             break;
         case 0x2007:
@@ -170,12 +177,13 @@
 
                 self.currVramAddress += self.incrementStep;
             } else {
-                NSLog(@"Read of 0x2007");
+                //NSLog(@"Read of 0x2007");
                 self.cpu.memory[0x2007] = self.memory[self.currVramAddress];
             }
             break;
         case 0x4014:
             if (self.cpu.notifyPpuWrite == YES) {
+                //NSLog(@"oam write!");
                 for (int i = 0; i < 0x100; i++) {
                     self.oamMemory[self.oamAddress + i] = self.cpu.memory[(self.cpu.memory[0x4014]*0x100)+i];
                 }
@@ -234,14 +242,34 @@
     return self.memory[0x3F00+colorLookup+attr];
 }
 
+- (uint16_t)getSpriteColorAddress: (uint8_t)colorLookup withAttr: (uint8_t)attr
+{
+    switch (attr) {
+        case 0:
+            attr = 0;
+            break;
+        case 1:
+            attr = 0x04;
+            break;
+        case 2:
+            attr = 0x08;
+            break;
+        case 3:
+            attr = 0xC;
+            break;
+    }
+    
+    return self.memory[0x3F10+colorLookup+attr];
+}
+
 - (uint16_t)getAttributeTableAddress
 {
     return [self getNameTableAddress]+0x03C0;
 }
 
-- (uint16_t)getPatternTableAddress
+- (uint16_t)getPatternTableAddress: (uint8_t)patternType
 {
-    switch ([BitHelper checkBit: 4 on: self.cpu.ppuReg1]) {
+    switch ([BitHelper checkBit: patternType on: self.cpu.ppuReg1]) {
         case 0:
             return 0x0000;
             break;
@@ -263,7 +291,7 @@
     uint8_t tileNumberY = y/8;
     uint16_t nameTable = [self getNameTableAddress];
     uint16_t attributeTable = [self getAttributeTableAddress];
-    uint16_t patternTable = [self getPatternTableAddress];
+    uint16_t patternTable = [self getPatternTableAddress: CR1_SCREEN_PATTERN_TABLE_ADDRESS];
     uint16_t nameByteAddress = 0x00;
     
     if (tileNumberY == 0) {
@@ -365,6 +393,24 @@
     }
 }
 
+- (uint8_t *)getSpriteDataForX: (uint16_t)x andY: (uint16_t)y atLocation: (uint16_t)patternTable withXtile: (uint8_t)xTile andYTile: (uint8_t)yTile drawBackwards: (BOOL)backwards
+{
+    uint8_t *pixel = malloc(sizeof(uint8_t)*5);
+    uint8_t reverseX = backwards?xTile:(xTile-7)*-1;
+    pixel[0] = x;
+    pixel[1] = y;
+    uint8_t fullRowLow = self.memory[patternTable+yTile];
+    uint8_t fullRowHigh = self.memory[patternTable+yTile+8];
+    uint8_t spriteColorLow = [self getSpriteColorAddress: (((fullRowLow >> reverseX) & 1) | ((fullRowHigh >> reverseX) & 1) << 1) withAttr: 0x00];
+    
+    pixel[2] = colorPalette[spriteColorLow][0]; // r
+    pixel[3] = colorPalette[spriteColorLow][1]; // g
+    pixel[4] = colorPalette[spriteColorLow][2]; // b
+    
+    return pixel;
+}
+
+
 - (void)drawFrame
 {
     if (self.currentScanline > 21) {
@@ -385,7 +431,7 @@
             self.currentVerticalLine += 3;
         } else {
             // Draw after every line... this will change
-            
+
             if (self.currentVerticalLine > 339) {
                 self.currentScanline++;
                 self.currentVerticalLine = 0;
@@ -395,6 +441,9 @@
             
             if (self.currentScanline > 261) {
                 self.currentScanline = 0;
+                [self drawSprites];
+
+                // Sprite drawing goes here
                 [self.screen setNeedsDisplay: YES];
             }
         }
@@ -405,6 +454,53 @@
             self.currentVerticalLine = 0;
         } else {
             self.currentVerticalLine += 3;
+        }
+    }
+}
+
+// TODO: Implement front/back drawing of sprites
+- (void)drawSprites
+{
+    uint8_t spritePatternTable = [self getPatternTableAddress: CR1_SPRITE_PATTERN_TABLE_ADDRESS];
+
+    if ([self readPpuStatus2Reg: CR2_SHOW_SPRITES]) {
+        //NSLog(@"sprite pattern table: %X, bg: %X", spritePatternTable);
+        //NSLog(@"sprite: %@", [BitHelper intToBinary: self.cpu.ppuReg1]);
+        
+        uint8_t spriteYPos, spriteXPos, spriteIndex, spriteAttr, spritePattern = 0x00;
+
+        for (int i = 0; i < 64; i++) {
+            spriteYPos = self.oamMemory[(i*4)+0];
+            spriteIndex = self.oamMemory[(i*4)+1];
+            spriteAttr = self.oamMemory[(i*4)+2];
+            spriteXPos = self.oamMemory[(i*4)+3];
+            
+            if (spriteYPos < 0xEF) {
+                //NSLog(@"sprite: %d, %d", spriteXPos, spriteYPos);
+                if (!((spriteAttr >> 6)&7)) {
+                for (int y = 0; y < 8; y++) {
+                    for (int x = 0; x < 8; x++) {
+                        //NSLog(@"sprite index: %X", spriteIndex);
+                        uint8_t *pixel = [self getSpriteDataForX: spriteXPos+x andY: spriteYPos+y atLocation: spritePatternTable+(spriteIndex*16) withXtile: x andYTile: y drawBackwards: (spriteAttr >> 6)&1?YES:NO];
+                        [self.screen loadPixelsToDrawAtX:pixel[0] atY: pixel[1] withR: pixel[2] G: pixel[3] B: pixel[4]];
+                        free(pixel);
+                    }
+                }
+                } else {
+                    for (int y = 7; y >= 0; y--) {
+                        for (int x = 7; x >= 0; x--) {
+                            //NSLog(@"sprite index: %X", spriteIndex);
+                            uint8_t *pixel = [self getSpriteDataForX: spriteXPos+x andY: spriteYPos+y atLocation: spritePatternTable+(spriteIndex*16) withXtile: x andYTile: y drawBackwards: (spriteAttr >> 6)&1?YES:NO];
+                            [self.screen loadPixelsToDrawAtX:pixel[0] atY: pixel[1] withR: pixel[2] G: pixel[3] B: pixel[4]];
+                            free(pixel);
+                        }
+                    }
+                }
+            }
+            
+            // Reads by 32 might need to be fixed, and also reads for 8x16 tiles which hold
+            // the overriding pattern table address in bit 0, which we are shifting off
+            spritePattern = self.memory[spritePatternTable + (((spriteIndex & 1) >> 1) * self.incrementStep)];
         }
     }
 }

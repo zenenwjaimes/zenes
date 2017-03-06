@@ -219,7 +219,7 @@
         
         [self.ppu observeCpuChanges];
     } else {
-        self.notifyPpuWrite = NO;
+        self.notifyPpu = NO;
     }
 }
 
@@ -234,11 +234,20 @@
         }
     }
     
-    if (address == 0x2000 || (address >= 0x2003 && address <= 0x2007) || address == 0x4014) {
-    //if (address == 0x2000) {
+    if (address == 0x2000 || address == 0x2001 || (address >= 0x2003 && address <= 0x2007) || address == 0x4014) {
         self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
         self.ppuReg2 = self.memory[0x2001];
 
+        self.notifyPpu = YES;
+        self.notifyPpuWrite = NO;
+        self.notifyPpuAddress = address;
+        [self.ppu observeCpuChanges];
+    }
+    
+    if (address == 0x2002) {
+        self.ppuReg1 = self.memory[0x2000];
+        self.ppuReg2 = self.memory[0x2001];
+        
         self.notifyPpu = YES;
         self.notifyPpuWrite = NO;
         self.notifyPpuAddress = address;
