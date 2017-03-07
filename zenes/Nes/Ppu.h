@@ -15,6 +15,7 @@
     uint8_t _chrRom[0x2000];
     uint8_t _oamMemory[0x100];
     uint8_t colorPalette[64][3];
+    uint8_t *visibleSpriteList;
 }
 
 @property (retain) Cpu6502 *cpu;

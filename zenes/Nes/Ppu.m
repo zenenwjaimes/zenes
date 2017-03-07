@@ -48,6 +48,20 @@
     
     self.memory = tempMemory;
     self.oamMemory = tempOamMemory;
+    // Initial malloc of 1 int
+    visibleSpriteList = (uint8_t *)malloc(sizeof(uint8_t)*1);
+}
+
+- (void)addSpriteToList: (uint8_t)spriteIndex
+{
+    visibleSpriteList[sizeof(visibleSpriteList)-1] = spriteIndex;
+    visibleSpriteList = realloc(visibleSpriteList, sizeof(visibleSpriteList)+sizeof(uint8_t));
+}
+
+- (void)resetSpriteList
+{
+    free(visibleSpriteList);
+    visibleSpriteList = (uint8_t *)malloc(sizeof(uint8_t)*1);
 }
 
 - (void)setMemory:(uint8_t *)memory {
@@ -83,7 +97,6 @@
     // Observe changes to increment stepping, in case any
     // games/demos switch between modes during writes to vram
     if ([self readPpuStatusReg: CR1_INCREMENT_BY_32]) {
-//        NSLog(@"changing increment step to 32");
         self.incrementStep = 32;
     }
     
@@ -420,13 +433,19 @@
             [self.screen loadPixelsToDrawAtX:pixel1[0] atY: pixel1[1] withR: pixel1[2] G: pixel1[3] B: pixel1[4]];
             free(pixel1);
             
+            [self drawSpritesPartialAt: self.currentVerticalLine andY: self.currentScanline-22];
+            
             uint8_t *pixel2 = [self getBackgroundDataForX: self.currentVerticalLine+1 andY: self.currentScanline-22];
             [self.screen loadPixelsToDrawAtX:pixel2[0] atY: pixel2[1] withR: pixel2[2] G: pixel2[3] B: pixel2[4]];
             free(pixel2);
             
+            [self drawSpritesPartialAt: self.currentVerticalLine+1 andY: self.currentScanline-22];
+            
             uint8_t *pixel3 = [self getBackgroundDataForX: self.currentVerticalLine+2 andY: self.currentScanline-22];
             [self.screen loadPixelsToDrawAtX:pixel3[0] atY: pixel3[1] withR: pixel3[2] G: pixel3[3] B: pixel3[4]];
             free(pixel3);
+            
+            [self drawSpritesPartialAt: self.currentVerticalLine+2 andY: self.currentScanline-22];
             
             self.currentVerticalLine += 3;
         } else {
@@ -441,7 +460,7 @@
             
             if (self.currentScanline > 261) {
                 self.currentScanline = 0;
-                [self drawSprites];
+                //[self drawSprites];
 
                 // Sprite drawing goes here
                 [self.screen setNeedsDisplay: YES];
@@ -505,6 +524,51 @@
     }
 }
 
+- (void)drawSpritesPartialAt: (uint8_t)partialX andY: (uint8_t)partialY
+{
+    uint8_t spritePatternTable = [self getPatternTableAddress: CR1_SPRITE_PATTERN_TABLE_ADDRESS];
+    
+    if ([self readPpuStatus2Reg: CR2_SHOW_SPRITES]) {
+        uint8_t spriteYPos, spriteXPos, spriteIndex, spriteAttr, spritePattern = 0x00;
+        
+        for (int i = 0; i < 64; i++) {
+            spriteYPos = self.oamMemory[(i*4)+0];
+            spriteIndex = self.oamMemory[(i*4)+1];
+            spriteAttr = self.oamMemory[(i*4)+2];
+            spriteXPos = self.oamMemory[(i*4)+3];
+            
+            if (spriteYPos < 0xEF) {
+                //NSLog(@"sprite: %d, %d", spriteXPos, spriteYPos);
+                if (!((spriteAttr >> 6)&7)) {
+                    //for (int y = 0; y < 8; y++) {
+                    //    for (int x = 0; x < 8; x++) {
+                            //NSLog(@"sprite index: %X", spriteIndex);
+                    if (partialX >= spriteXPos && partialX <= (spriteXPos+7) && partialY >= spriteYPos && partialY <= (spriteYPos+7)) {
+                            uint8_t *pixel = [self getSpriteDataForX: partialX andY: partialY atLocation: spritePatternTable+(spriteIndex*16) withXtile: partialX-spriteXPos andYTile: partialY-spriteYPos drawBackwards: (spriteAttr >> 6)&1?YES:NO];
+                            [self.screen loadPixelsToDrawAtX:pixel[0] atY: pixel[1] withR: pixel[2] G: pixel[3] B: pixel[4]];
+                            free(pixel);
+                    }
+                      //  }
+                   // }
+                }
+            }
+            
+            spritePattern = self.memory[spritePatternTable + (((spriteIndex & 1) >> 1) * self.incrementStep)];
+        }
+    }
+}
+
+- (void)setDrawableSprites
+{
+    uint8_t spriteYPos = 0x00;
+    
+    for (int i = 0; i < 64; i++) {
+        spriteYPos = self.oamMemory[(i*4)+0];
+        if (spriteYPos < 0xEF) {
+
+        }
+    }
+}
 
 - (void)setupColorPalette
 {
