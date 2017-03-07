@@ -221,6 +221,10 @@
     } else {
         self.notifyPpu = NO;
     }
+    
+    if (address >= 0x8000 && address <= 0xFFFF) {
+        NSLog(@"bank switching? %X to address %X", value, address);
+    }
 }
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
