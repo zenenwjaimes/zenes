@@ -35,8 +35,8 @@
 @property NSString *currentLine;
 @property Nes *nes;
 @property Ppu *ppu;
-@property uint8_t ppuReg1;
-@property uint8_t ppuReg2;
+//@property uint8_t ppuReg1;
+//@property uint8_t ppuReg2;
 @property uint8_t ppuReadBuffer;
 @property BOOL notifyPpu;
 @property BOOL notifyPpuWrite;

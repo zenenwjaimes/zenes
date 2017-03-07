@@ -47,21 +47,20 @@
     }
     
     self.memory = tempMemory;
-    self.oamMemory = tempOamMemory;
+    //self.oamMemory = tempOamMemory;
     // Initial malloc of 1 int
-    visibleSpriteList = (uint8_t *)malloc(sizeof(uint8_t)*1);
+    //self.visibleSpriteList = [NSMutableArray array];//(uint8_t *)malloc(sizeof(uint8_t)*1);
 }
 
 - (void)addSpriteToList: (uint8_t)spriteIndex
 {
-    visibleSpriteList[sizeof(visibleSpriteList)-1] = spriteIndex;
-    visibleSpriteList = realloc(visibleSpriteList, sizeof(visibleSpriteList)+sizeof(uint8_t));
+    visibleSprites[self.spriteCount] = spriteIndex;
+    self.spriteCount++;
 }
 
 - (void)resetSpriteList
 {
-    free(visibleSpriteList);
-    visibleSpriteList = (uint8_t *)malloc(sizeof(uint8_t)*1);
+    self.spriteCount = 0;
 }
 
 - (void)setMemory:(uint8_t *)memory {
@@ -76,19 +75,25 @@
     memcpy(_oamMemory, oamMemory, sizeof(_oamMemory));
 }
 
+- (void)setPpuReg1: (uint8_t)ppuReg1 andPpuReg2: (uint8_t)ppuReg2
+{
+    _ppuReg1 = ppuReg1;
+    _ppuReg2 = ppuReg2;
+}
+
 - (uint8_t*)oamMemory {
     return _oamMemory;
 }
 
 - (uint8_t)readPpuStatusReg: (uint8_t)flag
 {
-    uint8_t ppuStatusReg = self.cpu.ppuReg1;
+    uint8_t ppuStatusReg = _ppuReg1;
     return ((ppuStatusReg >> flag) & 1);
 }
 
 - (uint8_t)readPpuStatus2Reg: (uint8_t)flag
 {
-    uint8_t ppuStatusReg = self.cpu.ppuReg2;
+    uint8_t ppuStatusReg = _ppuReg2;
     return ((ppuStatusReg >> flag) & 1);
 }
 
@@ -158,10 +163,10 @@
             break;
         case 0x2004:
             if (self.cpu.notifyPpuWrite == YES) {
-                self.oamMemory[self.oamAddress] = self.cpu.memory[0x2004];
+                _oamMemory[self.oamAddress] = self.cpu.memory[0x2004];
             } else {
                 //NSLog(@"2004 read");
-                self.cpu.memory[0x2004] = self.oamMemory[self.oamAddress];
+                self.cpu.memory[0x2004] = _oamMemory[self.oamAddress];
             }
             break;
         case 0x2005:
@@ -198,7 +203,7 @@
             if (self.cpu.notifyPpuWrite == YES) {
                 //NSLog(@"oam write!");
                 for (int i = 0; i < 0x100; i++) {
-                    self.oamMemory[self.oamAddress + i] = self.cpu.memory[(self.cpu.memory[0x4014]*0x100)+i];
+                    _oamMemory[self.oamAddress + i] = self.cpu.memory[(self.cpu.memory[0x4014]*0x100)+i];
                 }
                 
                 self.cpu.counter += 513;
@@ -213,7 +218,7 @@
 - (uint16_t)getNameTableAddress
 {
     uint16_t nameTableAddress = 0x00;
-    uint8_t ppuControlReg1 = self.cpu.ppuReg1;
+    uint8_t ppuControlReg1 = _ppuReg1;
     uint8_t bits = ((ppuControlReg1 >> 0) & 1) | ((ppuControlReg1 >> 1) & 1 << 1);
     
     switch (bits) {
@@ -282,7 +287,7 @@
 
 - (uint16_t)getPatternTableAddress: (uint8_t)patternType
 {
-    switch ((self.cpu.ppuReg1 >> patternType) & 1) {
+    switch ((_ppuReg1 >> patternType) & 1) {
         case 0:
             return 0x0000;
             break;
@@ -460,11 +465,20 @@
             }
             
             if (self.currentScanline > 261) {
+                [self resetSpriteList];
+                [self setDrawableSprites];
+                //for (int i = 0; i < sizeof(visibleSpriteList); i++) {
+                //    NSLog(@"can draw sprite #%d", i);
+                //}
                 self.currentScanline = 0;
                 //[self drawSprites];
 
                 // Sprite drawing goes here
                 [self.screen setNeedsDisplay: YES];
+                
+                //for (int k = 0; k < sizeof(visibleSpriteList); k++) {
+                //    NSLog(@"sprite visible: %X", visibleSpriteList[k]);
+                //}
             }
         }
     } else {
@@ -490,22 +504,23 @@
         uint8_t spriteYPos, spriteXPos, spriteIndex, spriteAttr, spritePattern = 0x00;
 
         for (int i = 0; i < 64; i++) {
-            spriteYPos = self.oamMemory[(i*4)+0];
-            spriteIndex = self.oamMemory[(i*4)+1];
-            spriteAttr = self.oamMemory[(i*4)+2];
-            spriteXPos = self.oamMemory[(i*4)+3];
+            spriteYPos = _oamMemory[(i*4)+0];
+            spriteIndex = _oamMemory[(i*4)+1];
+            spriteAttr = _oamMemory[(i*4)+2];
+            spriteXPos = _oamMemory[(i*4)+3];
             
             if (spriteYPos < 0xEF) {
-                //NSLog(@"sprite: %d, %d", spriteXPos, spriteYPos);
+                //NSLog(@"drawing sprite: %d index: %d at %d", i, visibleSpriteList[i], spriteYPos);
+                //NSLog(@"drawing sprite: %d, %d index: %d", spriteXPos, spriteYPos, i);
                 if (!((spriteAttr >> 6)&7)) {
-                for (int y = 0; y < 8; y++) {
-                    for (int x = 0; x < 8; x++) {
-                        //NSLog(@"sprite index: %X", spriteIndex);
-                        uint8_t *pixel = [self getSpriteDataForX: spriteXPos+x andY: spriteYPos+y atLocation: spritePatternTable+(spriteIndex*16) withXtile: x andYTile: y drawBackwards: (spriteAttr >> 6)&1?YES:NO];
-                        [self.screen loadPixelsToDrawAtX:pixel[0] atY: pixel[1] withR: pixel[2] G: pixel[3] B: pixel[4]];
-                        free(pixel);
+                    for (int y = 0; y < 8; y++) {
+                        for (int x = 0; x < 8; x++) {
+                            //NSLog(@"sprite index: %X", spriteIndex);
+                            uint8_t *pixel = [self getSpriteDataForX: spriteXPos+x andY: spriteYPos+y atLocation: spritePatternTable+(spriteIndex*16) withXtile: x andYTile: y drawBackwards: (spriteAttr >> 6)&1?YES:NO];
+                            [self.screen loadPixelsToDrawAtX:pixel[0] atY: pixel[1] withR: pixel[2] G: pixel[3] B: pixel[4]];
+                            free(pixel);
+                        }
                     }
-                }
                 } else {
                     for (int y = 7; y >= 0; y--) {
                         for (int x = 7; x >= 0; x--) {
@@ -529,18 +544,22 @@
 {
     uint8_t spritePatternTable = [self getPatternTableAddress: CR1_SPRITE_PATTERN_TABLE_ADDRESS];
     
-    if ([self readPpuStatus2Reg: CR2_SHOW_SPRITES]) {
+    if (((_ppuReg2 >> CR2_SHOW_SPRITES) & 1)) {
         uint8_t spriteYPos, spriteXPos, spriteIndex, spriteAttr, spritePattern = 0x00;
         
-        for (int i = 0; i < 64; i++) {
-            spriteYPos = self.oamMemory[(i*4)+0];
-            spriteIndex = self.oamMemory[(i*4)+1];
-            spriteAttr = self.oamMemory[(i*4)+2];
-            spriteXPos = self.oamMemory[(i*4)+3];
+        //for (int i = 0; i < 64; i++) {
+        uint8_t index = 0x00;
+        for (int i = 0; i < self.spriteCount; i++) {
+            index = visibleSprites[i];
+            spriteYPos = _oamMemory[(index*4)+0];
+            spriteIndex = _oamMemory[(index*4)+1];
+            spriteAttr = _oamMemory[(index*4)+2];
+            spriteXPos = _oamMemory[(index*4)+3];
+            //NSLog(@"drawing sprite: %d index: %d at %d", i, visibleSpriteList[i], spriteYPos);
             
-            if (spriteYPos < 0xEF) {
+            //if (spriteYPos < 0xEF) {
                 //NSLog(@"sprite: %d, %d", spriteXPos, spriteYPos);
-                if (!((spriteAttr >> 6)&7)) {
+                //if (!((spriteAttr >> 6)&7)) {
                     //for (int y = 0; y < 8; y++) {
                     //    for (int x = 0; x < 8; x++) {
                             //NSLog(@"sprite index: %X", spriteIndex);
@@ -551,8 +570,8 @@
                     }
                       //  }
                    // }
-                }
-            }
+                //}
+            //}
             
             spritePattern = self.memory[spritePatternTable + (((spriteIndex & 1) >> 1) * self.incrementStep)];
         }
@@ -564,9 +583,11 @@
     uint8_t spriteYPos = 0x00;
     
     for (int i = 0; i < 64; i++) {
-        spriteYPos = self.oamMemory[(i*4)+0];
+        spriteYPos = _oamMemory[(i*4)];
         if (spriteYPos < 0xEF) {
+           // NSLog(@"adding sprite: %d at y pos: %d", i, spriteYPos);
 
+            [self addSpriteToList: i];
         }
     }
 }

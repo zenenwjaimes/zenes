@@ -15,7 +15,9 @@
     uint8_t _chrRom[0x2000];
     uint8_t _oamMemory[0x100];
     uint8_t colorPalette[64][3];
-    uint8_t *visibleSpriteList;
+    uint8_t visibleSprites[0x40];
+    uint8_t _ppuReg1;
+    uint8_t _ppuReg2;
 }
 
 @property (retain) Cpu6502 *cpu;
@@ -30,6 +32,7 @@
 @property (assign, nonatomic) uint16_t currVramAddress;
 @property (assign, nonatomic) uint8_t *memory;
 @property (assign, nonatomic) uint8_t *oamMemory;
+@property uint8_t spriteCount;
 @property uint8_t oamAddress;
 
 - (id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom;
@@ -37,6 +40,7 @@
 - (void)drawFrame;
 - (void)setVramAddress:(uint16_t)vramAddress;
 - (void)observeCpuChanges;
+- (void)setPpuReg1: (uint8_t)ppuReg1 andPpuReg2: (uint8_t)ppuReg2;
 
 @end
 

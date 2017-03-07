@@ -41,7 +41,6 @@
     }
     
     glFlush();
-    [[self openGLContext] flushBuffer];
 }
 
 - (void)resetScreen

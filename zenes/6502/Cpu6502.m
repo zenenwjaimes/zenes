@@ -210,8 +210,9 @@
     
     // Send any notifications to the PPU about changes to regs
     if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
-        self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
-        self.ppuReg2 = self.memory[0x2001];//[self readValueAtAddress: 0x2001];
+       // self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
+       // self.ppuReg2 = self.memory[0x2001];//[self readValueAtAddress: 0x2001];
+        [self.ppu setPpuReg1: self.memory[0x2000] andPpuReg2: self.memory[0x2001]];
         self.notifyPpu = YES;
         self.notifyPpuAddress = address;
         self.notifyPpuWrite = YES;
@@ -241,9 +242,9 @@
     //if (address == 0x2000 || address == 0x2001 || (address >= 0x2003 && address <= 0x2007) || address == 0x4014) {
     if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
 
-        self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
-        self.ppuReg2 = self.memory[0x2001];
-
+        //self.ppuReg1 = self.memory[0x2000];//[self readValueAtAddress: 0x2000];
+        //self.ppuReg2 = self.memory[0x2001];
+        [self.ppu setPpuReg1: self.memory[0x2000] andPpuReg2: self.memory[0x2001]];
         self.notifyPpu = YES;
         self.notifyPpuWrite = NO;
         self.notifyPpuAddress = address;
@@ -251,9 +252,10 @@
     }
     
     if (address == 0x2002) {
-        self.ppuReg1 = self.memory[0x2000];
-        self.ppuReg2 = self.memory[0x2001];
-        
+        //self.ppuReg1 = self.memory[0x2000];
+        //self.ppuReg2 = self.memory[0x2001];
+        [self.ppu setPpuReg1: self.memory[0x2000] andPpuReg2: self.memory[0x2001]];
+
         self.notifyPpu = YES;
         self.notifyPpuWrite = NO;
         self.notifyPpuAddress = address;
@@ -398,7 +400,7 @@
 - (void)toggleSignFlagForReg: (uint8_t)cpu_reg
 {
     // Sign flag set on CPU Reg
-    if ([BitHelper checkBit: 7 on: cpu_reg]) {
+    if ((cpu_reg >> STATUS_NEGATIVE_BIT) & 1) {
         [self enableSignFlag];
     } else {
         [self disableSignFlag];
