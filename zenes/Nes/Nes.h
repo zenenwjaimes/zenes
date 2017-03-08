@@ -10,12 +10,16 @@
 #import "NesInc.h"
 
 @interface Nes : NSObject
+{
+    uint16_t _buttonsPressed;
+    uint8_t _joystickStrobe;
+    uint8_t _joystickLastWrite;
+}
 
 @property (retain) Rom *rom;
 @property (retain) Cpu6502 *cpu;
 @property (retain) Screen *screen;
 @property (retain) Ppu *ppu;
-@property int buttonPressed;
 @property BOOL debuggerEnabled;
 
 - (id) initWithRom: (Rom *)rom;
@@ -23,6 +27,8 @@
 - (void) runNextInstruction;
 - (void) runNextInstructionInline;
 - (void)keyDown:(NSEvent *)theEvent;
-- (void)buttonStrobe: (int) button;
+- (void)keyUp:(NSEvent *)theEvent;
+- (void)joystickRead;
+- (void)joystickWrite: (uint8_t)value;
 
 @end

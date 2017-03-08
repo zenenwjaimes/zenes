@@ -45,9 +45,15 @@
         self.nesInstance.debuggerEnabled = YES;
     }
 }
+
 - (void)keyDown:(NSEvent *)theEvent
 {
     [self.nesInstance keyDown: theEvent];
+}
+
+- (void)keyUp:(NSEvent *)theEvent
+{
+    [self.nesInstance keyUp: theEvent];
 }
 
 @end

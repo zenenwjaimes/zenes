@@ -42,8 +42,6 @@
 @property BOOL notifyPpuWrite;
 @property uint16_t notifyPpuAddress;
 @property uint16_t notifyPpuValue;
-@property uint8_t joystickCounter;
-
 
 // Memory reading instructions
 - (uint8_t)readValueAtAddress: (uint16_t)address;
