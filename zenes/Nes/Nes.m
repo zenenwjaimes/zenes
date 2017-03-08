@@ -105,8 +105,9 @@
     [self.ppu drawFrame];
 }
 
-- (void)joystickRead
+- (uint8_t)joystickRead
 {
+    uint8_t ret = 0x00;
     //if (button <= 8 && _buttonsPressed != 0 && ) {
     //    [self.cpu writeValue: 1 toAddress: 0x4016];
     //} else {
@@ -122,7 +123,7 @@
         case 5:
         case 6:
         case 7:
-            self.cpu.memory[0x4016] = (_buttonsPressed & (uint32_t)pow(2.0,_joystickStrobe+1.0));
+            ret = (_buttonsPressed & (uint32_t)pow(2.0,_joystickStrobe+1.0))?1:0;
             //NSLog(@"button: %d (%d)", _joystickStrobe, (uint32_t)pow(2.0,_joystickStrobe+1.0));
             break;
         case 8:
@@ -136,32 +137,35 @@
         case 16:
         case 17:
         case 18:
-            self.cpu.memory[0x4016] = 0;
+            ret = 0;
             break;
         case 19:
-            self.cpu.memory[0x4016] = 1;
+            ret = 1;
             break;
-        default:
-            self.cpu.memory[0x4016] = 0;
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+            ret = 0;
         break;
     }
     
-    if (self.cpu.memory[0x4016]) {
-        NSLog(@"button press: %d", _joystickStrobe);
-    }
-    //NSLog(@"button: %d value: %d", _joystickStrobe, self.cpu.memory[0x4016]);
+    //if (self.cpu.memory[0x4016]) {
+    //    NSLog(@"button press: %d", _joystickStrobe);
+    //}
+    //NSLog(@"button: %d value: %d", _joystickStrobe, ret);
 
     _joystickStrobe++;
     if (_joystickStrobe == 24) {
         _joystickStrobe = 0;
     }
+    
+    return ret;
 }
 
 - (void)joystickWrite: (uint8_t)value
 {
     if ((value&1) == 0 && (_joystickLastWrite&1) == 1) {
-        NSLog(@"joystick write: %X", value);
-
         _joystickStrobe = 0;
     }
     _joystickLastWrite = value;
@@ -181,27 +185,27 @@
             break;
         case 126:
             //NSLog(@"Up Key Pressed");
-            _buttonsPressed |= 8;
+            _buttonsPressed |= 32;
             break;
         case 125:
             //NSLog(@"Down Key Pressed");
-            _buttonsPressed |= 16;
+            _buttonsPressed |= 64;
             break;
         case 123:
             //NSLog(@"Left Key Pressed");
-            _buttonsPressed |= 32;
+            _buttonsPressed |= 128;
             break;
         case 124:
             //NSLog(@"Right Key Pressed");
-            _buttonsPressed |= 64;
+            _buttonsPressed |= 256;
             break;
         case 36:
-            NSLog(@"Start Key Pressed");
-            _buttonsPressed |= 128;
+            //NSLog(@"Start Key Pressed");
+            _buttonsPressed |= 16;
             break;
         case 42:
-            NSLog(@"Select Key Pressed");
-            _buttonsPressed |= 256;
+            //NSLog(@"Select Key Pressed");
+            _buttonsPressed |= 8;
             break;
     }
 }
@@ -220,27 +224,27 @@
             break;
         case 126:
             //NSLog(@"Up Key UnPressed");
-            _buttonsPressed &= ~8;
+            _buttonsPressed &= ~32;
             break;
         case 125:
             //NSLog(@"Down Key UnPressed");
-            _buttonsPressed &= ~16;
+            _buttonsPressed &= ~64;
             break;
         case 123:
             //NSLog(@"Left Key UnPressed");
-            _buttonsPressed &= ~32;
+            _buttonsPressed &= ~128;
             break;
         case 124:
             //NSLog(@"Right Key UnPressed");
-            _buttonsPressed &= ~64;
+            _buttonsPressed &= ~256;
             break;
         case 36:
-            NSLog(@"Start Key UnPressed");
-            _buttonsPressed &= ~128;
+            //NSLog(@"Start Key UnPressed");
+            _buttonsPressed &= ~16;
             break;
         case 42:
-            NSLog(@"Select Key UnPressed");
-            _buttonsPressed &= ~256;
+            //NSLog(@"Select Key UnPressed");
+            _buttonsPressed &= ~8;
             break;
     }
 }

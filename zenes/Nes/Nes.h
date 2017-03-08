@@ -28,7 +28,7 @@
 - (void) runNextInstructionInline;
 - (void)keyDown:(NSEvent *)theEvent;
 - (void)keyUp:(NSEvent *)theEvent;
-- (void)joystickRead;
+- (uint8_t)joystickRead;
 - (void)joystickWrite: (uint8_t)value;
 
 @end

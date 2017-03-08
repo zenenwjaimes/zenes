@@ -233,10 +233,6 @@
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
 {
-    if (address == 0x4016) {
-        [self.nes joystickRead];
-    }
-    
     //if (address == 0x2000 || address == 0x2001 || (address >= 0x2003 && address <= 0x2007) || address == 0x4014) {
     if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
 
@@ -258,6 +254,10 @@
         self.notifyPpuWrite = NO;
         self.notifyPpuAddress = address;
         [self.ppu observeCpuChanges];
+    }
+    
+    if (address == 0x4016) {
+        return [self.nes joystickRead];
     }
     
     return self.memory[address];
