@@ -108,11 +108,6 @@
 - (uint8_t)joystickRead
 {
     uint8_t ret = 0x00;
-    //if (button <= 8 && _buttonsPressed != 0 && ) {
-    //    [self.cpu writeValue: 1 toAddress: 0x4016];
-    //} else {
-    //    [self.cpu writeValue: 0 toAddress: 0x4016];
-    //}
     
     switch (_joystickStrobe) {
         case 0:
@@ -124,7 +119,6 @@
         case 6:
         case 7:
             ret = (_buttonsPressed & (uint32_t)pow(2.0,_joystickStrobe+1.0))?1:0;
-            //NSLog(@"button: %d (%d)", _joystickStrobe, (uint32_t)pow(2.0,_joystickStrobe+1.0));
             break;
         case 8:
         case 9:
@@ -149,12 +143,54 @@
             ret = 0;
         break;
     }
-    
-    //if (self.cpu.memory[0x4016]) {
-    //    NSLog(@"button press: %d", _joystickStrobe);
-    //}
-    //NSLog(@"button: %d value: %d", _joystickStrobe, ret);
 
+    _joystickStrobe++;
+    if (_joystickStrobe == 24) {
+        _joystickStrobe = 0;
+    }
+    
+    return ret;
+}
+
+- (uint8_t)joystickReadZapper
+{
+    uint8_t ret = 0x00;
+    
+    switch (_joystickStrobe) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+            ret = (_buttonsPressed & (uint32_t)pow(2.0,_joystickStrobe+1.0))?1:0;
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+            ret = 1;
+            break;
+        case 19:
+            ret = 0;
+            break;
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+            ret = 0;
+            break;
+    }
+    
     _joystickStrobe++;
     if (_joystickStrobe == 24) {
         _joystickStrobe = 0;

@@ -29,6 +29,7 @@
 - (void)keyDown:(NSEvent *)theEvent;
 - (void)keyUp:(NSEvent *)theEvent;
 - (uint8_t)joystickRead;
+- (uint8_t)joystickReadZapper;
 - (void)joystickWrite: (uint8_t)value;
 
 @end

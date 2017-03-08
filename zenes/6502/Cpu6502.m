@@ -260,6 +260,10 @@
         return [self.nes joystickRead];
     }
     
+    if (address == 0x4017) {
+        return [self.nes joystickReadZapper];
+    }
+    
     return self.memory[address];
 }
 
