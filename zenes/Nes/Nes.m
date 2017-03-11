@@ -62,6 +62,7 @@
 
         [self.screen resetScreen];
         self.cpu.ppu = self.ppu;
+        self.rom.nesInstance = self;
         
         _joystickStrobe = _joystickLastWrite = 0;
     }

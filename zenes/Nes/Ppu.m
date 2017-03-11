@@ -565,6 +565,10 @@
                             //NSLog(@"sprite index: %X", spriteIndex);
                     if (partialX >= spriteXPos && partialX <= (spriteXPos+7) && partialY >= spriteYPos && partialY <= (spriteYPos+7)) {
                             uint8_t *pixel = [self getSpriteDataForX: partialX andY: partialY atLocation: spritePatternTable+(spriteIndex*16) withXtile: partialX-spriteXPos andYTile: partialY-spriteYPos drawBackwards: (spriteAttr >> 6)&1?YES:NO];
+                        
+                            spritePattern = self.memory[spritePatternTable + (((spriteIndex & 1) >> 1) * self.incrementStep)];
+
+                        
                             [self.screen loadPixelsToDrawAtX:pixel[0] atY: pixel[1] withR: pixel[2] G: pixel[3] B: pixel[4]];
                             free(pixel);
                     }

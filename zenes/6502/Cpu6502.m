@@ -227,7 +227,7 @@
     }
     
     if (address >= 0x8000 && address <= 0xFFFF) {
-        NSLog(@"bank switching? %X to address %X", value, address);
+        [self.nes.rom processMapper: address withValue: value];
     }
 }
 
