@@ -80,7 +80,7 @@
 + (NSString *)getFlagsForStatus: (uint8_t)status;
 
 @end
-
+/*
 enum interrupts {
     INT_RESET = 1,
     INT_IRQ = 2,
@@ -249,3 +249,4 @@ enum opcodes {
     TSX = 0xBA,
     TXS = 0x9A
 };
+*/

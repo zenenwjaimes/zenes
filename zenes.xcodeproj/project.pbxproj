@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E90CE8841FA8F793007A8446 /* 6502 in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CF01CF4465E001E85A5 /* 6502 */; };
 		E981FBD81CFE36480082ADA8 /* Nes in Resources */ = {isa = PBXBuildFile; fileRef = E981FBD71CFE36480082ADA8 /* Nes */; };
 		E981FBDC1CFE369E0082ADA8 /* Mapper.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBD91CFE369E0082ADA8 /* Mapper.m */; };
 		E981FBDD1CFE369E0082ADA8 /* Nes.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDA1CFE369E0082ADA8 /* Nes.m */; };
@@ -306,6 +307,7 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E90CE8841FA8F793007A8446 /* 6502 in Sources */,
 				FE43EF511D36335D005419DD /* Ppu.m in Sources */,
 				E981FBE01CFE36F80082ADA8 /* Cpu6502.h in Sources */,
 				E981FBDC1CFE369E0082ADA8 /* Mapper.m in Sources */,

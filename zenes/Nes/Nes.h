@@ -14,10 +14,11 @@
     uint16_t _buttonsPressed;
     uint8_t _joystickStrobe;
     uint8_t _joystickLastWrite;
+    
 }
 
 @property (retain) Rom *rom;
-@property (retain) Cpu6502 *cpu;
+//@property (retain) Cpu6502 *cpu;
 @property (retain) Screen *screen;
 @property (retain) Ppu *ppu;
 @property BOOL debuggerEnabled;
