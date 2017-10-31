@@ -54,7 +54,7 @@
     Rom *rom = [[Rom alloc] init: self.romPath];
     Nes *nesInstance = [[Nes alloc] initWithRom: rom];
     nesInstance.screen = self.window.nesScreen;
-    nesInstance.ppu.screen = self.window.nesScreen;
+    //nesInstance.ppu.screen = self.window.nesScreen;
     self.window.nesInstance = nesInstance;
 }
 
@@ -88,10 +88,10 @@
         NSMutableString *text = [NSMutableString string];
         
         for (long i = 0; i < 0x10000; i++) {
-            [text appendString: [NSString stringWithFormat: @"%lX: %X\n", i, self.window.nesInstance.cpu.memory[i]]];
+           // [text appendString: [NSString stringWithFormat: @"%lX: %X\n", i, self.window.nesInstance.cpu->memory[i]]];
         }
         for (long i = 0; i < 0x4000; i++) {
-            [text appendString: [NSString stringWithFormat: @"VRAM: %lX: %X\n", i, self.window.nesInstance.cpu.ppu.memory[i]]];
+           // [text appendString: [NSString stringWithFormat: @"VRAM: %lX: %X\n", i, self.window.nesInstance.cpu->ppu.memory[i]]];
         }
         NSAttributedString* attr = [[NSAttributedString alloc] initWithString: text];
         [[self.debuggerFull textStorage] setAttributedString: attr];
@@ -126,142 +126,142 @@
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"OP1";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op1];
+                //result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->op1];
             }
             break;
         case 1:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"OP2";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op2];
+                //result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->op2];
             }
             break;
         case 2:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"OP3";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X",  self.window.nesInstance.cpu.op3];
+                //result.stringValue = [NSString stringWithFormat: @"%X",  self.window.nesInstance.cpu->op3];
             }
             break;
         case 3:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"IntP";
             } else {
-                result.stringValue = [BitHelper intToBinary: self.window.nesInstance.cpu.interruptPeriod];
+                //result.stringValue = [BitHelper intToBinary: self.window.nesInstance.cpu->interrupt_period];
             }
             break;
         case 4:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Counter";
             } else {
-                result.stringValue = [[NSNumber numberWithLong: self.window.nesInstance.cpu.counter] stringValue];
+                //result.stringValue = [[NSNumber numberWithLong: self.window.nesInstance.cpu->counter] stringValue];
             }
             break;
         case 5:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"ACC";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.reg_acc];
+                //result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->reg_acc];
             }
             break;
         case 6:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"X";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.reg_x];
+                //result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->reg_x];
             }
             break;
         case 7:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Y";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X",  self.window.nesInstance.cpu.reg_y];
+                //result.stringValue = [NSString stringWithFormat: @"%X",  self.window.nesInstance.cpu->reg_y];
             }
             break;
         case 8:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"SP";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.reg_sp];
+                //result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->reg_sp];
             }
             break;
         case 9:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"STATUS";
             } else {
-                result.stringValue = [BitHelper intToBinary: self.window.nesInstance.cpu.reg_status];
+               // result.stringValue = [BitHelper intToBinary: self.window.nesInstance.cpu->reg_status];
             }
             break;
         case 10:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"PC";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.op1];
+                //result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->op1];
             }
             break;
         case 11:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Curr SP Val";
             } else {
-                if (self.window.nesInstance.cpu.isRunning == YES) {
-                    result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu.memory[0x100+self.window.nesInstance.cpu.reg_sp+1]];
-                }
+               // if (self.window.nesInstance.cpu->is_running == YES) {
+               //     result.stringValue = [NSString stringWithFormat: @"%X", self.window.nesInstance.cpu->memory[0x100+self.window.nesInstance.cpu->reg_sp+1]];
+              //  }
             }
             break;
         case 12:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Sign Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_NEGATIVE_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_NEGATIVE_BIT]?@"Y":@"N"];
             }
             break;
         case 13:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Zero Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_ZERO_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_ZERO_BIT]?@"Y":@"N"];
             }
             break;
         case 14:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"IRQ Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_IRQ_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_IRQ_BIT]?@"Y":@"N"];
             }
             break;
         case 15:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Decimal Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_DECIMAL_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_DECIMAL_BIT]?@"Y":@"N"];
             }
             break;
         case 16:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Carry Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_CARRY_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_CARRY_BIT]?@"Y":@"N"];
             }
             break;
         case 17:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Overflow Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_OVERFLOW_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_OVERFLOW_BIT]?@"Y":@"N"];
             }
             break;
         case 18:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Unused Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_UNUSED_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_UNUSED_BIT]?@"Y":@"N"];
             }
             break;
         case 19:
             if ([tableColumn.identifier isEqualToString: @"reg"]) {
                 result.stringValue = @"Break Flag";
             } else {
-                result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_BREAK_BIT]?@"Y":@"N"];
+                //result.stringValue = [NSString stringWithFormat: @"%@", [self.window.nesInstance.cpu checkFlag: STATUS_BREAK_BIT]?@"Y":@"N"];
             }
             break;
     }

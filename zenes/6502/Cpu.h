@@ -16,7 +16,7 @@
 
 
 typedef struct StateCpu {
-    boolean_t        is_running;
+    uint8_t        is_running;
     uint32_t       counter;
     uint8_t        reg_acc;
     uint8_t        reg_x;
@@ -26,6 +26,8 @@ typedef struct StateCpu {
     uint16_t       reg_pc;
     uint8_t        *memory;
     uint8_t        interrupt_period;
+    uint8_t      notify_ppu;
+    uint8_t      notify_ppu_write;
     uint16_t       notify_ppu_value;
     uint16_t       notify_ppu_address;
 } StateCpu;

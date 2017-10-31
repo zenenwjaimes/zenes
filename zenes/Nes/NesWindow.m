@@ -12,25 +12,25 @@
 
 - (IBAction)playButton:(id)sender
 {
-    if (self.nesInstance.cpu.isRunning == YES) {
+ //   if (self.nesInstance.cpu.isRunning == YES) {
         [self.nesInstance run];
-    }
+  //  }
 }
 
 - (IBAction)pauseButton:(id)sender
 {
-    if (self.nesInstance.cpu.isRunning == NO) {
-        [self.nesInstance.cpu setIsRunning: YES];
-    } else {
-        [self.nesInstance.cpu setIsRunning: NO];
-    }
+ //   if (self.nesInstance.cpu.isRunning == NO) {
+  //      [self.nesInstance.cpu setIsRunning: YES];
+  //  } else {
+ //       [self.nesInstance.cpu setIsRunning: NO];
+ //   }
 }
 
 - (IBAction)stepIntoButton:(id)sender
 {
-    if (self.nesInstance.cpu.isRunning == NO) {
-        [self.nesInstance.cpu setIsRunning: YES];
-    }
+ //   if (self.nesInstance.cpu.isRunning == NO) {
+ //       [self.nesInstance.cpu setIsRunning: YES];
+  //  }
     [self.nesInstance runNextInstructionInline];
     
     

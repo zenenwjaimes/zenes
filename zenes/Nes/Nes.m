@@ -16,8 +16,10 @@
 - (id) initWithRom: (Rom *)rom {
     if (self = [super init]) {
         self.rom = rom;
-        self.cpu = [[Cpu6502 alloc] init];
-        self.cpu.nes = self;
+//        cpu = [[Cpu6502 alloc] init];
+        cpu = calloc(sizeof(StateCpu), 1);
+        cpu->memory = malloc(16 * 0x1000);
+        //cpu.nes = self;
         self.debuggerEnabled = NO;
 
         uint16_t prgRom0 = 0x00;
@@ -41,7 +43,7 @@
         uint8_t chrRom[0x10000] = {};
         [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1+0x4000, 0x2000*self.rom.chrRomSize)];
         
-        self.ppu = [[Ppu alloc] initWithCpu: self.cpu andChrRom: chrRom];
+        self.ppu = [[Ppu alloc] initWithCpu: cpu andChrRom: chrRom];
 
         uint16_t prgBank0 = (prgRom0-16)+0x8000;
         uint16_t prgBank1 = (prgRom1-16)+0x8000;
@@ -53,15 +55,17 @@
         NSLog(@"prgBank0: %X, prgBank1: %X", prgBank0, prgBank1);
         
         // write prg rom to cpu mem
-        [self.cpu writePrgRom:bank0 toAddress: prgBank0];
-        [self.cpu writePrgRom:bank1 toAddress: prgBank1];
+        //[cpu writePrgRom:bank0 toAddress: prgBank0];
+        //[cpu writePrgRom:bank1 toAddress: prgBank1];
+        // FIXME: Fix the writing of prg rom to memory
         
         // set pc to the address stored at FFFD/FFFC (usually 0x8000)
-        self.cpu.reg_pc = (self.cpu.memory[0xFFFD] << 8) | (self.cpu.memory[0xFFFC]);
-        NSLog(@"Boot Reg PC: %X", self.cpu.reg_pc);
+        cpu->reg_pc = (cpu->memory[0xFFFD] << 8) | (cpu->memory[0xFFFC]);
+        NSLog(@"Boot Reg PC: %X", cpu->reg_pc);
 
         [self.screen resetScreen];
-        self.cpu.ppu = self.ppu;
+        //cpu.ppu = self.ppu;
+        // FIXME: eeeeh
         
         _joystickStrobe = _joystickLastWrite = 0;
     }
@@ -74,12 +78,12 @@
         for (;;) {
             [self runNextInstruction];
             
-            if (self.cpu.isRunning == YES) {
+            if (cpu->is_running == YES) {
                 if (self.debuggerEnabled == YES) {
                     dispatch_sync(dispatch_get_main_queue(), ^{
-                        if (self.cpu.currentLine != nil) {
-                            [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-                        }
+                        //if (cpu.currentLine != nil) {
+                        //    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: cpu.currentLine];
+                        //}
                     });
                     
                     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -92,16 +96,16 @@
 }
 
 - (void) runNextInstructionInline {
-    [self.cpu runNextInstruction];
+    //[cpu runNextInstruction];
     
     if (self.debuggerEnabled) {
-        [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-        [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
+    //    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: cpu.currentLine];
+    //    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
     }
 }
 
 - (void) runNextInstruction {
-    [self.cpu runNextInstruction];
+   // [cpu runNextInstruction];
     [self.ppu drawFrame];
 }
 
