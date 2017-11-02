@@ -10,8 +10,11 @@
 #define NesInc_h
 
 #import "Rom.h"
-#import "Cpu6502.h"
+//#import "Cpu6502.h"
 #import "Screen.h"
+#import "Cpu.h"
+#import "Ppu.h"
+//#include "Cpu.h"
 
 struct ppuFrameData;
 

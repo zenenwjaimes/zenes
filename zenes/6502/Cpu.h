@@ -1,86 +1,37 @@
 //
 //  Cpu.h
-//  zenes
+//  
 //
-//  Created by zenen jaimes on 5/24/16.
-//  Copyright © 2016 zenen jaimes. All rights reserved.
+//  Created by zenen jaimes on 10/31/17.
 //
 
-#import <Foundation/Foundation.h>
-#import <CoreFoundation/CFByteOrder.h>
-#import "ProcessorStatus.h"
-#import "BitHelper.h"
+#ifndef Cpu_h
+#define Cpu_h
 
-@class Ppu;
-@class Nes;
+#include <stdio.h>
+#include <string.h>
+#include <stdlib.h>
+#include <stdint.h>
+#include <sys/time.h>
 
-@interface Cpu6502 : NSObject
-{
-    uint8_t _memory[0x10000];
-}
 
-@property BOOL isRunning;
-@property uint16_t op1;
-@property uint16_t op2;
-@property uint16_t op3;
-@property uint8_t interruptPeriod;
-@property uint32_t counter;
-@property uint8_t reg_acc;
-@property uint8_t reg_x;
-@property uint8_t reg_y;
-@property uint16_t reg_sp;
-@property uint8_t reg_status;
-@property uint16_t reg_pc;
-@property (assign, nonatomic) uint8_t *memory;
-@property NSString *currentLine;
-@property Nes *nes;
-@property Ppu *ppu;
-//@property uint8_t ppuReg1;
-//@property uint8_t ppuReg2;
-@property uint8_t ppuReadBuffer;
-@property BOOL notifyPpu;
-@property BOOL notifyPpuWrite;
-@property uint16_t notifyPpuAddress;
-@property uint16_t notifyPpuValue;
+typedef struct StateCpu {
+    uint8_t        is_running;
+    uint32_t       counter;
+    uint8_t        reg_acc;
+    uint8_t        reg_x;
+    uint8_t        reg_y;
+    uint16_t       reg_sp;
+    uint8_t        reg_status;
+    uint16_t       reg_pc;
+    uint8_t        *memory;
+    uint8_t        interrupt_period;
+    uint8_t      notify_ppu;
+    uint8_t      notify_ppu_write;
+    uint16_t       notify_ppu_value;
+    uint16_t       notify_ppu_address;
+} StateCpu;
 
-// Memory reading instructions
-- (uint8_t)readValueAtAddress: (uint16_t)address;
-- (uint8_t)readAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2;
-- (uint8_t)readIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
-- (uint8_t)readIndexedIndirectAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
-- (uint8_t)readIndirectIndexAddressWithByte: (uint8_t)lowByte andOffset: (uint8_t)offset;
-- (uint16_t)getIndexedAbsoluteAddress1: (uint8_t)address1 address2: (uint8_t)address2 withOffset: (uint8_t)offset;
-- (uint16_t)getRelativeAddressWithAddress: (uint16_t)address andOffset: (uint8_t)offset;
-- (void)writePrgRom: (uint8_t *)rom toAddress: (uint16_t)address;
-- (uint8_t)readZeroPage: (uint8_t)address withRegister: (uint8_t)reg;
-- (uint8_t)readZeroPage: (uint8_t)address;
-- (void)writeZeroPage: (uint8_t)address withValue: (uint8_t)value;
-- (void)writeValue: (uint8_t)value toAbsoluteOp1: (uint8_t)absop1 andAbsoluteOp2: (uint8_t)absop2;
-- (void)writeValue: (uint8_t)value toAddress: (uint16_t)address;
-
-// Generic register flags
-- (void)enableZeroFlag;
-- (void)disableZeroFlag;
-- (void)enableInterrupts;
-- (void)disableInterrupts;
-- (void)enableDecimalFlag;
-- (void)disableDecimalFlag;
-- (void)enableCarryFlag;
-- (void)disableCarryFlag;
-- (void)enableOverflowFlag;
-- (void)disableOverflowFlag;
-- (uint8_t)checkFlag: (uint8_t)flag;
-- (void)toggleCarryFlagForReg: (uint8_t)cpu_reg;
-
-- (void)runNextInstruction;
-- (void)dumpMemoryToLog;
-- (void)triggerInterrupt: (int)interruptType;
-
-+ (NSString *)getOpcodeName: (uint8_t)opcode;
-+ (NSString *)getFlagsForStatus: (uint8_t)status;
-
-@end
-/*
 enum interrupts {
     INT_RESET = 1,
     INT_IRQ = 2,
@@ -135,7 +86,7 @@ enum opcodes {
     CPX_IMM = 0xE0,
     CPX_ZP = 0xE4,
     CPX_ABS = 0xEC,
-
+    
     CPY_IMM = 0xC0,
     CPY_ZP = 0xC4,
     CPY_ABS = 0xCC,
@@ -157,7 +108,7 @@ enum opcodes {
     INC_ZPX = 0xF6,
     INC_ABS = 0xEE,
     INC_ABSX = 0xFE,
-
+    
     INX = 0xE8,
     INY = 0xC8,
     JMP_ABS = 0x4C,
@@ -169,10 +120,10 @@ enum opcodes {
     LDA_IMM = 0xA9,
     LDA_INDY = 0xB1,
     LDA_INDX = 0xA1,
-
+    
     LDA_ZP = 0xA5,
     LDA_ZPX = 0xB5,
-
+    
     LDX_IMM = 0xA2,
     LDX_ZP = 0xA6,
     LDX_ZPY = 0xB6,
@@ -205,10 +156,10 @@ enum opcodes {
     ROR_ACC = 0x6A,
     ROR_ZP = 0x66,
     ROR_ZPX = 0x76,
-
+    
     ROR_ABSX = 0x7E,
     ROR_ABS = 0x6E,
-
+    
     ROL_ACC = 0x2A,
     ROL_ZP = 0x26,
     ROL_ZPX = 0x36,
@@ -224,7 +175,7 @@ enum opcodes {
     SBC_ABSY = 0xF9,
     SBC_INDX = 0xE1,
     SBC_INDY = 0xF1,
-
+    
     SEC = 0x38,
     SED = 0xF8,
     SEI = 0x78,
@@ -241,7 +192,7 @@ enum opcodes {
     STX_ZPY = 0x96,
     STY_ZP = 0x84,
     STY_ZPX = 0x94,
-
+    
     TAX = 0xAA,
     TXA = 0x8A,
     TAY = 0xA8,
@@ -249,4 +200,9 @@ enum opcodes {
     TSX = 0xBA,
     TXS = 0x9A
 };
-*/
+
+
+int Emulate6502(StateCpu* state);
+void GenerateInterrupt(StateCpu* state, int interrupt_num);
+
+#endif /* Cpu_h */

@@ -16,8 +16,10 @@
 - (id) initWithRom: (Rom *)rom {
     if (self = [super init]) {
         self.rom = rom;
-        self.cpu = [[Cpu6502 alloc] init];
-        self.cpu.nes = self;
+//        cpu = [[Cpu6502 alloc] init];
+        cpu = calloc(sizeof(StateCpu), 1);
+        cpu->memory = malloc(16 * 0x1000);
+        //cpu.nes = self;
         self.debuggerEnabled = NO;
 
         uint16_t prgRom0 = 0x00;
@@ -41,7 +43,7 @@
         uint8_t chrRom[0x10000] = {};
         [self.rom.data getBytes: chrRom range: NSMakeRange(prgRom1+0x4000, 0x2000*self.rom.chrRomSize)];
         
-        self.ppu = [[Ppu alloc] initWithCpu: self.cpu andChrRom: chrRom];
+        self.ppu = [[Ppu alloc] initWithCpu: cpu andChrRom: chrRom];
 
         uint16_t prgBank0 = (prgRom0-16)+0x8000;
         uint16_t prgBank1 = (prgRom1-16)+0x8000;
@@ -53,15 +55,19 @@
         NSLog(@"prgBank0: %X, prgBank1: %X", prgBank0, prgBank1);
         
         // write prg rom to cpu mem
-        [self.cpu writePrgRom:bank0 toAddress: prgBank0];
-        [self.cpu writePrgRom:bank1 toAddress: prgBank1];
+        //[cpu writePrgRom:bank0 toAddress: prgBank0];
+        //[cpu writePrgRom:bank1 toAddress: prgBank1];
+        // FIXME: Fix the writing of prg rom to memory
         
         // set pc to the address stored at FFFD/FFFC (usually 0x8000)
-        self.cpu.reg_pc = (self.cpu.memory[0xFFFD] << 8) | (self.cpu.memory[0xFFFC]);
-        NSLog(@"Boot Reg PC: %X", self.cpu.reg_pc);
+        cpu->reg_pc = (cpu->memory[0xFFFD] << 8) | (cpu->memory[0xFFFC]);
+        NSLog(@"Boot Reg PC: %X", cpu->reg_pc);
 
         [self.screen resetScreen];
-        self.cpu.ppu = self.ppu;
+        //cpu.ppu = self.ppu;
+        // FIXME: eeeeh
+        
+        _joystickStrobe = _joystickLastWrite = 0;
     }
     return self;
 }
@@ -72,12 +78,12 @@
         for (;;) {
             [self runNextInstruction];
             
-            if (self.cpu.isRunning == YES) {
+            if (cpu->is_running == YES) {
                 if (self.debuggerEnabled == YES) {
                     dispatch_sync(dispatch_get_main_queue(), ^{
-                        if (self.cpu.currentLine != nil) {
-                            [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-                        }
+                        //if (cpu.currentLine != nil) {
+                        //    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: cpu.currentLine];
+                        //}
                     });
                     
                     dispatch_sync(dispatch_get_main_queue(), ^{
@@ -90,20 +96,67 @@
 }
 
 - (void) runNextInstructionInline {
-    [self.cpu runNextInstruction];
+    //[cpu runNextInstruction];
     
     if (self.debuggerEnabled) {
-        [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: self.cpu.currentLine];
-        [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
+    //    [(AppDelegate *)[[NSApplication sharedApplication] delegate] appendToDebuggerWindow: cpu.currentLine];
+    //    [[NSNotificationCenter defaultCenter] postNotification: [NSNotification notificationWithName: @"debuggerUpdate" object: nil]];
     }
 }
 
 - (void) runNextInstruction {
-    [self.cpu runNextInstruction];
+   // [cpu runNextInstruction];
     [self.ppu drawFrame];
 }
 
-- (void)buttonStrobe: (int) button
+- (uint8_t)joystickRead
+{
+    uint8_t ret = 0x00;
+    
+    switch (_joystickStrobe) {
+        case 0:
+        case 1:
+        case 2:
+        case 3:
+        case 4:
+        case 5:
+        case 6:
+        case 7:
+            ret = (_buttonsPressed & (uint32_t)pow(2.0,_joystickStrobe+1.0))?1:0;
+            break;
+        case 8:
+        case 9:
+        case 10:
+        case 11:
+        case 12:
+        case 13:
+        case 14:
+        case 15:
+        case 16:
+        case 17:
+        case 18:
+            ret = 0;
+            break;
+        case 19:
+            ret = 1;
+            break;
+        case 20:
+        case 21:
+        case 22:
+        case 23:
+            ret = 0;
+        break;
+    }
+
+    _joystickStrobe++;
+    if (_joystickStrobe == 24) {
+        _joystickStrobe = 0;
+    }
+    
+    return ret;
+}
+
+- (uint8_t)joystickReadZapper
 {
     if (self.buttonPressed == (button+1)) {
         [self.cpu writeValue: 1 toAddress: 0x4016];
@@ -112,6 +165,16 @@
     } else {
         [self.cpu writeValue: 0 toAddress: 0x4016];
     }
+    
+    return ret;
+}
+
+- (void)joystickWrite: (uint8_t)value
+{
+    if ((value&1) == 0 && (_joystickLastWrite&1) == 1) {
+        _joystickStrobe = 0;
+    }
+    _joystickLastWrite = value;
 }
 
 - (void)keyDown:(NSEvent *)theEvent
@@ -121,46 +184,74 @@
     switch (key) {
         case 0:
             //NSLog(@"A Key Pressed");
-            self.buttonPressed = 1;
+            _buttonsPressed |= 2;
             break;
         case 1:
             //NSLog(@"B Key Pressed");
-            self.buttonPressed = 2;
+            _buttonsPressed |= 4;
             break;
         case 126:
             //NSLog(@"Up Key Pressed");
-            self.buttonPressed = 5;
+            _buttonsPressed |= 32;
             break;
         case 125:
             //NSLog(@"Down Key Pressed");
-            self.buttonPressed = 6;
+            _buttonsPressed |= 64;
             break;
         case 123:
             //NSLog(@"Left Key Pressed");
-            self.buttonPressed = 7;
+            _buttonsPressed |= 128;
             break;
         case 124:
             //NSLog(@"Right Key Pressed");
-            self.buttonPressed = 8;
+            _buttonsPressed |= 256;
             break;
         case 36:
-            //self.debuggerEnabled = YES;
-
             //NSLog(@"Start Key Pressed");
-            if (self.debuggerEnabled == NO) {
-            //    [self setDebuggerEnabled: YES];
-            } else {
-            //    [self setDebuggerEnabled: NO];
-            }
-            self.buttonPressed = 4;
+            _buttonsPressed |= 16;
             break;
         case 42:
             //NSLog(@"Select Key Pressed");
-            self.buttonPressed = 3;
+            _buttonsPressed |= 8;
             break;
-            // Ignore all other input
-        default:
-            self.buttonPressed = 0;
+    }
+}
+
+- (void)keyUp:(NSEvent *)theEvent
+{
+    int key = [[theEvent valueForKey: @"keyCode"] intValue];
+    switch (key) {
+        case 0:
+            //NSLog(@"A Key UnPressed");
+            _buttonsPressed &= ~2;
+            break;
+        case 1:
+            //NSLog(@"B Key UnPressed");
+            _buttonsPressed &= ~4;
+            break;
+        case 126:
+            //NSLog(@"Up Key UnPressed");
+            _buttonsPressed &= ~32;
+            break;
+        case 125:
+            //NSLog(@"Down Key UnPressed");
+            _buttonsPressed &= ~64;
+            break;
+        case 123:
+            //NSLog(@"Left Key UnPressed");
+            _buttonsPressed &= ~128;
+            break;
+        case 124:
+            //NSLog(@"Right Key UnPressed");
+            _buttonsPressed &= ~256;
+            break;
+        case 36:
+            //NSLog(@"Start Key UnPressed");
+            _buttonsPressed &= ~16;
+            break;
+        case 42:
+            //NSLog(@"Select Key UnPressed");
+            _buttonsPressed &= ~8;
             break;
     }
 }

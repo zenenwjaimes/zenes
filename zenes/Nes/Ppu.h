@@ -8,6 +8,7 @@
 
 #import <Foundation/Foundation.h>
 #import "NesInc.h"
+#import "Screen.h"
 
 @interface Ppu : NSObject
 {
@@ -18,9 +19,9 @@
     uint8_t visibleSprites[0x40];
     uint8_t _ppuReg1;
     uint8_t _ppuReg2;
+    StateCpu *cpu;
 }
 
-@property (retain) Cpu6502 *cpu;
 @property (retain) Screen *screen;
 @property uint16_t currentScanline;
 @property uint16_t currentVerticalLine;
@@ -34,8 +35,7 @@
 @property (assign, nonatomic) uint8_t *oamMemory;
 @property uint8_t spriteCount;
 @property uint8_t oamAddress;
-
-- (id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom;
+- (id)initWithCpu: (StateCpu *)cpu andChrRom: (uint8_t *)tmpRom;
 - (void)checkVBlank;
 - (void)drawFrame;
 - (void)setVramAddress:(uint16_t)vramAddress;

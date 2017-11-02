@@ -7,11 +7,13 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		E90CE8841FA8F793007A8446 /* 6502 in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CF01CF4465E001E85A5 /* 6502 */; };
+		E90CE8871FA920A2007A8446 /* Cpu.c in Sources */ = {isa = PBXBuildFile; fileRef = E90CE8851FA920A2007A8446 /* Cpu.c */; };
+		E90CE8881FA920A2007A8446 /* Cpu.h in Sources */ = {isa = PBXBuildFile; fileRef = E90CE8861FA920A2007A8446 /* Cpu.h */; };
 		E981FBD81CFE36480082ADA8 /* Nes in Resources */ = {isa = PBXBuildFile; fileRef = E981FBD71CFE36480082ADA8 /* Nes */; };
 		E981FBDC1CFE369E0082ADA8 /* Mapper.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBD91CFE369E0082ADA8 /* Mapper.m */; };
 		E981FBDD1CFE369E0082ADA8 /* Nes.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDA1CFE369E0082ADA8 /* Nes.m */; };
 		E981FBDE1CFE369E0082ADA8 /* Rom.m in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDB1CFE369E0082ADA8 /* Rom.m */; };
-		E981FBE01CFE36F80082ADA8 /* Cpu6502.h in Sources */ = {isa = PBXBuildFile; fileRef = E981FBDF1CFE36F80082ADA8 /* Cpu6502.h */; };
 		FE0BBCB21D0581C700BC4AC3 /* Screen.m in Sources */ = {isa = PBXBuildFile; fileRef = FE0BBCB11D0581C700BC4AC3 /* Screen.m */; };
 		FE2FD1571CFE875A002AD4F1 /* BitHelper.m in Sources */ = {isa = PBXBuildFile; fileRef = FE2FD1561CFE875A002AD4F1 /* BitHelper.m */; };
 		FE2FD1681CFE9994002AD4F1 /* NesWindow.m in Sources */ = {isa = PBXBuildFile; fileRef = FE2FD1671CFE9994002AD4F1 /* NesWindow.m */; };
@@ -23,7 +25,6 @@
 		FECA7CD81CF41D5F001E85A5 /* zenesTests.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CD71CF41D5F001E85A5 /* zenesTests.m */; };
 		FECA7CE31CF41D5F001E85A5 /* zenesUITests.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CE21CF41D5F001E85A5 /* zenesUITests.m */; };
 		FECA7CF11CF4465E001E85A5 /* 6502 in Resources */ = {isa = PBXBuildFile; fileRef = FECA7CF01CF4465E001E85A5 /* 6502 */; };
-		FECA7CFF1CF44F7F001E85A5 /* Cpu6502.m in Sources */ = {isa = PBXBuildFile; fileRef = FECA7CFE1CF44F7F001E85A5 /* Cpu6502.m */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -44,6 +45,8 @@
 /* End PBXContainerItemProxy section */
 
 /* Begin PBXFileReference section */
+		E90CE8851FA920A2007A8446 /* Cpu.c */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.c; name = Cpu.c; path = zenes/6502/Cpu.c; sourceTree = "<group>"; };
+		E90CE8861FA920A2007A8446 /* Cpu.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; name = Cpu.h; path = zenes/6502/Cpu.h; sourceTree = "<group>"; };
 		E981FBD71CFE36480082ADA8 /* Nes */ = {isa = PBXFileReference; lastKnownFileType = folder; path = Nes; sourceTree = "<group>"; };
 		E981FBD91CFE369E0082ADA8 /* Mapper.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Mapper.m; path = Nes/Mapper.m; sourceTree = "<group>"; };
 		E981FBDA1CFE369E0082ADA8 /* Nes.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; name = Nes.m; path = Nes/Nes.m; sourceTree = "<group>"; };
@@ -103,6 +106,8 @@
 		FECA7CB71CF41D5E001E85A5 = {
 			isa = PBXGroup;
 			children = (
+				E90CE8851FA920A2007A8446 /* Cpu.c */,
+				E90CE8861FA920A2007A8446 /* Cpu.h */,
 				FECA7CC21CF41D5E001E85A5 /* zenes */,
 				FECA7CD61CF41D5F001E85A5 /* zenesTests */,
 				FECA7CE11CF41D5F001E85A5 /* zenesUITests */,
@@ -306,8 +311,10 @@
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				E90CE8871FA920A2007A8446 /* Cpu.c in Sources */,
+				E90CE8881FA920A2007A8446 /* Cpu.h in Sources */,
+				E90CE8841FA8F793007A8446 /* 6502 in Sources */,
 				FE43EF511D36335D005419DD /* Ppu.m in Sources */,
-				E981FBE01CFE36F80082ADA8 /* Cpu6502.h in Sources */,
 				E981FBDC1CFE369E0082ADA8 /* Mapper.m in Sources */,
 				E981FBDD1CFE369E0082ADA8 /* Nes.m in Sources */,
 				E981FBDE1CFE369E0082ADA8 /* Rom.m in Sources */,
@@ -315,7 +322,6 @@
 				FE2FD1571CFE875A002AD4F1 /* BitHelper.m in Sources */,
 				FECA7CC51CF41D5E001E85A5 /* AppDelegate.m in Sources */,
 				FE0BBCB21D0581C700BC4AC3 /* Screen.m in Sources */,
-				FECA7CFF1CF44F7F001E85A5 /* Cpu6502.m in Sources */,
 				FE2FD1681CFE9994002AD4F1 /* NesWindow.m in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;

@@ -12,9 +12,9 @@
 @implementation Ppu
 @synthesize firstWrite,incrementStep;
 
--(id)initWithCpu: (Cpu6502 *)cpu andChrRom: (uint8_t *)tmpRom {
+- (id)initWithCpu: (StateCpu *)cpu andChrRom: (uint8_t *)tmpRom {
     if (self = [super init]) {
-        self.cpu = cpu;
+        //cpu = cpu;
         [self bootupSequence];
         self.canDraw = self.canDrawBg = YES;
         
@@ -122,12 +122,12 @@
 {
     // NOTICE: DO NOT USE READ/WRITE METHODS FROM CPU HERE
     // DOING SO WILL CAUSE A LOOP AND CRASH!
-    uint8_t value = self.cpu.memory[self.cpu.notifyPpuAddress];
+    uint8_t value = cpu->memory[cpu->notify_ppu_address];
     
-    switch (self.cpu.notifyPpuAddress) {
+    switch (cpu->notify_ppu_address) {
         case 0x2000:
-            if (self.cpu.notifyPpuWrite == YES) {
-                if ([BitHelper checkBit: CR1_INCREMENT_BY_32 on: self.cpu.memory[0x2000]]) {
+            if (cpu->notify_ppu_write) {
+                if ([BitHelper checkBit: CR1_INCREMENT_BY_32 on: cpu->memory[0x2000]]) {
                     self.incrementStep = 32;
                 } else {
                     self.incrementStep = 1;
@@ -136,79 +136,80 @@
             break;
             
         case 0x2001:
-            if (([BitHelper checkBit: CR2_SHOW_BACKGROUND on: self.cpu.memory[0x2001]])) {
+            if (([BitHelper checkBit: CR2_SHOW_BACKGROUND on: cpu->memory[0x2001]])) {
                 self.canDrawBg = YES;
             } else {
                 self.canDrawBg = NO;
             }
             break;
         case 0x2002:
-            if (self.cpu.notifyPpuWrite == NO) {
-                self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] & (1<<7));
-                self.cpu.memory[0x2005] = self.cpu.memory[0x2006] = 0;
+            if (!cpu->notify_ppu_write) {
+                cpu->memory[0x2002] = (cpu->memory[0x2002] & (1<<7));
+                cpu->memory[0x2005] = cpu->memory[0x2006] = 0;
                 
-                if ([BitHelper checkBit: 7 on: self.cpu.memory[0x2000]]) {
+                if ([BitHelper checkBit: 7 on: cpu->memory[0x2000]]) {
                 //TODO: There is something wrong here. causing nmi breaks nestest
                 // Should this even be an nmi? I read somewhere that it was but i could be wrong
-                //    [self.cpu triggerInterrupt: INT_NMI];
+                //    [cpu triggerInterrupt: INT_NMI];
                 }
             }
             break;
         case 0x2003:
-            if (self.cpu.notifyPpuWrite == YES) {
-                self.oamAddress = self.cpu.memory[0x2003];
+            if (cpu->notify_ppu_write) {
+                self.oamAddress = cpu->memory[0x2003];
             } else {
                 //NSLog(@"reading 2003");
             }
             break;
         case 0x2004:
-            if (self.cpu.notifyPpuWrite == YES) {
-                _oamMemory[self.oamAddress] = self.cpu.memory[0x2004];
+            if (cpu->notify_ppu_write) {
+                _oamMemory[self.oamAddress] = cpu->memory[0x2004];
             } else {
                 //NSLog(@"2004 read");
-                self.cpu.memory[0x2004] = _oamMemory[self.oamAddress];
+                cpu->memory[0x2004] = _oamMemory[self.oamAddress];
             }
             break;
         case 0x2005:
             //NSLog(@"2005 write");
             break;
         case 0x2006:
-            if (self.cpu.notifyPpuWrite == YES) {
+            if (cpu->notify_ppu_write) {
                 [self setVramAddress: value];
             }
             break;
         case 0x2007:
             [self setCanDraw: YES];
             
-            if (self.cpu.notifyPpuWrite == YES) {
-                self.memory[self.currVramAddress] = self.cpu.memory[0x2007];
+            if (cpu->notify_ppu_write) {
+                self.memory[self.currVramAddress] = cpu->memory[0x2007];
                 if (self.currVramAddress >= 0x2000 && self.currVramAddress <= 0x2400) {
-                    self.memory[self.currVramAddress+0x800] = self.cpu.memory[0x2007];
+                    self.memory[self.currVramAddress+0x800] = cpu->memory[0x2007];
                 }
                 if (self.currVramAddress >= 0x2400 && self.currVramAddress <= 0x2800) {
-                    self.memory[self.currVramAddress+0x800] = self.cpu.memory[0x2007];
+                    self.memory[self.currVramAddress+0x800] = cpu->memory[0x2007];
                 }
                 
                 if (self.currVramAddress == 0x3F00 || self.currVramAddress == 0x3F04 || self.currVramAddress == 0x3F08 || self.currVramAddress == 0x3F0C) {
-                    self.memory[self.currVramAddress+0x10] = self.cpu.memory[0x2007];
+                    self.memory[self.currVramAddress+0x10] = cpu->memory[0x2007];
                 }
 
                 self.currVramAddress += self.incrementStep;
             } else {
+                // FIXME: If this is a read, why am i writing???
                 //NSLog(@"Read of 0x2007");
-                self.cpu.memory[0x2007] = self.memory[self.currVramAddress];
+                cpu->memory[0x2007] = self.memory[self.currVramAddress];
             }
             break;
         case 0x4014:
-            if (self.cpu.notifyPpuWrite == YES) {
+            if (cpu->notify_ppu_write) {
                 //NSLog(@"oam write!");
                 for (int i = 0; i < 0x100; i++) {
-                    _oamMemory[self.oamAddress + i] = self.cpu.memory[(self.cpu.memory[0x4014]*0x100)+i];
+                    _oamMemory[self.oamAddress + i] = cpu->memory[(cpu->memory[0x4014]*0x100)+i];
                 }
                 
-                self.cpu.counter += 513;
-                if ((self.cpu.counter % 2) == 1) {
-                    self.cpu.counter++;
+                cpu->counter += 513;
+                if ((cpu->counter % 2) == 1) {
+                    cpu->counter++;
                 }
             }
             break;
@@ -393,22 +394,24 @@
 - (void)checkVBlank
 {
     // Vblank set
-    if (self.cpu.counter >= 29781) {
+    if (cpu->counter >= 29781) {
     //if (self.currentScanline == 1 && self.currentVerticalLine == 0) {
-        self.cpu.memory[0x2002] = (self.cpu.memory[0x2002] | (1<<7));
+        cpu->memory[0x2002] = (cpu->memory[0x2002] | (1<<7));
         
         // Generate nmi if set in control reg 1
-        if (self.cpu.memory[0x2000] >> 7) {
-            [self.cpu triggerInterrupt: INT_NMI];
+        if (cpu->memory[0x2000] >> 7) {
+           // [cpu triggerInterrupt: INT_NMI];
+            // FIXME: Trigger NMI
         }
         
-        self.cpu.counter = 0;
+        cpu->counter = 0;
     }
     
     // Vblank has finished. read the value so it clears
-    if (self.cpu.memory[0x2002] >> 7 && self.cpu.counter >= 21*256) {
-        [self.cpu readValueAtAddress: 0x2002];
-        self.cpu.counter = 0;
+    if (cpu->memory[0x2002] >> 7 && cpu->counter >= 21*256) {
+        //[cpu readValueAtAddress: 0x2002];
+        // FIXME: implement read value
+        cpu->counter = 0;
     }
 }
 
@@ -499,7 +502,7 @@
 
     if ([self readPpuStatus2Reg: CR2_SHOW_SPRITES]) {
         //NSLog(@"sprite pattern table: %X, bg: %X", spritePatternTable);
-        //NSLog(@"sprite: %@", [BitHelper intToBinary: self.cpu.ppuReg1]);
+        //NSLog(@"sprite: %@", [BitHelper intToBinary: cpu.ppuReg1]);
         
         uint8_t spriteYPos, spriteXPos, spriteIndex, spriteAttr, spritePattern = 0x00;
 

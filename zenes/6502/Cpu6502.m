@@ -33,7 +33,6 @@
     self.reg_y = 0x00;
     self.reg_acc = 0x00;
     self.reg_sp = 0x1FF;
-    self.joystickCounter = 0;
     uint8_t tempMemory[0x10000] = {};
     
     //TODO: Set everything to 0xFF on bootup. this could be wrong
@@ -206,7 +205,9 @@
 
 - (void)writeValue: (uint8_t)value toAddress: (uint16_t)address
 {
-    self.memory[address] = value;
+    if (address != 0x4016) {
+        self.memory[address] = value;
+    }
     
     // Send any notifications to the PPU about changes to regs
     if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
@@ -219,6 +220,8 @@
         self.notifyPpuValue = value;
         
         [self.ppu observeCpuChanges];
+    } else if (address == 0x4016) {
+        [self.nes joystickWrite: value];
     } else {
         self.notifyPpu = NO;
     }
@@ -230,15 +233,6 @@
 
 - (uint8_t)readValueAtAddress: (uint16_t)address
 {
-    if (address == 0x4016) {
-        [self.nes buttonStrobe: self.joystickCounter];
-        
-        self.joystickCounter++;
-        if (self.joystickCounter > 7) {
-            self.joystickCounter = 0;
-        }
-    }
-    
     //if (address == 0x2000 || address == 0x2001 || (address >= 0x2003 && address <= 0x2007) || address == 0x4014) {
     if ((address >= 0x2000 && address <= 0x2007) || address == 0x4014) {
 
@@ -260,6 +254,14 @@
         self.notifyPpuWrite = NO;
         self.notifyPpuAddress = address;
         [self.ppu observeCpuChanges];
+    }
+    
+    if (address == 0x4016) {
+        return [self.nes joystickRead];
+    }
+    
+    if (address == 0x4017) {
+        return [self.nes joystickReadZapper];
     }
     
     return self.memory[address];
