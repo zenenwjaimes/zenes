@@ -107,6 +107,7 @@
 {
     if (self.buttonPressed == (button+1)) {
         [self.cpu writeValue: 1 toAddress: 0x4016];
+
         self.buttonPressed = 0;
     } else {
         [self.cpu writeValue: 0 toAddress: 0x4016];
@@ -116,6 +117,7 @@
 - (void)keyDown:(NSEvent *)theEvent
 {
     int key = [[theEvent valueForKey: @"keyCode"] intValue];
+    
     switch (key) {
         case 0:
             //NSLog(@"A Key Pressed");

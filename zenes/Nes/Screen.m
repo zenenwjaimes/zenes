@@ -68,4 +68,9 @@
     }
 }
 
+- (void)keyDown:(NSEvent *)theEvent
+{
+    NSLog(@"key pressed");
+}
+
 @end

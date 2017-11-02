@@ -521,7 +521,7 @@
         self.reg_sp++;
     }
     uint8_t data = [self readValueAtAddress: self.reg_sp];
-    [self writeZeroPage: self.reg_sp withValue: 0x00];
+    //  [self writeZeroPage: self.reg_sp withValue: 0x00];
     
     return data;
 }

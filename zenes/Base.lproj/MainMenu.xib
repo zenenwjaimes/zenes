@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="11762" systemVersion="16D32" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
+<document type="com.apple.InterfaceBuilder3.Cocoa.XIB" version="3.0" toolsVersion="12121" systemVersion="16G29" targetRuntime="MacOSX.Cocoa" propertyAccessControl="none" useAutolayout="YES" customObjectInstantitationMethod="direct">
     <dependencies>
         <deployment identifier="macosx"/>
-        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="11762"/>
+        <plugIn identifier="com.apple.InterfaceBuilder.CocoaPlugin" version="12121"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
     <objects>
@@ -90,6 +90,7 @@
                                     </items>
                                 </menu>
                             </menuItem>
+                            <menuItem title="Run" keyEquivalent="r" id="WaL-J7-LrU"/>
                             <menuItem isSeparatorItem="YES" id="m54-Is-iLE"/>
                             <menuItem title="Close" keyEquivalent="w" id="DVo-aG-piG">
                                 <connections>
@@ -376,65 +377,6 @@
                 </menuItem>
             </items>
         </menu>
-        <window title="zenes" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="NesWindow">
-            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
-            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
-            <rect key="contentRect" x="335" y="390" width="256" height="240"/>
-            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
-            <view key="contentView" canDrawConcurrently="YES" id="EiT-Mj-1SZ">
-                <rect key="frame" x="0.0" y="0.0" width="256" height="240"/>
-                <autoresizingMask key="autoresizingMask"/>
-                <subviews>
-                    <openGLView canDrawConcurrently="YES" fixedFrame="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KGG-m6-8Q9" customClass="Screen">
-                        <rect key="frame" x="0.0" y="0.0" width="256" height="240"/>
-                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
-                    </openGLView>
-                </subviews>
-            </view>
-            <toolbar key="toolbar" implicitIdentifier="7805D3C5-AF2D-4CA4-82B9-779DD5D43223" autosavesConfiguration="NO" displayMode="iconOnly" sizeMode="small" id="0qZ-5A-r6o">
-                <allowedToolbarItems>
-                    <toolbarItem implicitItemIdentifier="EA6C4F02-CAF2-452F-BB22-F0D1F99BCD5F" label="Run" paletteLabel="Run" tag="1" image="play" selectable="YES" id="Xbw-d2-cTt">
-                        <size key="minSize" width="5" height="5"/>
-                        <size key="maxSize" width="8" height="8"/>
-                        <connections>
-                            <action selector="playButton:" target="QvC-M9-y7g" id="qHG-BB-YVs"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="41P-zY-DqE"/>
-                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="tvj-GR-Bcb"/>
-                    <toolbarItem implicitItemIdentifier="6B19686C-4B8D-4A6E-8232-9AD685C8982F" label="Pause" paletteLabel="Pause" tag="2" image="pause" selectable="YES" id="gSU-mU-RNP">
-                        <size key="minSize" width="5" height="5"/>
-                        <size key="maxSize" width="8" height="8"/>
-                        <connections>
-                            <action selector="pauseButton:" target="QvC-M9-y7g" id="b6c-W0-yzT"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="0A6E249A-6290-4CD7-BEA3-707F0CACBC66" label="Memory Dump" paletteLabel="Memory Dump" tag="-1" image="NSIconViewTemplate" id="Qhk-wU-D3F">
-                        <connections>
-                            <action selector="memoryDumpButton:" target="QvC-M9-y7g" id="7T4-b2-izQ"/>
-                        </connections>
-                    </toolbarItem>
-                    <toolbarItem implicitItemIdentifier="C1622856-A284-4025-9954-4B6FB6CD3C1D" label="Step Into" paletteLabel="Step Into" tag="3" image="right-arrow-1" selectable="YES" id="XIa-yj-sFz">
-                        <size key="minSize" width="5" height="5"/>
-                        <size key="maxSize" width="8" height="8"/>
-                        <connections>
-                            <action selector="stepIntoButton:" target="QvC-M9-y7g" id="Vo8-VB-4tI"/>
-                        </connections>
-                    </toolbarItem>
-                </allowedToolbarItems>
-                <defaultToolbarItems>
-                    <toolbarItem reference="Xbw-d2-cTt"/>
-                    <toolbarItem reference="gSU-mU-RNP"/>
-                    <toolbarItem reference="XIa-yj-sFz"/>
-                    <toolbarItem reference="41P-zY-DqE"/>
-                    <toolbarItem reference="Qhk-wU-D3F"/>
-                </defaultToolbarItems>
-            </toolbar>
-            <connections>
-                <outlet property="nesScreen" destination="KGG-m6-8Q9" id="Hwl-17-p0W"/>
-            </connections>
-            <point key="canvasLocation" x="-204" y="292"/>
-        </window>
         <userDefaultsController representsSharedInstance="YES" id="Qoj-BY-tII"/>
         <window title="Window" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" showsToolbarButton="NO" frameAutosaveName="" animationBehavior="default" id="NY9-bS-AAk" customClass="NSPanel">
             <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
@@ -465,7 +407,7 @@
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                             </tableHeaderCell>
-                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="BqR-rs-o9F">
+                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" refusesFirstResponder="YES" title="Text Cell" id="BqR-rs-o9F">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -476,7 +418,7 @@
                                                     <rect key="frame" x="1" y="1" width="116" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <subviews>
-                                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="66G-DU-hDo">
+                                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="66G-DU-hDo">
                                                             <rect key="frame" x="0.0" y="0.0" width="100" height="17"/>
                                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="hI4-y3-7tN">
@@ -498,7 +440,7 @@
                                                 <color key="textColor" name="headerTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="headerColor" catalog="System" colorSpace="catalog"/>
                                             </tableHeaderCell>
-                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" title="Text Cell" id="xFj-dm-IiJ">
+                                            <textFieldCell key="dataCell" lineBreakMode="truncatingTail" selectable="YES" editable="YES" refusesFirstResponder="YES" title="Text Cell" id="xFj-dm-IiJ">
                                                 <font key="font" metaFont="system"/>
                                                 <color key="textColor" name="controlTextColor" catalog="System" colorSpace="catalog"/>
                                                 <color key="backgroundColor" name="controlBackgroundColor" catalog="System" colorSpace="catalog"/>
@@ -509,7 +451,7 @@
                                                     <rect key="frame" x="120" y="1" width="107" height="17"/>
                                                     <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                                                     <subviews>
-                                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" translatesAutoresizingMaskIntoConstraints="NO" id="unc-Gv-jbE">
+                                                        <textField verticalHuggingPriority="750" horizontalCompressionResistancePriority="250" fixedFrame="YES" allowsCharacterPickerTouchBarItem="YES" translatesAutoresizingMaskIntoConstraints="NO" id="unc-Gv-jbE">
                                                             <rect key="frame" x="0.0" y="0.0" width="100" height="17"/>
                                                             <autoresizingMask key="autoresizingMask" flexibleMaxX="YES" flexibleMinY="YES"/>
                                                             <textFieldCell key="cell" lineBreakMode="truncatingTail" sendsActionOnEndEditing="YES" title="Table View Cell" id="hwb-et-Cx0">
@@ -615,6 +557,65 @@
                 </subviews>
             </view>
             <point key="canvasLocation" x="861" y="679"/>
+        </window>
+        <window title="zenes" allowsToolTipsWhenApplicationIsInactive="NO" autorecalculatesKeyViewLoop="NO" oneShot="NO" releasedWhenClosed="NO" animationBehavior="default" id="QvC-M9-y7g" customClass="NesWindow">
+            <windowStyleMask key="styleMask" titled="YES" closable="YES" miniaturizable="YES" resizable="YES"/>
+            <windowPositionMask key="initialPositionMask" leftStrut="YES" rightStrut="YES" topStrut="YES" bottomStrut="YES"/>
+            <rect key="contentRect" x="335" y="390" width="256" height="240"/>
+            <rect key="screenRect" x="0.0" y="0.0" width="1680" height="1027"/>
+            <view key="contentView" canDrawConcurrently="YES" id="EiT-Mj-1SZ">
+                <rect key="frame" x="0.0" y="0.0" width="256" height="240"/>
+                <autoresizingMask key="autoresizingMask"/>
+                <subviews>
+                    <openGLView canDrawConcurrently="YES" fixedFrame="YES" useAuxiliaryDepthBufferStencil="NO" allowOffline="YES" translatesAutoresizingMaskIntoConstraints="NO" id="KGG-m6-8Q9" customClass="Screen">
+                        <rect key="frame" x="0.0" y="0.0" width="256" height="240"/>
+                        <autoresizingMask key="autoresizingMask" flexibleMinX="YES" widthSizable="YES" flexibleMaxX="YES" flexibleMinY="YES" heightSizable="YES" flexibleMaxY="YES"/>
+                    </openGLView>
+                </subviews>
+            </view>
+            <toolbar key="toolbar" implicitIdentifier="3E0C59CE-A4FD-4140-887B-676ECDD00119" autosavesConfiguration="NO" displayMode="iconOnly" sizeMode="small" id="0qZ-5A-r6o">
+                <allowedToolbarItems>
+                    <toolbarItem implicitItemIdentifier="EA6C4F02-CAF2-452F-BB22-F0D1F99BCD5F" label="Run" paletteLabel="Run" tag="1" image="play" selectable="YES" id="Xbw-d2-cTt">
+                        <size key="minSize" width="5" height="5"/>
+                        <size key="maxSize" width="8" height="8"/>
+                        <connections>
+                            <action selector="playButton:" target="QvC-M9-y7g" id="qHG-BB-YVs"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="NSToolbarFlexibleSpaceItem" id="41P-zY-DqE"/>
+                    <toolbarItem implicitItemIdentifier="NSToolbarSpaceItem" id="tvj-GR-Bcb"/>
+                    <toolbarItem implicitItemIdentifier="6B19686C-4B8D-4A6E-8232-9AD685C8982F" label="Pause" paletteLabel="Pause" tag="2" image="pause" selectable="YES" id="gSU-mU-RNP">
+                        <size key="minSize" width="5" height="5"/>
+                        <size key="maxSize" width="8" height="8"/>
+                        <connections>
+                            <action selector="pauseButton:" target="QvC-M9-y7g" id="b6c-W0-yzT"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="0A6E249A-6290-4CD7-BEA3-707F0CACBC66" label="Memory Dump" paletteLabel="Memory Dump" tag="-1" image="NSIconViewTemplate" id="Qhk-wU-D3F">
+                        <connections>
+                            <action selector="memoryDumpButton:" target="QvC-M9-y7g" id="7T4-b2-izQ"/>
+                        </connections>
+                    </toolbarItem>
+                    <toolbarItem implicitItemIdentifier="C1622856-A284-4025-9954-4B6FB6CD3C1D" label="Step Into" paletteLabel="Step Into" tag="3" image="right-arrow-1" selectable="YES" id="XIa-yj-sFz">
+                        <size key="minSize" width="5" height="5"/>
+                        <size key="maxSize" width="8" height="8"/>
+                        <connections>
+                            <action selector="stepIntoButton:" target="QvC-M9-y7g" id="Vo8-VB-4tI"/>
+                        </connections>
+                    </toolbarItem>
+                </allowedToolbarItems>
+                <defaultToolbarItems>
+                    <toolbarItem reference="Xbw-d2-cTt"/>
+                    <toolbarItem reference="gSU-mU-RNP"/>
+                    <toolbarItem reference="XIa-yj-sFz"/>
+                    <toolbarItem reference="41P-zY-DqE"/>
+                    <toolbarItem reference="Qhk-wU-D3F"/>
+                </defaultToolbarItems>
+            </toolbar>
+            <connections>
+                <outlet property="nesScreen" destination="KGG-m6-8Q9" id="Hwl-17-p0W"/>
+            </connections>
+            <point key="canvasLocation" x="-204" y="292"/>
         </window>
     </objects>
     <resources>

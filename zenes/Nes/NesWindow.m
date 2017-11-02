@@ -36,7 +36,6 @@
     
 }
 
-
 - (IBAction)memoryDumpButton:(id)sender
 {
     if (self.nesInstance.debuggerEnabled == YES) {
